@@ -1,0 +1,36 @@
+# Example Verdex configuration file.
+#
+# This file documents every field in config.Config and shows the YAML
+# layer's shape. Copy it to a real path and pass that path to
+# config.Loader (WithFile) to use it. Values here are illustrative
+# defaults/placeholders only -- no real secrets belong in this file.
+# Secret-bearing fields (like database.dsn) should use a secret
+# reference such as "env://VERDEX_DATABASE_DSN" rather than a literal
+# value. See README.md for the full secret reference syntax.
+
+deployment:
+  name: verdex-api
+  environment: sandbox
+
+server:
+  host: 0.0.0.0
+  port: 8080
+  read_timeout: 5s
+  write_timeout: 10s
+  idle_timeout: 120s
+  shutdown_timeout: 15s
+
+database:
+  dsn: "env://VERDEX_DATABASE_DSN"
+  max_open_conns: 10
+  max_idle_conns: 5
+  conn_max_lifetime: 30m
+
+observability:
+  log_level: info
+  log_format: json
+
+# provider: intentionally left empty. No model/provider configuration
+# is defined in this phase; see packages/provider's LLMProvider
+# interface, owned by a later phase, for how models are selected.
+provider: {}

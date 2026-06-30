@@ -1,0 +1,5 @@
+# Sandbox profile overlay used by tests.
+deployment:
+  environment: sandbox
+observability:
+  log_level: debug

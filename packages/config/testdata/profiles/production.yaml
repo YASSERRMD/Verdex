@@ -1,0 +1,8 @@
+# Production profile overlay used by tests.
+deployment:
+  environment: production
+server:
+  port: 443
+observability:
+  log_level: warn
+  log_format: json
