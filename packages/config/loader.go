@@ -1,5 +1,7 @@
 package config
 
+import "fmt"
+
 // Loader assembles a Config from layered sources. Layers are applied in
 // increasing order of precedence:
 //
@@ -49,9 +51,9 @@ func NewLoader(opts ...Option) *Loader {
 }
 
 // Load runs all configured layers in precedence order, resolves secret
-// references, and returns the final merged Config. The returned error
-// wraps the originating failure (file read/parse, env parse, or secret
-// resolution).
+// references, validates the result, and returns the final merged
+// Config. The returned error wraps the originating failure (file
+// read/parse, env parse, secret resolution, or validation).
 func (l *Loader) Load() (Config, error) {
 	cfg := Default()
 
@@ -65,6 +67,10 @@ func (l *Loader) Load() (Config, error) {
 
 	if err := resolveSecrets(&cfg, l.secretResolver); err != nil {
 		return Config{}, err
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return Config{}, fmt.Errorf("config: %w", err)
 	}
 
 	return cfg, nil
