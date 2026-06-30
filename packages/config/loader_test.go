@@ -75,3 +75,42 @@ func TestLoaderMissingFilePropagatesError(t *testing.T) {
 		t.Fatal("Load() error = nil, want error for missing file")
 	}
 }
+
+func TestLoaderResolvesSecretReferencesAfterMerge(t *testing.T) {
+	t.Setenv("TEST_DB_PASSWORD", "fake-resolved-via-loader")
+	t.Setenv("VERDEX_DATABASE_DSN", "env://TEST_DB_PASSWORD")
+
+	cfg, err := NewLoader().Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if cfg.Database.DSN != "fake-resolved-via-loader" {
+		t.Errorf("Database.DSN = %q, want resolved secret value", cfg.Database.DSN)
+	}
+}
+
+func TestLoaderPropagatesSecretResolutionFailure(t *testing.T) {
+	t.Setenv("VERDEX_DATABASE_DSN", "env://TEST_DB_PASSWORD_DEFINITELY_UNSET")
+
+	_, err := NewLoader().Load()
+	if err == nil {
+		t.Fatal("Load() error = nil, want error for unresolved secret reference")
+	}
+}
+
+func TestLoaderWithSecretResolverOverride(t *testing.T) {
+	t.Setenv("VERDEX_DATABASE_DSN", "vault://secret/data/verdex#dsn")
+
+	custom := SecretResolverFunc(func(ref string) (string, error) {
+		return "stub:" + ref, nil
+	})
+
+	cfg, err := NewLoader(WithSecretResolver(custom)).Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.Database.DSN != "stub:vault://secret/data/verdex#dsn" {
+		t.Errorf("Database.DSN = %q, want stubbed resolution", cfg.Database.DSN)
+	}
+}
