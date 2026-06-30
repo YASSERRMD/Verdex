@@ -1,0 +1,14 @@
+# Global owner — all files require review from YASSERRMD
+* @YASSERRMD
+
+# Infra changes require explicit approval
+/infra/ @YASSERRMD
+
+# CI pipeline changes require explicit approval
+/.github/ @YASSERRMD
+
+# Provider abstraction — no change without review
+/packages/provider/ @YASSERRMD
+
+# Non-binding guardrail — no change without review
+/packages/guardrail/ @YASSERRMD

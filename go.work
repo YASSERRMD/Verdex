@@ -1,0 +1,5 @@
+go 1.23
+
+use (
+	// services and packages will be added here as they are created
+)
