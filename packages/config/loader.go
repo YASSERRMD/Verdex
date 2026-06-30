@@ -7,7 +7,9 @@ import "fmt"
 //
 //  1. Default() — built-in, hardcoded defaults.
 //  2. YAML file — optional, set via WithFile.
-//  3. Environment variables — always considered; VERDEX_-prefixed vars
+//  3. Profile overlay — optional, selected via WithProfile or the
+//     VERDEX_PROFILE environment variable; see profile.go.
+//  4. Environment variables — always considered; VERDEX_-prefixed vars
 //     win over anything set by an earlier layer.
 //
 // Each layer mutates only the fields it explicitly sets, so a value
@@ -17,6 +19,8 @@ import "fmt"
 // value; see secrets.go.
 type Loader struct {
 	filePath       string
+	profile        string
+	profileDir     string
 	secretResolver SecretResolver
 }
 
@@ -28,6 +32,26 @@ type Option func(*Loader)
 func WithFile(path string) Option {
 	return func(l *Loader) {
 		l.filePath = path
+	}
+}
+
+// WithProfile explicitly selects a named profile (e.g. "sandbox",
+// "production", "airgapped"), taking precedence over whatever
+// VERDEX_PROFILE is set to. See profile.go for profile resolution and
+// layering rules.
+func WithProfile(name string) Option {
+	return func(l *Loader) {
+		l.profile = name
+	}
+}
+
+// WithProfileDir overrides the directory profile overlay files are
+// read from. It defaults to a "profiles" directory next to the base
+// config file (or "./profiles" if no base file is configured); see
+// profile.go.
+func WithProfileDir(dir string) Option {
+	return func(l *Loader) {
+		l.profileDir = dir
 	}
 }
 
@@ -53,11 +77,16 @@ func NewLoader(opts ...Option) *Loader {
 // Load runs all configured layers in precedence order, resolves secret
 // references, validates the result, and returns the final merged
 // Config. The returned error wraps the originating failure (file
-// read/parse, env parse, secret resolution, or validation).
+// read/parse, profile load, env parse, secret resolution, or
+// validation).
 func (l *Loader) Load() (Config, error) {
 	cfg := Default()
 
 	if err := loadYAMLFile(&cfg, l.filePath); err != nil {
+		return Config{}, err
+	}
+
+	if err := applyProfile(&cfg, l); err != nil {
 		return Config{}, err
 	}
 

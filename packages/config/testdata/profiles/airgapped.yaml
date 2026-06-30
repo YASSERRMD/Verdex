@@ -1,0 +1,8 @@
+# Airgapped profile overlay used by tests. Demonstrates a profile
+# that disables outbound-dependent features by convention (no such
+# field exists yet in Config; this documents the intended pattern for
+# future fields).
+deployment:
+  environment: airgapped
+observability:
+  log_format: console
