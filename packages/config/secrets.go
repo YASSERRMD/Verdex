@@ -139,6 +139,9 @@ func resolveSecretsInStruct(v reflect.Value, resolver SecretResolver) error {
 				return fmt.Errorf("config: resolve secret for field %s: %w", field.Name, err)
 			}
 			fieldValue.SetString(resolved)
+		default:
+			// Other kinds (int, bool, slice, etc.) never carry secret
+			// references and are intentionally left untouched.
 		}
 	}
 
