@@ -1,5 +1,6 @@
-go 1.23
+go 1.25
 
 use (
 	// services and packages will be added here as they are created
+	./packages/config
 )
