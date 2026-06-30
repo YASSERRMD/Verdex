@@ -1,0 +1,6 @@
+# Partial config used by tests to verify that YAML-set fields survive
+# merge while YAML-omitted fields keep whatever a lower layer set.
+server:
+  port: 9001
+observability:
+  log_level: debug
