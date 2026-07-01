@@ -1,7 +1,8 @@
-go 1.25
+go 1.25.0
 
 use (
 	// services and packages will be added here as they are created
 	./packages/config
 	./packages/observability
+	./packages/persistence
 )
