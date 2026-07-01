@@ -10,6 +10,7 @@ use (
 	./packages/jurisdiction
 	./packages/observability
 	./packages/persistence
+	./packages/prompts
 	./packages/provider
 	./packages/router
 	./packages/setup
