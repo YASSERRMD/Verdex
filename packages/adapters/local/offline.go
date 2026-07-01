@@ -64,10 +64,11 @@ func (e *OfflineModeEnforcer) OutboundGuard(rawURL string) {
 }
 
 // isLocalHost reports whether host is a loopback address or "localhost".
+// IPv6 loopback is accepted as both "::1" and "[::1]" (with brackets).
 func isLocalHost(host string) bool {
-	host = strings.ToLower(host)
+	host = strings.ToLower(strings.Trim(host, "[]"))
 	return host == "localhost" ||
 		host == "127.0.0.1" ||
 		host == "::1" ||
-		strings.HasPrefix(host, "127.") // 127.x.x.x range
+		strings.HasPrefix(host, "127.") // entire 127.x.x.x/8 loopback range
 }
