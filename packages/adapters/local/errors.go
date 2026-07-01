@@ -24,3 +24,11 @@ var ErrModelNotFound = errors.New("local: model not found on local server")
 // cancelled while waiting for a semaphore slot, indicating the server is
 // saturated and no slot freed in time.
 var ErrConcurrencyLimitExceeded = errors.New("local: concurrency limit exceeded")
+
+// IsEndpointError reports whether err is one of the local-endpoint sentinel
+// errors (ErrLocalEndpointDown or ErrOfflineEndpointUnreachable). This is a
+// convenience helper for callers that want to distinguish connectivity problems
+// from model-level errors without importing the errors package directly.
+func IsEndpointError(err error) bool {
+	return errors.Is(err, ErrLocalEndpointDown) || errors.Is(err, ErrOfflineEndpointUnreachable)
+}
