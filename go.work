@@ -9,6 +9,7 @@ use (
 	./packages/observability
 	./packages/persistence
 	./packages/provider
+	./packages/router
 	./packages/setup
 	./packages/tenancy
 )
