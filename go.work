@@ -4,6 +4,7 @@ use (
 	// services and packages will be added here as they are created
 	./packages/config
 	./packages/identity
+	./packages/jurisdiction
 	./packages/observability
 	./packages/persistence
 	./packages/tenancy
