@@ -19,7 +19,7 @@ test: ## Run all Go tests
 	@for mod in $(GO_SERVICES) $(GO_PKGS); do \
 	  dir=$$(dirname $$mod); \
 	  echo "→ testing $$dir"; \
-	  (cd $$dir && go test -race -count=1 ./...); \
+	  (cd $$dir && go test -race -count=1 -timeout=5m ./...); \
 	done
 
 lint: ## Run golangci-lint on all Go modules
