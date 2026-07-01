@@ -59,3 +59,35 @@ type TokenUsage struct {
 	OutputTokens int
 	TotalTokens  int
 }
+
+// TaskType classifies the kind of work a provider call performs.
+type TaskType string
+
+const (
+	// TaskChat is a conversational chat-completion task.
+	TaskChat TaskType = "chat"
+	// TaskEmbed is a text-embedding task.
+	TaskEmbed TaskType = "embed"
+	// TaskReason is a structured reasoning / chain-of-thought task.
+	TaskReason TaskType = "reason"
+	// TaskExtract is an information-extraction task.
+	TaskExtract TaskType = "extract"
+)
+
+// Capability describes what a specific provider/model combination can do.
+type Capability struct {
+	// SupportedTasks lists the TaskType values this provider handles.
+	SupportedTasks []TaskType
+	// MaxContextTokens is the maximum combined input token limit.
+	MaxContextTokens int
+	// MaxOutputTokens is the maximum number of tokens the model can generate.
+	MaxOutputTokens int
+	// SupportsStreaming indicates whether ChatStream is functional.
+	SupportsStreaming bool
+	// SupportsEmbedding indicates whether Embed is functional.
+	SupportsEmbedding bool
+	// ProviderID identifies the provider (e.g. "anthropic", "openai").
+	ProviderID string
+	// ModelID identifies the specific model (e.g. "claude-3-5-sonnet-20241022").
+	ModelID string
+}
