@@ -128,8 +128,12 @@ func TestIntegration_MigrationsApplyCleanly(t *testing.T) {
 	if dirty {
 		t.Fatal("expected clean schema after Up, got dirty")
 	}
-	if version != 2 {
-		t.Fatalf("expected schema version 2 after applying both migrations, got %d", version)
+	// Phase 005 (packages/tenancy) added migrations 000003 (RLS on
+	// deployments), 000004 (deployment provisioning records), and 000005
+	// (the non-superuser verdex_app role RLS depends on) to this
+	// directory, so the latest version is now 5, not 2.
+	if version != 5 {
+		t.Fatalf("expected schema version 5 after applying all migrations, got %d", version)
 	}
 
 	// Running Up again must be a no-op, not an error.
@@ -343,7 +347,7 @@ func TestIntegration_MigrationsRollback(t *testing.T) {
 		t.Fatalf("seed Create: %v", err)
 	}
 
-	// Down must actually reverse the schema: after reverting both
+	// Down must actually reverse the schema: after reverting all
 	// migrations, the tenants table (and the row just inserted into
 	// it) must no longer exist.
 	if err := migrator.Down(ctx); err != nil {
@@ -389,8 +393,17 @@ func TestIntegration_RecoverDirty(t *testing.T) {
 		t.Fatalf("Up: %v", err)
 	}
 
+	// Capture the actual current version dynamically rather than
+	// hardcoding a literal: a hardcoded expectation here previously
+	// went stale (and broke in CI) each time a later phase added a new
+	// migration to this directory.
+	currentVersion, _, err := migrator.Version()
+	if err != nil {
+		t.Fatalf("Version: %v", err)
+	}
+
 	// RecoverDirty must refuse to act on a clean schema.
-	if err := migrator.RecoverDirty(2); err == nil {
+	if err := migrator.RecoverDirty(int(currentVersion)); err == nil {
 		t.Fatal("expected RecoverDirty to refuse a non-dirty schema, got nil error")
 	}
 
@@ -414,7 +427,7 @@ func TestIntegration_RecoverDirty(t *testing.T) {
 		t.Fatalf("expected dirty=true after manual UPDATE, got dirty=%v err=%v", dirty, err)
 	}
 
-	if err := migrator.RecoverDirty(2); err != nil {
+	if err := migrator.RecoverDirty(int(currentVersion)); err != nil {
 		t.Fatalf("RecoverDirty: %v", err)
 	}
 
