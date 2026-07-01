@@ -1,0 +1,132 @@
+openapi: "3.1.0"
+
+info:
+  title: Verdex Judicial Reasoning API
+  version: "1.0.0"
+  description: |
+    The Verdex API provides programmatic access to the Verdex judicial
+    reasoning platform. All endpoints are versioned under a /v{n}/ prefix.
+    Responses follow a standard envelope format; errors include a machine-
+    readable code field.
+  contact:
+    name: Verdex Engineering
+    email: engineering@verdex.example
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.verdex.example/v1
+    description: Production (v1)
+  - url: https://api-staging.verdex.example/v1
+    description: Staging (v1)
+  - url: http://localhost:8080/v1
+    description: Local development
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      tags:
+        - System
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT issued by the Verdex identity service. Include it in the
+        Authorization header as "Bearer <token>".
+
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        version:
+          type: string
+          example: v1
+        status:
+          type: string
+          example: success
+        data:
+          type: object
+          properties:
+            status:
+              type: string
+              example: ok
+      required:
+        - version
+        - status
+        - data
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          example: 1
+        per_page:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 20
+        total:
+          type: integer
+          minimum: 0
+          example: 142
+        total_pages:
+          type: integer
+          minimum: 1
+          example: 8
+      required:
+        - page
+        - per_page
+        - total
+        - total_pages
+
+    ErrorResponse:
+      type: object
+      properties:
+        version:
+          type: string
+          example: v1
+        status:
+          type: string
+          enum:
+            - error
+          example: error
+        code:
+          type: string
+          example: NOT_FOUND
+        message:
+          type: string
+          example: "The requested resource could not be found."
+        details:
+          type: array
+          items:
+            type: string
+          example:
+            - "name: is required"
+        request_id:
+          type: string
+          format: uuid
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+      required:
+        - version
+        - status
+        - code
+        - message
+
+security:
+  - BearerAuth: []
