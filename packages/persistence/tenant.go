@@ -29,6 +29,7 @@ type Tenant struct {
 type TenantRepository interface {
 	Create(ctx context.Context, exec Executor, t *Tenant) error
 	Get(ctx context.Context, exec Executor, id uuid.UUID) (*Tenant, error)
+	GetBySlug(ctx context.Context, exec Executor, slug string) (*Tenant, error)
 	List(ctx context.Context, exec Executor) ([]*Tenant, error)
 	Update(ctx context.Context, exec Executor, t *Tenant) error
 	Delete(ctx context.Context, exec Executor, id uuid.UUID) error
@@ -80,6 +81,29 @@ func (r *PostgresTenantRepository) Get(ctx context.Context, exec Executor, id uu
 			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("persistence: TenantRepository.Get: %w", err)
+	}
+	return t, nil
+}
+
+// GetBySlug returns the tenant with the given slug, or ErrNotFound if
+// none exists. This is the lookup tenant resolution needs (see
+// packages/tenancy/resolve.go): callers typically have a tenant slug
+// from an external source (an HTTP header today, a resolved
+// identity/session in Phase 006) rather than the tenant's internal
+// id.
+func (r *PostgresTenantRepository) GetBySlug(ctx context.Context, exec Executor, slug string) (*Tenant, error) {
+	const q = `
+		SELECT id, name, slug, created_at, updated_at
+		FROM tenants
+		WHERE slug = $1`
+
+	t := &Tenant{}
+	row := exec.QueryRow(ctx, q, slug)
+	if err := scanTenant(row, t); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("persistence: TenantRepository.GetBySlug: %w", err)
 	}
 	return t, nil
 }
