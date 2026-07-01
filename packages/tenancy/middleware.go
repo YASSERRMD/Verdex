@@ -45,6 +45,30 @@ func resolvedTenantFromContext(ctx context.Context) (*persistence.Tenant, bool) 
 // Unauthorized and does not call next — every handler wrapped by
 // Middleware can assume TenantFromContext always succeeds.
 //
+// # Cross-tenant access denial at this layer
+//
+// This phase's resolution design (resolve.go's HeaderResolver) has
+// exactly one source of tenant identity per request: the X-Tenant-Slug
+// header. There is no independent second source (e.g. a tenant ID
+// embedded in a path parameter or request body) for Middleware to
+// cross-check the resolved tenant against, so there is no
+// "mismatched-source" scenario for this middleware layer to reject -
+// every request that reaches next has exactly one tenant, resolved
+// exactly one way, and TenantFromContext is guaranteed to return it.
+// This is why the mismatch check the phase spec asks for either
+// exists (when a second source is present) or is documented as
+// already covered by construction (here, since none is).
+//
+// Defense in depth against cross-tenant *data* access still applies at
+// the two layers below this one regardless: the Row-Level Security
+// policy (migrations/000003_enable_rls_deployments.up.sql) at the
+// database layer, and ErrCrossTenantAccess in the tenant-scoped
+// repository wrappers (deployment_repository.go, errors.go) at the
+// application layer. Once Phase 006 introduces a second source of
+// tenant identity (e.g. a path-scoped tenant ID alongside an
+// authenticated session's tenant), add the mismatch check here rather
+// than only relying on the layers below.
+//
 // # Ordering with observability.CorrelationMiddleware
 //
 // Compose Middleware *inside* (i.e. wrapped by)
