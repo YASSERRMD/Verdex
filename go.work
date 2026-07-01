@@ -7,5 +7,6 @@ use (
 	./packages/jurisdiction
 	./packages/observability
 	./packages/persistence
+	./packages/setup
 	./packages/tenancy
 )
