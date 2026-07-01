@@ -2,6 +2,7 @@ package tenancy_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -143,5 +144,161 @@ func TestIntegration_SeedSandboxTenant_IsIdempotent(t *testing.T) {
 	}
 	if len(all) != 1 {
 		t.Fatalf("expected exactly 1 tenant after re-seeding, got %d", len(all))
+	}
+}
+
+// seedTwoTenantsWithDeployments creates two tenants, each with one
+// deployment, and returns both tenants and both deployments for the
+// isolation tests below.
+func seedTwoTenantsWithDeployments(t *testing.T, pg *persistence.Postgres) (tenantA, tenantB *persistence.Tenant, deploymentA, deploymentB *persistence.Deployment) {
+	t.Helper()
+	ctx := context.Background()
+
+	tenants := persistence.NewPostgresTenantRepository()
+	tenantA = &persistence.Tenant{Name: "Tenant A", Slug: "tenant-a"}
+	if err := tenants.Create(ctx, pg.Pool(), tenantA); err != nil {
+		t.Fatalf("create tenant A: %v", err)
+	}
+	tenantB = &persistence.Tenant{Name: "Tenant B", Slug: "tenant-b"}
+	if err := tenants.Create(ctx, pg.Pool(), tenantB); err != nil {
+		t.Fatalf("create tenant B: %v", err)
+	}
+
+	scopedRepo := tenancy.NewTenantScopedDeploymentRepository(pg.Pool(), persistence.NewPostgresDeploymentRepository())
+
+	deploymentA = &persistence.Deployment{TenantID: tenantA.ID, Profile: "standard"}
+	if err := scopedRepo.Create(ctx, tenantA.ID, deploymentA); err != nil {
+		t.Fatalf("create deployment A: %v", err)
+	}
+	deploymentB = &persistence.Deployment{TenantID: tenantB.ID, Profile: "standard"}
+	if err := scopedRepo.Create(ctx, tenantB.ID, deploymentB); err != nil {
+		t.Fatalf("create deployment B: %v", err)
+	}
+
+	return tenantA, tenantB, deploymentA, deploymentB
+}
+
+func TestIntegration_TenantScopedDeploymentRepository_CannotSeeOtherTenantsDeployment(t *testing.T) {
+	pg := migratedPool(t)
+	ctx := context.Background()
+	tenantA, tenantB, deploymentA, deploymentB := seedTwoTenantsWithDeployments(t, pg)
+
+	scopedRepo := tenancy.NewTenantScopedDeploymentRepository(pg.Pool(), persistence.NewPostgresDeploymentRepository())
+
+	// Tenant A's scope must not see tenant B's deployment.
+	if _, err := scopedRepo.Get(ctx, tenantA.ID, deploymentB.ID); !errors.Is(err, persistence.ErrNotFound) {
+		t.Fatalf("expected ErrNotFound fetching tenant B's deployment under tenant A's scope, got %v", err)
+	}
+	// And vice versa.
+	if _, err := scopedRepo.Get(ctx, tenantB.ID, deploymentA.ID); !errors.Is(err, persistence.ErrNotFound) {
+		t.Fatalf("expected ErrNotFound fetching tenant A's deployment under tenant B's scope, got %v", err)
+	}
+
+	// List under tenant A's scope must only ever return tenant A's own
+	// deployment.
+	listA, err := scopedRepo.List(ctx, tenantA.ID)
+	if err != nil {
+		t.Fatalf("List under tenant A: %v", err)
+	}
+	if len(listA) != 1 || listA[0].ID != deploymentA.ID {
+		t.Fatalf("expected List under tenant A's scope to return only deployment A, got %+v", listA)
+	}
+}
+
+func TestIntegration_TenantScopedDeploymentRepository_CannotUpdateOtherTenantsDeployment(t *testing.T) {
+	pg := migratedPool(t)
+	ctx := context.Background()
+	tenantA, tenantB, _, deploymentB := seedTwoTenantsWithDeployments(t, pg)
+
+	scopedRepo := tenancy.NewTenantScopedDeploymentRepository(pg.Pool(), persistence.NewPostgresDeploymentRepository())
+
+	// Attempting to update tenant B's deployment while scoped to
+	// tenant A must fail: the RLS policy hides the row from the
+	// UPDATE's WHERE clause, so the underlying repository reports
+	// ErrNotFound (0 rows affected) exactly as it would for a
+	// genuinely nonexistent id.
+	mutated := &persistence.Deployment{ID: deploymentB.ID, TenantID: tenantA.ID, Profile: "tampered"}
+	if err := scopedRepo.Update(ctx, tenantA.ID, mutated); err != nil && !errors.Is(err, persistence.ErrNotFound) && !errors.Is(err, tenancy.ErrCrossTenantAccess) {
+		t.Fatalf("expected ErrNotFound or ErrCrossTenantAccess, got %v", err)
+	}
+
+	// Whichever way it failed, tenant B's deployment must be
+	// completely unchanged.
+	unchanged, err := scopedRepo.Get(ctx, tenantB.ID, deploymentB.ID)
+	if err != nil {
+		t.Fatalf("Get deployment B under tenant B's own scope: %v", err)
+	}
+	if unchanged.Profile != "standard" {
+		t.Fatalf("expected deployment B's profile to remain unchanged, got %q", unchanged.Profile)
+	}
+}
+
+func TestIntegration_TenantScopedDeploymentRepository_CannotDeleteOtherTenantsDeployment(t *testing.T) {
+	pg := migratedPool(t)
+	ctx := context.Background()
+	tenantA, tenantB, _, deploymentB := seedTwoTenantsWithDeployments(t, pg)
+
+	scopedRepo := tenancy.NewTenantScopedDeploymentRepository(pg.Pool(), persistence.NewPostgresDeploymentRepository())
+
+	if err := scopedRepo.Delete(ctx, tenantA.ID, deploymentB.ID); !errors.Is(err, persistence.ErrNotFound) {
+		t.Fatalf("expected ErrNotFound deleting tenant B's deployment under tenant A's scope, got %v", err)
+	}
+
+	// Tenant B's deployment must still exist.
+	if _, err := scopedRepo.Get(ctx, tenantB.ID, deploymentB.ID); err != nil {
+		t.Fatalf("expected deployment B to still exist after the denied cross-tenant delete, got %v", err)
+	}
+}
+
+func TestIntegration_UnscopedQuery_SeesZeroRowsNotError(t *testing.T) {
+	pg := migratedPool(t)
+	ctx := context.Background()
+	_, _, deploymentA, _ := seedTwoTenantsWithDeployments(t, pg)
+
+	// Bypass WithTenantScope entirely: query the pool directly, with
+	// no app.current_tenant_id ever set on this connection/session.
+	// This is the load-bearing behavior documented in
+	// migrations/000003_enable_rls_deployments.up.sql: RLS must yield
+	// zero rows, not raise an error, when the setting is unset.
+	deploymentRepo := persistence.NewPostgresDeploymentRepository()
+
+	all, err := deploymentRepo.List(ctx, pg.Pool())
+	if err != nil {
+		t.Fatalf("expected List with no tenant scope to succeed (returning zero rows), got error: %v", err)
+	}
+	if len(all) != 0 {
+		t.Fatalf("expected zero rows visible with no tenant scope set, got %d", len(all))
+	}
+
+	if _, err := deploymentRepo.Get(ctx, pg.Pool(), deploymentA.ID); !errors.Is(err, persistence.ErrNotFound) {
+		t.Fatalf("expected ErrNotFound (not a raised error) fetching a real deployment with no tenant scope set, got %v", err)
+	}
+}
+
+func TestIntegration_TenantScopedDeploymentRepository_CrossTenantGuardRejectsBeforeDB(t *testing.T) {
+	pg := migratedPool(t)
+	ctx := context.Background()
+	tenantA, tenantB, _, deploymentB := seedTwoTenantsWithDeployments(t, pg)
+
+	scopedRepo := tenancy.NewTenantScopedDeploymentRepository(pg.Pool(), persistence.NewPostgresDeploymentRepository())
+
+	// deploymentB.TenantID is tenantB's id; scoping the call to
+	// tenantA with that mismatched TenantID must be rejected by
+	// requireMatchingTenant before any statement reaches the database
+	// - i.e. this must fail with ErrCrossTenantAccess specifically,
+	// not merely ErrNotFound from RLS.
+	mutated := &persistence.Deployment{ID: deploymentB.ID, TenantID: tenantB.ID, Profile: "tampered"}
+	err := scopedRepo.Update(ctx, tenantA.ID, mutated)
+	if !errors.Is(err, tenancy.ErrCrossTenantAccess) {
+		t.Fatalf("expected ErrCrossTenantAccess, got %v", err)
+	}
+
+	// Confirm no partial write happened.
+	unchanged, err := scopedRepo.Get(ctx, tenantB.ID, deploymentB.ID)
+	if err != nil {
+		t.Fatalf("Get deployment B under tenant B's own scope: %v", err)
+	}
+	if unchanged.Profile != "standard" {
+		t.Fatalf("expected deployment B's profile to remain unchanged, got %q", unchanged.Profile)
 	}
 }
