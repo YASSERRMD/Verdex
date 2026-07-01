@@ -3,6 +3,7 @@ package persistence
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -37,10 +38,10 @@ func Open(ctx context.Context, cfg *config.Config) (*Postgres, error) {
 		return nil, fmt.Errorf("persistence: Open: parse DSN: %w", err)
 	}
 
-	if cfg.Database.MaxOpenConns > 0 {
+	if cfg.Database.MaxOpenConns > 0 && cfg.Database.MaxOpenConns <= math.MaxInt32 {
 		poolCfg.MaxConns = int32(cfg.Database.MaxOpenConns)
 	}
-	if cfg.Database.MaxIdleConns > 0 {
+	if cfg.Database.MaxIdleConns > 0 && cfg.Database.MaxIdleConns <= math.MaxInt32 {
 		poolCfg.MinConns = int32(cfg.Database.MaxIdleConns)
 	}
 	if cfg.Database.ConnMaxLifetime > 0 {
