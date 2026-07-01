@@ -9,6 +9,7 @@ use (
 	./packages/eval
 	./packages/gateway
 	./packages/identity
+	./packages/intake
 	./packages/jurisdiction
 	./packages/observability
 	./packages/persistence
