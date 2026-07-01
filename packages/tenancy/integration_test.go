@@ -64,10 +64,20 @@ func requirePostgresContainer(t *testing.T) string {
 	return dsn
 }
 
-// migratedPool starts a Postgres container, applies every embedded
-// packages/persistence schema migration (including this phase's RLS
-// and provisioning-record migrations), and returns an open pool
-// against it.
+// migratedPool starts a Postgres container as the bootstrap
+// superuser, applies every embedded packages/persistence schema
+// migration (including this phase's RLS, provisioning-record, and
+// app-role migrations), and returns an open pool against it.
+//
+// This pool is authenticated as the container's bootstrap user, which
+// testcontainers' postgres module (like most managed Postgres
+// providers' default admin user, and Postgres's own initdb bootstrap
+// role) creates as a superuser. PostgreSQL never applies Row-Level
+// Security to a superuser connection, FORCE ROW LEVEL SECURITY
+// notwithstanding — so this pool must be used only for schema
+// migration and cross-tenant setup/verification in tests, never for
+// the tenant-scoped operations actually under test. Use appScopedPool
+// for those.
 func migratedPool(t *testing.T) *persistence.Postgres {
 	t.Helper()
 
@@ -95,6 +105,79 @@ func migratedPool(t *testing.T) *persistence.Postgres {
 	t.Cleanup(pg.Close)
 
 	return pg
+}
+
+// appScopedPool takes a superuser pool already returned by
+// migratedPool (over the same dsn used to build it), bootstraps
+// tenancy.AppRoleName's login password via that superuser connection,
+// and returns a second pool authenticated as tenancy.AppRoleName —
+// the non-superuser, non-BYPASSRLS role RLS policies actually apply
+// to. All tenant-scoped repository operations under test must run
+// against this pool, not the superuser one, or the isolation
+// assertions would pass for the wrong reason (or not at all, as
+// discovered when this phase's integration tests first ran against
+// live Postgres in CI: every isolation test failed because the
+// superuser pool silently bypassed RLS).
+func appScopedPool(t *testing.T, superuserPG *persistence.Postgres, superuserDSN string) *persistence.Postgres {
+	t.Helper()
+	ctx := context.Background()
+
+	password, err := tenancy.GenerateAppRolePassword()
+	if err != nil {
+		t.Fatalf("GenerateAppRolePassword: %v", err)
+	}
+	if err := tenancy.BootstrapAppRolePassword(ctx, superuserPG.Pool(), password); err != nil {
+		t.Fatalf("BootstrapAppRolePassword: %v", err)
+	}
+
+	appDSN, err := tenancy.BuildAppRoleDSN(superuserDSN, password)
+	if err != nil {
+		t.Fatalf("BuildAppRoleDSN: %v", err)
+	}
+
+	cfg := config.Default()
+	cfg.Database.DSN = appDSN
+	appPG, err := persistence.Open(ctx, &cfg)
+	if err != nil {
+		t.Fatalf("Open (app role): %v", err)
+	}
+	t.Cleanup(appPG.Close)
+
+	if err := tenancy.VerifyRLSEnforceable(ctx, appPG.Pool()); err != nil {
+		t.Fatalf("VerifyRLSEnforceable: expected the app role pool to enforce RLS, got %v", err)
+	}
+
+	return appPG
+}
+
+// migratedAppPool is the common case: migrate as superuser, then
+// return only the app-role-scoped pool tenant-scoped operations
+// should use.
+func migratedAppPool(t *testing.T) *persistence.Postgres {
+	t.Helper()
+	dsn := requirePostgresContainer(t)
+
+	ctx, cancel := context.WithTimeout(context.Background(), containerStartTimeout)
+	defer cancel()
+
+	migrator, err := persistence.NewEmbeddedMigrator(dsn)
+	if err != nil {
+		t.Fatalf("NewEmbeddedMigrator: %v", err)
+	}
+	t.Cleanup(func() { _ = migrator.Close() })
+	if err := migrator.Up(ctx); err != nil {
+		t.Fatalf("Up: %v", err)
+	}
+
+	cfg := config.Default()
+	cfg.Database.DSN = dsn
+	superuserPG, err := persistence.Open(ctx, &cfg)
+	if err != nil {
+		t.Fatalf("Open (superuser): %v", err)
+	}
+	defer superuserPG.Close()
+
+	return appScopedPool(t, superuserPG, dsn)
 }
 
 func TestIntegration_SeedSandboxTenant_CreatesOnce(t *testing.T) {
@@ -149,7 +232,10 @@ func TestIntegration_SeedSandboxTenant_IsIdempotent(t *testing.T) {
 
 // seedTwoTenantsWithDeployments creates two tenants, each with one
 // deployment, and returns both tenants and both deployments for the
-// isolation tests below.
+// isolation tests below. pg must be an app-role pool (from
+// migratedAppPool), since deployment creation runs through
+// WithTenantScope and therefore through the RLS policy's WITH CHECK
+// clause on INSERT.
 func seedTwoTenantsWithDeployments(t *testing.T, pg *persistence.Postgres) (tenantA, tenantB *persistence.Tenant, deploymentA, deploymentB *persistence.Deployment) {
 	t.Helper()
 	ctx := context.Background()
@@ -179,7 +265,7 @@ func seedTwoTenantsWithDeployments(t *testing.T, pg *persistence.Postgres) (tena
 }
 
 func TestIntegration_TenantScopedDeploymentRepository_CannotSeeOtherTenantsDeployment(t *testing.T) {
-	pg := migratedPool(t)
+	pg := migratedAppPool(t)
 	ctx := context.Background()
 	tenantA, tenantB, deploymentA, deploymentB := seedTwoTenantsWithDeployments(t, pg)
 
@@ -206,7 +292,7 @@ func TestIntegration_TenantScopedDeploymentRepository_CannotSeeOtherTenantsDeplo
 }
 
 func TestIntegration_TenantScopedDeploymentRepository_CannotUpdateOtherTenantsDeployment(t *testing.T) {
-	pg := migratedPool(t)
+	pg := migratedAppPool(t)
 	ctx := context.Background()
 	tenantA, tenantB, _, deploymentB := seedTwoTenantsWithDeployments(t, pg)
 
@@ -234,7 +320,7 @@ func TestIntegration_TenantScopedDeploymentRepository_CannotUpdateOtherTenantsDe
 }
 
 func TestIntegration_TenantScopedDeploymentRepository_CannotDeleteOtherTenantsDeployment(t *testing.T) {
-	pg := migratedPool(t)
+	pg := migratedAppPool(t)
 	ctx := context.Background()
 	tenantA, tenantB, _, deploymentB := seedTwoTenantsWithDeployments(t, pg)
 
@@ -251,13 +337,14 @@ func TestIntegration_TenantScopedDeploymentRepository_CannotDeleteOtherTenantsDe
 }
 
 func TestIntegration_UnscopedQuery_SeesZeroRowsNotError(t *testing.T) {
-	pg := migratedPool(t)
+	pg := migratedAppPool(t)
 	ctx := context.Background()
 	_, _, deploymentA, _ := seedTwoTenantsWithDeployments(t, pg)
 
-	// Bypass WithTenantScope entirely: query the pool directly, with
-	// no app.current_tenant_id ever set on this connection/session.
-	// This is the load-bearing behavior documented in
+	// Bypass WithTenantScope entirely: query the (still non-superuser,
+	// RLS-subject) app-role pool directly, with no
+	// app.current_tenant_id ever set on this connection/session. This
+	// is the load-bearing behavior documented in
 	// migrations/000003_enable_rls_deployments.up.sql: RLS must yield
 	// zero rows, not raise an error, when the setting is unset.
 	deploymentRepo := persistence.NewPostgresDeploymentRepository()
@@ -276,7 +363,7 @@ func TestIntegration_UnscopedQuery_SeesZeroRowsNotError(t *testing.T) {
 }
 
 func TestIntegration_TenantScopedDeploymentRepository_CrossTenantGuardRejectsBeforeDB(t *testing.T) {
-	pg := migratedPool(t)
+	pg := migratedAppPool(t)
 	ctx := context.Background()
 	tenantA, tenantB, _, deploymentB := seedTwoTenantsWithDeployments(t, pg)
 
@@ -300,5 +387,32 @@ func TestIntegration_TenantScopedDeploymentRepository_CrossTenantGuardRejectsBef
 	}
 	if unchanged.Profile != "standard" {
 		t.Fatalf("expected deployment B's profile to remain unchanged, got %q", unchanged.Profile)
+	}
+}
+
+// TestIntegration_VerifyRLSEnforceable_RejectsSuperuserPool documents,
+// with a live database, exactly the failure mode this phase's RLS
+// design first hit in CI: a pool authenticated as a superuser (as
+// testcontainers' bootstrap user, and many managed Postgres
+// providers' default admin user, both are) silently bypasses every
+// RLS policy, so VerifyRLSEnforceable must reject it.
+func TestIntegration_VerifyRLSEnforceable_RejectsSuperuserPool(t *testing.T) {
+	superuserPG := migratedPool(t)
+
+	if err := tenancy.VerifyRLSEnforceable(context.Background(), superuserPG.Pool()); err == nil {
+		t.Fatal("expected VerifyRLSEnforceable to reject a superuser pool, got nil error")
+	}
+}
+
+// TestIntegration_VerifyRLSEnforceable_AcceptsAppRolePool is the
+// positive counterpart: the app-role pool migratedAppPool hands back
+// must pass VerifyRLSEnforceable (this is also asserted inline inside
+// appScopedPool itself, but an explicit test makes the guarantee
+// discoverable on its own).
+func TestIntegration_VerifyRLSEnforceable_AcceptsAppRolePool(t *testing.T) {
+	appPG := migratedAppPool(t)
+
+	if err := tenancy.VerifyRLSEnforceable(context.Background(), appPG.Pool()); err != nil {
+		t.Fatalf("expected VerifyRLSEnforceable to accept the app-role pool, got %v", err)
 	}
 }
