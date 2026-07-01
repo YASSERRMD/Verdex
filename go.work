@@ -5,4 +5,5 @@ use (
 	./packages/config
 	./packages/observability
 	./packages/persistence
+	./packages/tenancy
 )
