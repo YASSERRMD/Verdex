@@ -38,13 +38,13 @@ const (
 type SetupStep string
 
 const (
-	StepStart             SetupStep = "start"
-	StepJurisdiction      SetupStep = "select_jurisdiction"
-	StepCourt             SetupStep = "select_court"
-	StepLanguages         SetupStep = "select_languages"
-	StepProviderConfigure SetupStep = "configure_provider"
-	StepComplete          SetupStep = "complete"
-	StepLock              SetupStep = "lock"
+	StepLabelStart             SetupStep = "start"
+	StepLabelJurisdiction      SetupStep = "select_jurisdiction"
+	StepLabelCourt             SetupStep = "select_court"
+	StepLabelLanguages         SetupStep = "select_languages"
+	StepLabelProviderConfigure SetupStep = "configure_provider"
+	StepLabelComplete          SetupStep = "complete"
+	StepLabelLock              SetupStep = "lock"
 )
 
 // validTransitions maps each state to the set of states it may transition into.
