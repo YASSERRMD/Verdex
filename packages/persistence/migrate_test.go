@@ -25,21 +25,29 @@ func TestNewMigrator_InvalidSourceDir(t *testing.T) {
 	}
 }
 
-func TestNewMigrator_ValidSourceInvalidHost(t *testing.T) {
+// TestNewMigrator_UnreachableHostFailsFast verifies that pointing a
+// Migrator at an unreachable host fails fast at construction time
+// (postgres.WithInstance connects eagerly, unlike a bare
+// database/sql.Open) bounded by a short connect_timeout, rather than
+// hanging - the same fail-fast property RecoverDirty and friends
+// depend on when a caller mistakenly points them at a bad DSN.
+//
+// RecoverDirty's core safety property - refusing to Force when
+// Version reports the schema is not dirty - is exercised end-to-end
+// against a real dirty schema in the Docker-backed integration suite
+// (integration_test.go), since producing a genuinely dirty
+// schema_migrations row requires a live database.
+func TestNewMigrator_UnreachableHostFailsFast(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
 	writeMigrationFile(t, dir, "000001_init.up.sql", "SELECT 1;")
 	writeMigrationFile(t, dir, "000001_init.down.sql", "SELECT 1;")
 
-	m, err := NewMigrator(os.DirFS(dir), ".", "postgres://user:pass@127.0.0.1:1/verdex?sslmode=disable&connect_timeout=1")
-	if err != nil {
-		// database/sql.Open with pgx is lazy and typically does not
-		// dial until first use, but if the driver validates eagerly
-		// that's an acceptable outcome for this constructor-only test.
-		return
+	_, err := NewMigrator(os.DirFS(dir), ".", "postgres://user:pass@127.0.0.1:1/verdex?sslmode=disable&connect_timeout=1")
+	if err == nil {
+		t.Fatal("expected error constructing a Migrator against an unreachable host, got nil")
 	}
-	t.Cleanup(func() { _ = m.Close() })
 }
 
 func writeMigrationFile(t *testing.T, dir, name, contents string) {

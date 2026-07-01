@@ -140,3 +140,29 @@ func (m *Migrator) Force(version int) error {
 	}
 	return nil
 }
+
+// RecoverDirty safely wraps the Force-based dirty-state recovery
+// procedure: it reads the current version, refuses to act unless the
+// schema is actually marked dirty (returning an error rather than
+// silently forcing a clean schema, which would be a no-op at best and
+// mask a real bug at worst), and otherwise forces the version back to
+// the caller-supplied knownGoodVersion, clearing the dirty flag.
+//
+// The caller is responsible for verifying knownGoodVersion actually
+// matches the database's real schema state (e.g. by manual
+// inspection) before calling this; Force/RecoverDirty cannot verify
+// that for you, only golang-migrate's own bookkeeping.
+func (m *Migrator) RecoverDirty(knownGoodVersion int) error {
+	version, dirty, err := m.Version()
+	if err != nil && !errors.Is(err, migrate.ErrNilVersion) {
+		return fmt.Errorf("persistence: RecoverDirty: read version: %w", err)
+	}
+	if !dirty {
+		return fmt.Errorf("persistence: RecoverDirty: schema at version %d is not dirty, refusing to force", version)
+	}
+
+	if err := m.Force(knownGoodVersion); err != nil {
+		return fmt.Errorf("persistence: RecoverDirty: %w", err)
+	}
+	return nil
+}
