@@ -4,6 +4,7 @@ use (
 	// services and packages will be added here as they are created
 	./packages/adapters
 	./packages/config
+	./packages/embedding
 	./packages/gateway
 	./packages/identity
 	./packages/jurisdiction
