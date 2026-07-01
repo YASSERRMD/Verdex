@@ -56,21 +56,38 @@ ALTER TABLE deployments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE deployments FORCE ROW LEVEL SECURITY;
 
 CREATE POLICY tenant_isolation ON deployments
-    USING (tenant_id = current_setting('app.current_tenant_id', true)::uuid);
+    USING (tenant_id = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
 ```
 
 `FORCE ROW LEVEL SECURITY` makes the policy apply even to the table
 owner (Postgres otherwise exempts owners from RLS by default).
+
 `current_setting('app.current_tenant_id', true)` (`true` = the
 `missing_ok` argument) returns `NULL` instead of raising when the
-setting has never been set on the current session/transaction.
-Comparing the `NOT NULL` `tenant_id` column to a `NULL`-valued cast
-`uuid` evaluates to `NULL` under standard SQL three-valued logic, and a
-policy's `USING` clause treats `NULL` as "row does not match" — so a
-connection that never sets `app.current_tenant_id` sees **zero rows**,
-not an error. This is verified directly by
-`TestIntegration_UnscopedQuery_SeesZeroRowsNotError` in
-`integration_test.go`.
+setting has *never* been set anywhere in the session. But `pgxpool`
+reuses physical connections across many transactions: once **any**
+transaction on a given physical connection has run `SET LOCAL
+app.current_tenant_id = ...`, Postgres registers that custom GUC name
+for the session, and once that transaction ends, the `LOCAL` value
+reverts — not to `NULL`, but to an **empty string** (`''`), since the
+setting had no prior session-level value to revert to. A later,
+unscoped query reusing that same physical connection would then
+evaluate `''::uuid` directly, which **raises a hard "invalid input
+syntax for type uuid" error**, not `NULL`. This is not a hypothetical:
+it is exactly what first broke `TestIntegration_UnscopedQuery_SeesZeroRowsNotError`
+in CI, against a real `pgxpool.Pool` reusing connections across tests.
+
+`NULLIF(current_setting(...), '')` normalizes both cases — "never set
+in this session" (`NULL`) and "reset after a prior `SET LOCAL`" (`''`)
+— to `NULL` before the `::uuid` cast, so the cast only ever runs on a
+real UUID string or is skipped entirely. Comparing the `NOT NULL`
+`tenant_id` column to a `NULL` right-hand side evaluates to `NULL`
+under standard SQL three-valued logic, and a policy's `USING` clause
+treats `NULL` as "row does not match" — so an unscoped connection sees
+**zero rows**, not an error, whether it's freshly opened or a pooled
+connection a different tenant's request previously scoped. This is
+verified directly by `TestIntegration_UnscopedQuery_SeesZeroRowsNotError`
+in `integration_test.go`.
 
 ### The connecting role must not be a superuser — `FORCE` is not enough
 
