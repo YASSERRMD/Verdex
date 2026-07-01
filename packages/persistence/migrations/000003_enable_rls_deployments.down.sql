@@ -1,0 +1,4 @@
+DROP POLICY IF EXISTS tenant_isolation ON deployments;
+
+ALTER TABLE deployments NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE deployments DISABLE ROW LEVEL SECURITY;
