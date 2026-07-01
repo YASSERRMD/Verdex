@@ -6,6 +6,7 @@ use (
 	./packages/adapters
 	./packages/config
 	./packages/embedding
+	./packages/eval
 	./packages/gateway
 	./packages/identity
 	./packages/jurisdiction
