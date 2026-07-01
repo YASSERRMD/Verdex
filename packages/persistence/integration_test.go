@@ -128,8 +128,11 @@ func TestIntegration_MigrationsApplyCleanly(t *testing.T) {
 	if dirty {
 		t.Fatal("expected clean schema after Up, got dirty")
 	}
-	if version != 2 {
-		t.Fatalf("expected schema version 2 after applying both migrations, got %d", version)
+	// Phase 005 (packages/tenancy) added migrations 000003 (RLS on
+	// deployments) and 000004 (deployment provisioning records) to
+	// this directory, so the latest version is now 4, not 2.
+	if version != 4 {
+		t.Fatalf("expected schema version 4 after applying all migrations, got %d", version)
 	}
 
 	// Running Up again must be a no-op, not an error.
@@ -343,7 +346,7 @@ func TestIntegration_MigrationsRollback(t *testing.T) {
 		t.Fatalf("seed Create: %v", err)
 	}
 
-	// Down must actually reverse the schema: after reverting both
+	// Down must actually reverse the schema: after reverting all
 	// migrations, the tenants table (and the row just inserted into
 	// it) must no longer exist.
 	if err := migrator.Down(ctx); err != nil {
@@ -390,7 +393,7 @@ func TestIntegration_RecoverDirty(t *testing.T) {
 	}
 
 	// RecoverDirty must refuse to act on a clean schema.
-	if err := migrator.RecoverDirty(2); err == nil {
+	if err := migrator.RecoverDirty(4); err == nil {
 		t.Fatal("expected RecoverDirty to refuse a non-dirty schema, got nil error")
 	}
 
@@ -414,7 +417,7 @@ func TestIntegration_RecoverDirty(t *testing.T) {
 		t.Fatalf("expected dirty=true after manual UPDATE, got dirty=%v err=%v", dirty, err)
 	}
 
-	if err := migrator.RecoverDirty(2); err != nil {
+	if err := migrator.RecoverDirty(4); err != nil {
 		t.Fatalf("RecoverDirty: %v", err)
 	}
 
