@@ -48,3 +48,12 @@ func (l *ConcurrencyLimiter) AcquireSlot(ctx context.Context) error {
 func (l *ConcurrencyLimiter) ReleaseSlot() {
 	l.sem <- struct{}{}
 }
+
+// MaxSlots returns the total number of concurrency slots configured for this
+// limiter (i.e. the channel capacity).
+func (l *ConcurrencyLimiter) MaxSlots() int { return cap(l.sem) }
+
+// AvailableSlots returns the number of slots that are currently free.
+// It is intended for observability (metrics, health endpoints) only; do not
+// use it to make flow-control decisions — use AcquireSlot instead.
+func (l *ConcurrencyLimiter) AvailableSlots() int { return len(l.sem) }
