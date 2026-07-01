@@ -11,6 +11,8 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	_ "github.com/jackc/pgx/v5/stdlib" // registers the "pgx" database/sql driver
+
+	"github.com/YASSERRMD/verdex/packages/persistence/migrations"
 )
 
 // Migrator runs schema migrations against PostgreSQL. It wraps
@@ -58,6 +60,15 @@ func NewMigrator(migrations fs.FS, dir, dsn string) (*Migrator, error) {
 	}
 
 	return &Migrator{migrate: m, sqlDB: sqlDB}, nil
+}
+
+// NewEmbeddedMigrator builds a Migrator using the SQL files embedded
+// in packages/persistence/migrations at compile time. This is the
+// constructor production services should use; NewMigrator remains
+// available for tests and tools that need to point at an alternate
+// migrations source.
+func NewEmbeddedMigrator(dsn string) (*Migrator, error) {
+	return NewMigrator(migrations.FS, ".", dsn)
 }
 
 // Close releases the Migrator's own database connection. It does not
