@@ -72,6 +72,66 @@ not an error. This is verified directly by
 `TestIntegration_UnscopedQuery_SeesZeroRowsNotError` in
 `integration_test.go`.
 
+### The connecting role must not be a superuser — `FORCE` is not enough
+
+**This is the second most important thing a future maintainer must not
+get wrong, after the `SET LOCAL` requirement below.** PostgreSQL never
+applies Row-Level Security to a role with the `BYPASSRLS` attribute —
+**and every superuser has `BYPASSRLS`, unconditionally, regardless of
+`FORCE ROW LEVEL SECURITY`**. `FORCE` only removes the *table owner*
+exemption; it cannot and does not override `BYPASSRLS`.
+
+This is not theoretical: this phase's isolation tests first ran
+against a live Postgres in CI while `pgxpool` was authenticated as
+`testcontainers`' bootstrap user — a superuser, exactly like the
+default admin account on many managed Postgres providers — and every
+single cross-tenant assertion failed, because RLS was silently
+providing zero isolation the whole time.
+
+The fix, in migration `000005_create_app_role`: a dedicated
+`verdex_app` role, created `NOSUPERUSER ... NOBYPASSRLS`, with grants
+on all current and (via `ALTER DEFAULT PRIVILEGES`) future tables.
+**`cfg.Database.DSN` must authenticate as this role — or an equivalent
+non-superuser, non-`BYPASSRLS` role — in every real deployment.** A
+DSN pointed at an admin/superuser account, however convenient for
+local development, silently disables tenant isolation.
+
+`packages/tenancy/role.go` provides the supporting machinery:
+
+- `BootstrapAppRolePassword(ctx, exec, password)` — sets/rotates
+  `verdex_app`'s login password, via the `verdex_set_app_role_password`
+  SQL function the migration creates. `exec` must be an elevated
+  (bootstrap/superuser) connection; the function's grants specifically
+  exclude `verdex_app` itself from being able to call it. `password` is
+  passed as an ordinary bound query parameter — the function performs
+  the DDL's literal-quoting server-side via `format(..., %L, ...)`,
+  so no client-side string concatenation of the password into SQL text
+  ever happens.
+- `GenerateAppRolePassword()` — a cryptographically random hex
+  password generator for bootstrap tooling that needs one (tests use
+  this; a real deployment's password should come from Phase 076's key
+  management once that exists).
+- `BuildAppRoleDSN(baseDSN, password)` — rewrites an admin DSN's
+  credentials to `verdex_app`'s, preserving host/port/database/query
+  parameters.
+- `VerifyRLSEnforceable(ctx, pool)` — queries
+  `SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname = current_user`
+  against the given pool and returns an actionable error if either is
+  true. **Call this once at service startup**, against the pool the
+  service will actually use for tenant-scoped operations, and fail
+  startup on error — catching a misconfigured DSN immediately instead
+  of silently shipping with no isolation. It is deliberately *not*
+  called automatically inside `WithTenantScope` (that runs per
+  request; this check's cost is only worth paying once per process).
+
+`integration_test.go` mirrors this split: `migratedPool` returns the
+superuser pool (used only for running migrations and for
+`SeedSandboxTenant`-style setup that touches no RLS-protected table),
+while `migratedAppPool` bootstraps `verdex_app`'s password and returns
+the pool every tenant-scoped assertion actually runs against — and
+`TestIntegration_VerifyRLSEnforceable_RejectsSuperuserPool` /
+`..._AcceptsAppRolePool` pin down the distinction explicitly.
+
 ### `WithTenantScope` and why `SET LOCAL` is mandatory
 
 ```go
@@ -208,8 +268,11 @@ seeds data, not schema.
 - **Full suite, including isolation integration tests** (spins up a
   real ephemeral PostgreSQL container via
   [`testcontainers-go`](https://golang.testcontainers.org/), applies
-  every `packages/persistence` migration including this phase's RLS
-  and provisioning-record migrations):
+  every `packages/persistence` migration including this phase's RLS,
+  provisioning-record, and app-role migrations, then bootstraps
+  `verdex_app`'s password and connects as that role for every
+  tenant-scoped assertion — see "The connecting role must not be a
+  superuser" above for why that distinction matters):
   ```sh
   go test ./...
   ```
@@ -220,5 +283,6 @@ seeds data, not schema.
   cannot see/update/delete each other's deployments, an unscoped query
   sees zero rows (not an error) per the RLS behavior documented above,
   the cross-tenant guard rejects a mismatched `TenantID` before the
-  database is touched, and the sandbox tenant seed creates once and is
-  idempotent on re-run.
+  database is touched, the sandbox tenant seed creates once and is
+  idempotent on re-run, and `VerifyRLSEnforceable` correctly
+  distinguishes the superuser pool from the `verdex_app` pool.
