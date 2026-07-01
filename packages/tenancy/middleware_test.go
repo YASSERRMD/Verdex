@@ -23,9 +23,8 @@ func TestMiddleware_AttachesResolvedTenant(t *testing.T) {
 
 	handler := tenancy.Middleware(next)
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	ctx := tenancy.WithResolvedTenant(context.Background(), want)
-	req = req.WithContext(ctx)
+	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/", nil)
 
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
@@ -46,7 +45,7 @@ func TestMiddleware_RejectsUnresolvedTenant(t *testing.T) {
 
 	handler := tenancy.Middleware(next)
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 
