@@ -57,4 +57,5 @@ use (
 	./packages/guardrail
 	./packages/reasoningprofile
 	./packages/reasoningorchestration
+	./packages/reasoningtrace
 )

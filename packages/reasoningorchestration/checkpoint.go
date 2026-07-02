@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/YASSERRMD/verdex/packages/agentframework"
 	"github.com/YASSERRMD/verdex/packages/evidenceweighing"
 	"github.com/YASSERRMD/verdex/packages/firstpartyagent"
 	"github.com/YASSERRMD/verdex/packages/issueagent"
@@ -52,6 +53,31 @@ type Checkpoint struct {
 	// GuardrailApproved is populated when Stage is StageGuardrailCheck:
 	// true if CheckText and the sign-off gate both passed.
 	GuardrailApproved bool
+
+	// IssueFramingRun is the agentframework.Result (including the full
+	// step-by-step Scratchpad of every model call, tool call, and
+	// observation) produced alongside IssueAnalysis when Stage is
+	// StageIssueFraming. issueagent.Analyze already returns this value;
+	// it is captured here so a later auditability layer (see
+	// packages/reasoningtrace) has a real data source for "every agent
+	// step and tool call this stage took" instead of only this stage's
+	// typed IssueAnalysisResult.
+	IssueFramingRun agentframework.Result
+
+	// FirstPartyRun is the agentframework.Result produced alongside
+	// FirstPartyArguments when Stage is StageFirstPartyArguments. See
+	// IssueFramingRun's doc comment for why this is captured.
+	FirstPartyRun agentframework.Result
+
+	// SecondPartyRun is the agentframework.Result produced alongside
+	// SecondPartyArguments when Stage is StageSecondPartyArguments. See
+	// IssueFramingRun's doc comment for why this is captured.
+	SecondPartyRun agentframework.Result
+
+	// SynthesisRun is the agentframework.Result produced alongside
+	// Opinion when Stage is StageSynthesis. See IssueFramingRun's doc
+	// comment for why this is captured.
+	SynthesisRun agentframework.Result
 }
 
 // CheckpointStore persists a Checkpoint per (CaseID, Stage) and the
