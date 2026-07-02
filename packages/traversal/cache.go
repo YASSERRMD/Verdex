@@ -26,7 +26,7 @@ type cacheKey struct {
 // cacheEntry is the value stored per cacheKey.
 type cacheEntry struct {
 	key    cacheKey
-	result TraversalResult
+	result Result
 }
 
 // Cache is a small, dependency-free, fixed-capacity least-recently-used
@@ -64,7 +64,7 @@ type Cache struct {
 
 // CacheOptions configures a new Cache.
 type CacheOptions struct {
-	// Capacity is the maximum number of TraversalResults the Cache holds
+	// Capacity is the maximum number of Results the Cache holds
 	// at once. Zero or negative falls back to DefaultCacheCapacity.
 	Capacity int
 }
@@ -97,7 +97,7 @@ func (c *Cache) revisionFor(caseID string) int {
 }
 
 // SetRevision records revision as caseID's current tree revision. Every
-// TraversalResult cached under an older revision for this case becomes
+// Result cached under an older revision for this case becomes
 // unreachable (see the Cache doc comment's "Invalidation model" section).
 // A caller reacting to a new irac.TreeRevision (e.g. via ReindexOnQuery,
 // reindex.go) should call this after the underlying tree changes.
@@ -107,9 +107,9 @@ func (c *Cache) SetRevision(caseID string, revision int) {
 	c.revisions[caseID] = revision
 }
 
-// get returns the cached TraversalResult for query at caseID's current
+// get returns the cached Result for query at caseID's current
 // revision, if present, promoting it to most-recently-used on a hit.
-func (c *Cache) get(caseID string, query Query) (TraversalResult, bool) {
+func (c *Cache) get(caseID string, query Query) (Result, bool) {
 	key := cacheKey{query: query.cacheKey(), revision: c.revisionFor(caseID)}
 
 	c.mu.Lock()
@@ -117,7 +117,7 @@ func (c *Cache) get(caseID string, query Query) (TraversalResult, bool) {
 
 	elem, ok := c.items[key]
 	if !ok {
-		return TraversalResult{}, false
+		return Result{}, false
 	}
 	c.order.MoveToFront(elem)
 	return elem.Value.(cacheEntry).result, true
@@ -125,7 +125,7 @@ func (c *Cache) get(caseID string, query Query) (TraversalResult, bool) {
 
 // put stores result under (caseID, query) at caseID's current revision,
 // evicting the least-recently-used entry if the cache is at capacity.
-func (c *Cache) put(caseID string, query Query, result TraversalResult) {
+func (c *Cache) put(caseID string, query Query, result Result) {
 	key := cacheKey{query: query.cacheKey(), revision: c.revisionFor(caseID)}
 
 	c.mu.Lock()
@@ -171,7 +171,7 @@ func (w *Walker) WithCache(cache *Cache) *Walker {
 // revision, query's shape), and populates the cache on a miss. If w has
 // no cache configured, ExecuteCached behaves exactly like Execute (every
 // call is a "miss" that is never stored).
-func (w *Walker) ExecuteCached(ctx context.Context, query Query) (TraversalResult, error) {
+func (w *Walker) ExecuteCached(ctx context.Context, query Query) (Result, error) {
 	if w.cache == nil {
 		return w.Execute(ctx, query)
 	}
@@ -182,7 +182,7 @@ func (w *Walker) ExecuteCached(ctx context.Context, query Query) (TraversalResul
 
 	result, err := w.Execute(ctx, query)
 	if err != nil {
-		return TraversalResult{}, err
+		return Result{}, err
 	}
 	w.cache.put(query.CaseID, query, result)
 	return result, nil

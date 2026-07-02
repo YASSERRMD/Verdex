@@ -11,7 +11,7 @@ import (
 
 // Walker executes Query values against a graph.GraphStore, walking each
 // hop step in sequence and shaping the discovered routes into a
-// TraversalResult. Walker is the package's main entry point: build one
+// Result. Walker is the package's main entry point: build one
 // with NewWalker, then call Execute (or ExecuteCached, cache.go) for each
 // Query.
 //
@@ -70,22 +70,22 @@ type frontierNode struct {
 // from query.validate() before touching the store, and
 // ErrStartNodeNotFound if query.StartNodeID cannot be resolved in the
 // GraphStore.
-func (w *Walker) Execute(ctx context.Context, query Query) (TraversalResult, error) {
+func (w *Walker) Execute(ctx context.Context, query Query) (Result, error) {
 	if err := query.validate(); err != nil {
-		return TraversalResult{}, err
+		return Result{}, err
 	}
 
 	startNode, err := w.store.GetNode(ctx, query.StartNodeID)
 	if err != nil {
-		return TraversalResult{}, fmt.Errorf("traversal: execute query: %w: %v", ErrStartNodeNotFound, err)
+		return Result{}, fmt.Errorf("traversal: execute query: %w: %v", ErrStartNodeNotFound, err)
 	}
 	if startNode.CaseID != query.CaseID {
-		return TraversalResult{}, fmt.Errorf("traversal: execute query: %w: node %q belongs to case %q, not %q", ErrStartNodeNotFound, query.StartNodeID, startNode.CaseID, query.CaseID)
+		return Result{}, fmt.Errorf("traversal: execute query: %w: node %q belongs to case %q, not %q", ErrStartNodeNotFound, query.StartNodeID, startNode.CaseID, query.CaseID)
 	}
 
 	edges, err := loadCaseEdges(ctx, w.store, query.CaseID)
 	if err != nil {
-		return TraversalResult{}, err
+		return Result{}, err
 	}
 	edgeIdx := newCaseEdgeIndex(edges)
 
@@ -102,7 +102,7 @@ func (w *Walker) Execute(ctx context.Context, query Query) (TraversalResult, err
 
 		nextFrontier, err := w.expand(ctx, query, hop, edgeIdx, frontier, &nodes, &hops, visited)
 		if err != nil {
-			return TraversalResult{}, err
+			return Result{}, err
 		}
 		if len(nextFrontier) == 0 {
 			// Nothing more to expand; the walk naturally ends before
@@ -130,7 +130,7 @@ func (w *Walker) Execute(ctx context.Context, query Query) (TraversalResult, err
 		return paths[i].Score > paths[j].Score
 	})
 
-	return TraversalResult{
+	return Result{
 		Paths:        paths,
 		Truncated:    truncated,
 		VisitedCount: len(visited),

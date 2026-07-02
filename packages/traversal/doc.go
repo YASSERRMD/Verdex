@@ -28,7 +28,7 @@
 // startNodeID).ViaGoverningRule().ViaControllingPrecedent().
 // ViaDistinguishingFacts().WithMaxDepth(3). Each Via* call appends one
 // HopSpec (hop.go); Walker.Execute (walk.go) walks them in order,
-// producing a TraversalResult of ranked Paths (result.go). See
+// producing a Result of ranked Paths (result.go). See
 // doc/graph-traversal.md for the full DSL reference and per-hop-type
 // semantics.
 //

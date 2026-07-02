@@ -126,10 +126,10 @@ func (p Path) Explain() string {
 	return out
 }
 
-// TraversalResult is the outcome of executing a Query: every discovered
+// Result is the outcome of executing a Query: every discovered
 // Path, already ordered by the Query's ScoreFunc (highest score first;
 // see score.go), plus bookkeeping about how the traversal was bounded.
-type TraversalResult struct {
+type Result struct {
 	// Paths is every Path discovered by the traversal, sorted by
 	// descending Score. Empty (not nil) when nothing was reachable.
 	Paths []Path

@@ -1,7 +1,7 @@
 package traversal
 
 // ScoreFunc computes a ranking score for one discovered Path. Higher
-// scores rank first in a TraversalResult.Paths. Callers plug in whatever
+// scores rank first in a Result.Paths. Callers plug in whatever
 // criteria matters for their domain — precedent AuthorityScore, statute
 // specificity, recency, node Confidence — without this package importing
 // packages/precedent, packages/statute, or any other package that would

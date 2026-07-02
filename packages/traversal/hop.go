@@ -32,7 +32,7 @@ func (d Direction) String() string {
 
 // HopKind names one step of a multi-hop traversal. A HopKind does not
 // change how a hop is walked (that's EdgeType + Direction); it labels
-// *why* the hop is being walked, so a rendered TraversalResult can explain
+// *why* the hop is being walked, so a rendered Result can explain
 // itself (see Path.Explain) and so a caller building a Query with the
 // named convenience methods (ViaGoverningRule, ViaControllingPrecedent,
 // ViaDistinguishingFacts) gets a self-documenting Path back.
