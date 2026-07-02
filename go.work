@@ -52,4 +52,5 @@ use (
 	./packages/secondpartyagent
 	./packages/evidenceweighing
 	./packages/lawapplication
+	./packages/synthesisagent
 )
