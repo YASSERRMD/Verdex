@@ -79,8 +79,8 @@ Respond in valid JSON conforming to the schema:
 }`,
 		Variables: []prompts.VariableSpec{
 			{Name: "issues_block", Required: true, Sanitize: true, MaxLen: 64000},
-			{Name: "jurisdiction_name", Required: true, Sanitize: true, MaxLen: 256},
-			{Name: "legal_family", Required: true, Sanitize: true, MaxLen: 128},
+			{Name: "jurisdiction_name", Required: false, Sanitize: true, MaxLen: 256},
+			{Name: "legal_family", Required: false, Sanitize: true, MaxLen: 128},
 		},
 		NonBindingLabel: true,
 	}
