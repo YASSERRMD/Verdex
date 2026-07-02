@@ -233,6 +233,14 @@ func (b *Builder) Telemetry() BuildTelemetry {
 	return b.tel.snapshot()
 }
 
+// Cache returns b's internal Cache, so a caller can pass it directly to
+// ReindexOnRevision (or call its methods for inspection/testing) without
+// the Builder needing to expose every Cache method on itself. See
+// SetRevision for the common case of reacting to a new irac.TreeRevision.
+func (b *Builder) Cache() *Cache {
+	return b.cache
+}
+
 // SetRevision informs b's Cache that caseID has moved to revision's
 // RevisionNumber, marking any previously cached Subgraph for that case
 // stale on its next Build call. Equivalent to
