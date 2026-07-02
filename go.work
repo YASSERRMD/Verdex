@@ -42,4 +42,5 @@ use (
 	./packages/treeindex
 	./packages/traversal
 	./packages/hybridretrieval
+	./packages/adaptiveretrieval
 )
