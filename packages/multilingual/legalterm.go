@@ -1,6 +1,9 @@
 package multilingual
 
-import "strings"
+import (
+	"strings"
+	"unicode/utf8"
+)
 
 // LegalTermNormalizer canonicalizes variant spellings, abbreviations, and
 // transliteration variants of legal vocabulary to a single canonical form
@@ -87,10 +90,17 @@ func (n *LegalTermNormalizer) Normalize(lang Language, term string) string {
 
 // NormalizeText scans text for any known variant term (for lang) as a
 // case-insensitive substring and replaces every occurrence with its
-// canonical form. Longer variants are replaced before shorter ones so that
+// canonical form. Longer variants are matched before shorter ones so that
 // a longer phrase is not partially shadowed by a shorter substring match
 // (e.g. "first information report" is matched before any shorter variant
 // that might be its substring).
+//
+// NormalizeText performs a single left-to-right scan of text, so a
+// canonical replacement value is never itself rescanned for further
+// matches. This is a deliberate safety property: without it, a canonical
+// form that happens to contain a shorter variant as a substring (e.g.
+// "FIR" -> "First Information Report", where "First" contains "fir")
+// would be matched and replaced again indefinitely.
 func (n *LegalTermNormalizer) NormalizeText(lang Language, text string) string {
 	mapping, ok := n.terms[lang]
 	if !ok || text == "" {
@@ -111,18 +121,32 @@ func (n *LegalTermNormalizer) NormalizeText(lang Language, text string) string {
 		}
 	}
 
-	result := text
-	lowerResult := strings.ToLower(result)
-	for _, variant := range variants {
-		canonical := mapping[variant]
-		for {
-			idx := strings.Index(lowerResult, variant)
-			if idx == -1 {
+	lower := strings.ToLower(text)
+
+	var out strings.Builder
+	out.Grow(len(text))
+
+	pos := 0
+	for pos < len(text) {
+		matchedVariant := ""
+		for _, variant := range variants {
+			if variant == "" {
+				continue
+			}
+			if strings.HasPrefix(lower[pos:], variant) {
+				matchedVariant = variant
 				break
 			}
-			result = result[:idx] + canonical + result[idx+len(variant):]
-			lowerResult = strings.ToLower(result)
 		}
+		if matchedVariant != "" {
+			out.WriteString(mapping[matchedVariant])
+			pos += len(matchedVariant)
+			continue
+		}
+		_, size := utf8.DecodeRuneInString(text[pos:])
+		out.WriteString(text[pos : pos+size])
+		pos += size
 	}
-	return result
+
+	return out.String()
 }
