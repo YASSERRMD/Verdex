@@ -41,4 +41,5 @@ use (
 	./packages/vectorindex
 	./packages/treeindex
 	./packages/traversal
+	./packages/hybridretrieval
 )
