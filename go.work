@@ -44,4 +44,5 @@ use (
 	./packages/hybridretrieval
 	./packages/adaptiveretrieval
 	./packages/citation
+	./packages/knowledgeisolation
 )
