@@ -36,14 +36,16 @@ var verdictLanguageWordlist = []string{
 // is the only exported way to build a ConclusionNode, so it is not
 // possible to construct one without the mandatory guardrail label
 // attached.
-func NewConclusionNode(id, caseID, text string, createdAt time.Time, spans ...SourceSpan) ConclusionNode {
+func NewConclusionNode(id, caseID, text string, createdAt time.Time, confidence float64, provenance Provenance, spans ...SourceSpan) ConclusionNode {
 	return ConclusionNode{
 		Node: Node{
-			ID:        id,
-			Type:      NodeConclusion,
-			CaseID:    caseID,
-			Text:      text,
-			CreatedAt: createdAt,
+			ID:         id,
+			Type:       NodeConclusion,
+			CaseID:     caseID,
+			Text:       text,
+			CreatedAt:  createdAt,
+			Confidence: confidence,
+			Provenance: provenance,
 		},
 		Label: DraftAnalysisLabel,
 		Spans: spans,

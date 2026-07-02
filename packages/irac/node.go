@@ -80,6 +80,16 @@ type Node struct {
 
 	// CreatedAt is the timestamp this node was created.
 	CreatedAt time.Time `json:"created_at"`
+
+	// Confidence is this node's extraction/reasoning confidence score, in
+	// the closed interval [0, 1]. Mirrors packages/timeline's
+	// Event.Confidence convention.
+	Confidence float64 `json:"confidence"`
+
+	// Provenance records which upstream process generated this node, when,
+	// and from which other nodes (if any) it was derived (see
+	// provenance.go).
+	Provenance Provenance `json:"provenance"`
 }
 
 // GetID returns the node's ID. Implements the NodeLike interface so
@@ -110,14 +120,16 @@ type IssueNode struct {
 }
 
 // NewIssueNode constructs an IssueNode with Type fixed to NodeIssue.
-func NewIssueNode(id, caseID, text string, createdAt time.Time, spans ...SourceSpan) IssueNode {
+func NewIssueNode(id, caseID, text string, createdAt time.Time, confidence float64, provenance Provenance, spans ...SourceSpan) IssueNode {
 	return IssueNode{
 		Node: Node{
-			ID:        id,
-			Type:      NodeIssue,
-			CaseID:    caseID,
-			Text:      text,
-			CreatedAt: createdAt,
+			ID:         id,
+			Type:       NodeIssue,
+			CaseID:     caseID,
+			Text:       text,
+			CreatedAt:  createdAt,
+			Confidence: confidence,
+			Provenance: provenance,
 		},
 		Spans: spans,
 	}
@@ -145,14 +157,16 @@ type RuleNode struct {
 }
 
 // NewRuleNode constructs a RuleNode with Type fixed to NodeRule.
-func NewRuleNode(id, caseID, text, jurisdictionCode, legalFamily string, createdAt time.Time, spans ...SourceSpan) RuleNode {
+func NewRuleNode(id, caseID, text, jurisdictionCode, legalFamily string, createdAt time.Time, confidence float64, provenance Provenance, spans ...SourceSpan) RuleNode {
 	return RuleNode{
 		Node: Node{
-			ID:        id,
-			Type:      NodeRule,
-			CaseID:    caseID,
-			Text:      text,
-			CreatedAt: createdAt,
+			ID:         id,
+			Type:       NodeRule,
+			CaseID:     caseID,
+			Text:       text,
+			CreatedAt:  createdAt,
+			Confidence: confidence,
+			Provenance: provenance,
 		},
 		JurisdictionCode: jurisdictionCode,
 		LegalFamily:      legalFamily,
@@ -171,14 +185,16 @@ type FactNode struct {
 }
 
 // NewFactNode constructs a FactNode with Type fixed to NodeFact.
-func NewFactNode(id, caseID, text string, createdAt time.Time, spans ...SourceSpan) FactNode {
+func NewFactNode(id, caseID, text string, createdAt time.Time, confidence float64, provenance Provenance, spans ...SourceSpan) FactNode {
 	return FactNode{
 		Node: Node{
-			ID:        id,
-			Type:      NodeFact,
-			CaseID:    caseID,
-			Text:      text,
-			CreatedAt: createdAt,
+			ID:         id,
+			Type:       NodeFact,
+			CaseID:     caseID,
+			Text:       text,
+			CreatedAt:  createdAt,
+			Confidence: confidence,
+			Provenance: provenance,
 		},
 		Spans: spans,
 	}
@@ -196,14 +212,16 @@ type ApplicationNode struct {
 
 // NewApplicationNode constructs an ApplicationNode with Type fixed to
 // NodeApplication.
-func NewApplicationNode(id, caseID, text string, createdAt time.Time, spans ...SourceSpan) ApplicationNode {
+func NewApplicationNode(id, caseID, text string, createdAt time.Time, confidence float64, provenance Provenance, spans ...SourceSpan) ApplicationNode {
 	return ApplicationNode{
 		Node: Node{
-			ID:        id,
-			Type:      NodeApplication,
-			CaseID:    caseID,
-			Text:      text,
-			CreatedAt: createdAt,
+			ID:         id,
+			Type:       NodeApplication,
+			CaseID:     caseID,
+			Text:       text,
+			CreatedAt:  createdAt,
+			Confidence: confidence,
+			Provenance: provenance,
 		},
 		Spans: spans,
 	}
