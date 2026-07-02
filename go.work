@@ -55,4 +55,5 @@ use (
 	./packages/synthesisagent
 	./packages/uncertainty
 	./packages/guardrail
+	./packages/reasoningprofile
 )
