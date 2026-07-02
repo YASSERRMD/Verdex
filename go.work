@@ -27,4 +27,5 @@ use (
 	./packages/evidence
 	./packages/category
 	./packages/timeline
+	./packages/ingestion
 )
