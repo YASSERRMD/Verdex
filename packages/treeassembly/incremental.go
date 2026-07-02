@@ -114,12 +114,33 @@ func ReassembleIncremental(prev *Tree, newFacts []irac.FactNode, newApplications
 	updated := &Tree{Nodes: nodes, Edges: edges, Revision: prev.Revision}
 	updated.Revision = NextRevision(updated)
 
-	// Validate/detect gaps only over the delta subgraph: the new nodes
-	// plus the edges touching them, rather than the whole tree, per this
+	// Validate/detect gaps only over the affected subset: the new nodes
+	// plus every existing node one of the new edges touches (so the
+	// delta subgraph is self-contained and does not spuriously report a
+	// dangling edge for a reference into the untouched, already-valid
+	// remainder of the tree), rather than the whole tree — per this
 	// function's "incremental" contract.
-	deltaIssues := irac.ValidateTree(deltaNodes, deltaEdges)
+	affected := make([]irac.NodeLike, 0, len(deltaNodes))
+	affectedIDs := make(map[string]struct{}, len(deltaNodes))
+	for _, n := range deltaNodes {
+		affected = append(affected, n)
+		affectedIDs[n.GetID()] = struct{}{}
+	}
+	for _, e := range deltaEdges {
+		for _, id := range []string{e.FromID, e.ToID} {
+			if _, already := affectedIDs[id]; already {
+				continue
+			}
+			if n, ok := existingByID[id]; ok {
+				affected = append(affected, n)
+				affectedIDs[id] = struct{}{}
+			}
+		}
+	}
 
-	deltaTree := &Tree{Nodes: deltaNodes, Edges: deltaEdges, Revision: updated.Revision}
+	deltaIssues := irac.ValidateTree(affected, deltaEdges)
+
+	deltaTree := &Tree{Nodes: affected, Edges: deltaEdges, Revision: updated.Revision}
 	deltaGaps := DetectGaps(deltaTree)
 
 	return &IncrementalResult{
