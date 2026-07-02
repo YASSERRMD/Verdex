@@ -94,7 +94,7 @@ var (
 	// phonePattern matches common phone-number shapes: optional leading +,
 	// optional parenthesized area code, and groups of digits separated by
 	// spaces, dots, or hyphens, with at least 7 total digits.
-	phonePattern = regexp.MustCompile(`\+?\(?\d{2,4}\)?[\s.\-]?\d{3,4}[\s.\-]\d{3,4}(?:[\s.\-]\d{2,4})?`)
+	phonePattern = regexp.MustCompile(`\+\d{1,4}(?:[\s.\-]\d{1,4}){2,4}|\(?\d{2,4}\)?[\s.\-]?\d{3,4}[\s.\-]\d{3,4}(?:[\s.\-]\d{2,4})?`)
 
 	// nationalIDPattern matches national-ID-like number sequences: long runs
 	// of digits (optionally hyphen/space-grouped) of a length typical of
