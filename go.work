@@ -26,4 +26,5 @@ use (
 	./packages/pii
 	./packages/evidence
 	./packages/category
+	./packages/timeline
 )
