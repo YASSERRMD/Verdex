@@ -36,4 +36,5 @@ use (
 	./packages/precedent
 	./packages/application
 	./packages/ontology
+	./packages/treeassembly
 )
