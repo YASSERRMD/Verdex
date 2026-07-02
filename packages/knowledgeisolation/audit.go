@@ -38,6 +38,11 @@ const (
 	// ViolationDeleteTree marks a rejected CaseScopedStore.DeleteTree
 	// call for a case other than the one the guard is scoped to.
 	ViolationDeleteTree ViolationKind = "delete_tree"
+
+	// ViolationVectorDeleteCase marks a rejected
+	// CaseScopedVectorStore.DeleteCase call for a case other than the
+	// one the guard is scoped to.
+	ViolationVectorDeleteCase ViolationKind = "vector_delete_case"
 )
 
 // AccessAttempt records a single rejected (or, for Traverse, filtered)
