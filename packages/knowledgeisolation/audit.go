@@ -34,6 +34,10 @@ const (
 	// ViolationCrossCaseAnalysis marks a rejected attempt to use the
 	// cross-case analysis escape hatch (see CrossCaseAuthorization).
 	ViolationCrossCaseAnalysis ViolationKind = "cross_case_analysis"
+
+	// ViolationDeleteTree marks a rejected CaseScopedStore.DeleteTree
+	// call for a case other than the one the guard is scoped to.
+	ViolationDeleteTree ViolationKind = "delete_tree"
 )
 
 // AccessAttempt records a single rejected (or, for Traverse, filtered)
