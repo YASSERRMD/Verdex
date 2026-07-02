@@ -32,4 +32,5 @@ use (
 	./packages/graph
 	./packages/issue
 	./packages/fact
+	./packages/statute
 )
