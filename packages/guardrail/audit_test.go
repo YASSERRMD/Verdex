@@ -11,20 +11,20 @@ import (
 
 func TestNoOpAlertSinkDiscardsSilently(t *testing.T) {
 	// Must not panic.
-	guardrail.NoOpAlertSink{}.Notify(guardrail.GuardrailEvent{Kind: guardrail.ViolationVerdictLanguage})
+	guardrail.NoOpAlertSink{}.Notify(guardrail.Event{Kind: guardrail.ViolationVerdictLanguage})
 }
 
 func TestFuncAlertSinkNilSafe(t *testing.T) {
 	var sink guardrail.FuncAlertSink
 	// Must not panic when the wrapped function is nil.
-	sink.Notify(guardrail.GuardrailEvent{Kind: guardrail.ViolationMissingLabel})
+	sink.Notify(guardrail.Event{Kind: guardrail.ViolationMissingLabel})
 }
 
 func TestFuncAlertSinkCallsFunc(t *testing.T) {
-	var got guardrail.GuardrailEvent
-	sink := guardrail.FuncAlertSink(func(e guardrail.GuardrailEvent) { got = e })
+	var got guardrail.Event
+	sink := guardrail.FuncAlertSink(func(e guardrail.Event) { got = e })
 
-	sink.Notify(guardrail.GuardrailEvent{Kind: guardrail.ViolationFinalizeBlocked, CaseID: "case-1"})
+	sink.Notify(guardrail.Event{Kind: guardrail.ViolationFinalizeBlocked, CaseID: "case-1"})
 
 	if got.Kind != guardrail.ViolationFinalizeBlocked || got.CaseID != "case-1" {
 		t.Fatalf("FuncAlertSink did not forward event correctly: %+v", got)
@@ -34,12 +34,12 @@ func TestFuncAlertSinkCallsFunc(t *testing.T) {
 func TestMultiAlertSinkFansOut(t *testing.T) {
 	var count1, count2 int
 	sink := guardrail.MultiAlertSink{Sinks: []guardrail.AlertSink{
-		guardrail.FuncAlertSink(func(guardrail.GuardrailEvent) { count1++ }),
+		guardrail.FuncAlertSink(func(guardrail.Event) { count1++ }),
 		nil, // must tolerate a nil child sink
-		guardrail.FuncAlertSink(func(guardrail.GuardrailEvent) { count2++ }),
+		guardrail.FuncAlertSink(func(guardrail.Event) { count2++ }),
 	}}
 
-	sink.Notify(guardrail.GuardrailEvent{Kind: guardrail.ViolationVerdictLanguage})
+	sink.Notify(guardrail.Event{Kind: guardrail.ViolationVerdictLanguage})
 
 	if count1 != 1 || count2 != 1 {
 		t.Fatalf("MultiAlertSink did not fan out to all children: count1=%d count2=%d", count1, count2)
@@ -47,15 +47,15 @@ func TestMultiAlertSinkFansOut(t *testing.T) {
 }
 
 func TestRecorderRecordsAndForwards(t *testing.T) {
-	var forwarded []guardrail.GuardrailEvent
+	var forwarded []guardrail.Event
 	fixedTime := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	rec := guardrail.NewRecorder(
-		guardrail.FuncAlertSink(func(e guardrail.GuardrailEvent) { forwarded = append(forwarded, e) }),
+		guardrail.FuncAlertSink(func(e guardrail.Event) { forwarded = append(forwarded, e) }),
 		func() time.Time { return fixedTime },
 	)
 
-	rec.Record(guardrail.GuardrailEvent{Kind: guardrail.ViolationVerdictLanguage, CaseID: "case-1", Detail: "test"})
+	rec.Record(guardrail.Event{Kind: guardrail.ViolationVerdictLanguage, CaseID: "case-1", Detail: "test"})
 
 	events := rec.Events()
 	if len(events) != 1 {
@@ -71,7 +71,7 @@ func TestRecorderRecordsAndForwards(t *testing.T) {
 
 func TestRecorderDefaultsNilSinkAndClock(t *testing.T) {
 	rec := guardrail.NewRecorder(nil, nil)
-	rec.Record(guardrail.GuardrailEvent{Kind: guardrail.ViolationMissingLabel})
+	rec.Record(guardrail.Event{Kind: guardrail.ViolationMissingLabel})
 
 	events := rec.Events()
 	if len(events) != 1 {
@@ -84,7 +84,7 @@ func TestRecorderDefaultsNilSinkAndClock(t *testing.T) {
 
 func TestRecorderEventsReturnsDefensiveCopy(t *testing.T) {
 	rec := guardrail.NewRecorder(nil, nil)
-	rec.Record(guardrail.GuardrailEvent{Kind: guardrail.ViolationVerdictLanguage})
+	rec.Record(guardrail.Event{Kind: guardrail.ViolationVerdictLanguage})
 
 	events := rec.Events()
 	events[0].CaseID = "mutated"
@@ -103,7 +103,7 @@ func TestRecorderConcurrentAccess(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			rec.Record(guardrail.GuardrailEvent{Kind: guardrail.ViolationVerdictLanguage})
+			rec.Record(guardrail.Event{Kind: guardrail.ViolationVerdictLanguage})
 			_ = rec.Events()
 		}()
 	}

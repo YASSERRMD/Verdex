@@ -12,7 +12,7 @@ import (
 // convention exactly.
 type ViolationKind string
 
-// ViolationKind constants for GuardrailEvent.Kind.
+// ViolationKind constants for Event.Kind.
 const (
 	// ViolationMissingLabel marks a RequireLabel/ValidateLabeled failure:
 	// a reasoning output did not carry the mandatory draft_analysis
@@ -29,11 +29,11 @@ const (
 	ViolationFinalizeBlocked ViolationKind = "finalize_blocked"
 )
 
-// GuardrailEvent records a single guardrail-check failure with enough
+// Event records a single guardrail-check failure with enough
 // detail to support a security/compliance review: which check failed,
 // for which case, why, and when. Mirrors
 // packages/knowledgeisolation.AccessAttempt's shape.
-type GuardrailEvent struct {
+type Event struct {
 	// Kind identifies which guardrail check failed.
 	Kind ViolationKind
 
@@ -50,14 +50,14 @@ type GuardrailEvent struct {
 	OccurredAt time.Time
 }
 
-// AlertSink receives GuardrailEvent values for delivery to an external
+// AlertSink receives Event values for delivery to an external
 // system (a SIEM, a metrics platform, a paging system). Mirrors
 // packages/knowledgeisolation.AlertSink precisely: a minimal interface
 // with a no-op default so alerting is opt-in.
 type AlertSink interface {
 	// Notify delivers event. Implementations should be fast and
 	// non-blocking; heavy I/O should be offloaded to a goroutine.
-	Notify(event GuardrailEvent)
+	Notify(event Event)
 }
 
 // NoOpAlertSink is an AlertSink that silently discards every event. It is
@@ -65,28 +65,28 @@ type AlertSink interface {
 type NoOpAlertSink struct{}
 
 // Notify implements AlertSink by doing nothing.
-func (NoOpAlertSink) Notify(GuardrailEvent) {}
+func (NoOpAlertSink) Notify(Event) {}
 
 // FuncAlertSink adapts a plain function to the AlertSink interface, for
 // simple stateless sinks — mirroring
 // packages/knowledgeisolation.FuncAlertSink.
-type FuncAlertSink func(GuardrailEvent)
+type FuncAlertSink func(Event)
 
 // Notify implements AlertSink by calling f.
-func (f FuncAlertSink) Notify(event GuardrailEvent) {
+func (f FuncAlertSink) Notify(event Event) {
 	if f != nil {
 		f(event)
 	}
 }
 
-// MultiAlertSink fans out a single GuardrailEvent to multiple AlertSink
+// MultiAlertSink fans out a single Event to multiple AlertSink
 // implementations, in order.
 type MultiAlertSink struct {
 	Sinks []AlertSink
 }
 
 // Notify implements AlertSink by calling Notify on each child sink.
-func (m MultiAlertSink) Notify(event GuardrailEvent) {
+func (m MultiAlertSink) Notify(event Event) {
 	for _, s := range m.Sinks {
 		if s != nil {
 			s.Notify(event)
@@ -105,7 +105,7 @@ func (m MultiAlertSink) Notify(event GuardrailEvent) {
 // still providing the standard audit shape for callers that want it.
 type Recorder struct {
 	mu     sync.Mutex
-	events []GuardrailEvent
+	events []Event
 	sink   AlertSink
 	now    func() time.Time
 }
@@ -125,7 +125,7 @@ func NewRecorder(sink AlertSink, now func() time.Time) *Recorder {
 
 // Record appends event (with OccurredAt filled in) to the recorder's log
 // and forwards it to the configured AlertSink. Safe for concurrent use.
-func (r *Recorder) Record(event GuardrailEvent) {
+func (r *Recorder) Record(event Event) {
 	event.OccurredAt = r.now()
 
 	r.mu.Lock()
@@ -142,7 +142,7 @@ func (r *Recorder) RecordCheckTextFailure(caseID string, err error) {
 	if err == nil {
 		return
 	}
-	r.Record(GuardrailEvent{Kind: ViolationVerdictLanguage, CaseID: caseID, Detail: err.Error()})
+	r.Record(Event{Kind: ViolationVerdictLanguage, CaseID: caseID, Detail: err.Error()})
 }
 
 // RecordLabelFailure records a RequireLabel/ValidateLabeled failure for
@@ -151,7 +151,7 @@ func (r *Recorder) RecordLabelFailure(caseID string, err error) {
 	if err == nil {
 		return
 	}
-	r.Record(GuardrailEvent{Kind: ViolationMissingLabel, CaseID: caseID, Detail: err.Error()})
+	r.Record(Event{Kind: ViolationMissingLabel, CaseID: caseID, Detail: err.Error()})
 }
 
 // RecordFinalizeBlocked records a CanFinalize failure for caseID, using
@@ -160,16 +160,16 @@ func (r *Recorder) RecordFinalizeBlocked(caseID string, err error) {
 	if err == nil {
 		return
 	}
-	r.Record(GuardrailEvent{Kind: ViolationFinalizeBlocked, CaseID: caseID, Detail: err.Error()})
+	r.Record(Event{Kind: ViolationFinalizeBlocked, CaseID: caseID, Detail: err.Error()})
 }
 
-// Events returns a defensive copy of every GuardrailEvent recorded so
+// Events returns a defensive copy of every Event recorded so
 // far, in recording order. Safe for concurrent use.
-func (r *Recorder) Events() []GuardrailEvent {
+func (r *Recorder) Events() []Event {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	out := make([]GuardrailEvent, len(r.events))
+	out := make([]Event, len(r.events))
 	copy(out, r.events)
 	return out
 }

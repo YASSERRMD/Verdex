@@ -49,7 +49,7 @@
 //   - packages/knowledgeisolation (audit.go, Phase 047) already
 //     established the AccessAttempt/AlertSink audit convention for
 //     "record every violation, forward to a pluggable sink, default to
-//     a no-op." This package's GuardrailEvent/AlertSink mirrors that
+//     a no-op." This package's Event/AlertSink mirrors that
 //     shape exactly, rather than inventing a new audit style.
 //
 // # Primary surface
@@ -66,7 +66,7 @@
 //   - SignoffStatus / SignoffGate / NoSignoffRecordedGate / CanFinalize
 //     (signoff.go): the forward-looking, fail-closed extension point for
 //     Phase 068's human sign-off workflow.
-//   - GuardrailEvent / ViolationKind / AlertSink (audit.go): the audit
+//   - Event / ViolationKind / AlertSink (audit.go): the audit
 //     trail for every guardrail check that fails.
 //
 // # Why override-prevention matters here specifically
