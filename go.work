@@ -28,4 +28,5 @@ use (
 	./packages/category
 	./packages/timeline
 	./packages/ingestion
+	./packages/irac
 )
