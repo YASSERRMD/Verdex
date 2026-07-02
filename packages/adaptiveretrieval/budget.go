@@ -72,22 +72,20 @@ func (b BuildBudget) withDefaults() BuildBudget {
 	return out
 }
 
-// buildTracker turns a BuildBudget into a concrete deadline and running
-// node counter for a single build, offering helpers to test whether the
-// budget has been exceeded so far. Unlike hybridretrieval's budgetTracker
-// (which only tracks wall-clock time), buildTracker also tracks a node
-// visit count, since MaxNodes is enforced independently of MaxWallClock.
+// buildTracker turns a BuildBudget into a concrete wall-clock deadline for
+// a single build, offering a helper to test whether that deadline has
+// passed. MaxNodes is checked separately by the caller against
+// traversal.Result.VisitedCount once a build completes (see Builder.build)
+// rather than tracked incrementally here, since traversal.Walker.Execute
+// does not report intermediate progress mid-walk.
 type buildTracker struct {
-	budget    BuildBudget
-	deadline  time.Time
-	nodeCount int
+	deadline time.Time
 }
 
 // newBuildTracker starts a buildTracker for budget, measured from now.
 func newBuildTracker(budget BuildBudget) *buildTracker {
 	budget = budget.withDefaults()
 	return &buildTracker{
-		budget:   budget,
 		deadline: time.Now().Add(budget.MaxWallClock),
 	}
 }
@@ -95,17 +93,6 @@ func newBuildTracker(budget BuildBudget) *buildTracker {
 // exceeded reports whether the tracked wall-clock deadline has passed.
 func (t *buildTracker) exceeded() bool {
 	return time.Now().After(t.deadline)
-}
-
-// nodesExceeded reports whether visiting one more node would exceed
-// MaxNodes.
-func (t *buildTracker) nodesExceeded() bool {
-	return t.nodeCount >= t.budget.MaxNodes
-}
-
-// recordNodes adds n to the running node count.
-func (t *buildTracker) recordNodes(n int) {
-	t.nodeCount += n
 }
 
 // withDeadline returns a derived context bounded by both parent's own

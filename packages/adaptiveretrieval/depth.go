@@ -64,7 +64,7 @@ func AdaptiveDepth(q AdaptiveQuery, budget BuildBudget) (hops []hybridretrieval.
 		sequence = DefaultHopSequence
 	}
 
-	want := len(sequence)
+	var want int
 	switch {
 	case q.VectorHitCount >= ManyVectorHits:
 		want = max(1, len(sequence)-2)
