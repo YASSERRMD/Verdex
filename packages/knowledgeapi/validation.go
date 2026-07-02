@@ -2,6 +2,7 @@ package knowledgeapi
 
 import (
 	"context"
+	"errors"
 
 	"github.com/YASSERRMD/verdex/packages/graph"
 	"github.com/YASSERRMD/verdex/packages/irac"
@@ -18,11 +19,16 @@ import (
 // wrapper treeassembly.Tree requires.
 //
 // CanFinalize in the response is false whenever the aggregated Report
-// contains at least one SeverityCritical Finding (or the case has no
-// nodes at all), per treevalidation's hard gate — this mirrors, for tree
-// reads exposed through this facade, the same guarantee Phase 040's
-// treevalidation established for any future downstream consumer of an
-// assembled tree.
+// contains at least one SeverityCritical Finding, per treevalidation's
+// hard gate — this mirrors, for tree reads exposed through this facade,
+// the same guarantee Phase 040's treevalidation established for any
+// future downstream consumer of an assembled tree. CanFinalize is also
+// forced false when the case has no nodes at all (treevalidation.
+// ErrEmptyTree): CanFinalize's own vacuous-true behaviour for a Report
+// with zero Findings is correct for "no critical problems found", but a
+// tree with literally nothing in it is not a tree a caller should ever
+// treat as finalizable, so this endpoint does not let that ambiguity
+// leak through its CanFinalize field.
 func (api *KnowledgeAPI) ValidationStatus(ctx context.Context, req ValidationStatusRequest) (ValidationStatusResponse, error) {
 	if _, err := authorize(ctx); err != nil {
 		return ValidationStatusResponse{}, err
@@ -58,12 +64,15 @@ func (api *KnowledgeAPI) ValidationStatus(ctx context.Context, req ValidationSta
 	// to fail the request when a tree happens to be unfinalizable. The
 	// Report it always returns (even on error) is what CanFinalize below
 	// re-derives the boolean/summary from.
-	report, _ := service.Validate(tree)
+	report, validateErr := service.Validate(tree)
 	if report == nil {
 		report = &treevalidation.Report{CaseID: api.caseID}
 	}
 
 	canFinalize, _ := treevalidation.CanFinalize(*report)
+	if errors.Is(validateErr, treevalidation.ErrEmptyTree) {
+		canFinalize = false
+	}
 
 	findings := make([]FindingDTO, 0, len(report.Findings))
 	for _, f := range report.Findings {
