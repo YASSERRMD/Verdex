@@ -56,7 +56,7 @@ func buildRuleGroupedIssuePaths(ctx context.Context, store graph.GraphStore, cas
 				return nil, fmt.Errorf("treeindex: build rule-grouped issue paths for case %q: get issue node %q: %w", caseID, issueID, err)
 			}
 			nodes = append(nodes, nodeRefFromNode(issueNode))
-			hops = append(hops, Hop{EdgeType: irac.EdgeGoverns, Reverse: false})
+			hops = append(hops, Hop{FromIndex: 0, EdgeType: irac.EdgeGoverns, Reverse: false})
 		}
 
 		paths = append(paths, Path{
