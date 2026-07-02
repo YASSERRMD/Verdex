@@ -22,4 +22,5 @@ use (
 	./packages/stt
 	./packages/ocr
 	./packages/multilingual
+	./packages/segmentation
 )
