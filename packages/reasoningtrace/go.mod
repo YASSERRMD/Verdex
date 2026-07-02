@@ -8,6 +8,7 @@ replace (
 	github.com/YASSERRMD/verdex/packages/identity => ../identity
 	github.com/YASSERRMD/verdex/packages/irac => ../irac
 	github.com/YASSERRMD/verdex/packages/issueagent => ../issueagent
+	github.com/YASSERRMD/verdex/packages/lawapplication => ../lawapplication
 	github.com/YASSERRMD/verdex/packages/reasoningorchestration => ../reasoningorchestration
 	github.com/YASSERRMD/verdex/packages/secondpartyagent => ../secondpartyagent
 	github.com/YASSERRMD/verdex/packages/synthesisagent => ../synthesisagent
@@ -17,6 +18,7 @@ replace (
 require (
 	github.com/YASSERRMD/verdex/packages/agentframework v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/identity v0.0.0-00010101000000-000000000000
+	github.com/YASSERRMD/verdex/packages/lawapplication v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/reasoningorchestration v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/synthesisagent v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/uncertainty v0.0.0-00010101000000-000000000000
@@ -37,7 +39,6 @@ require (
 	github.com/YASSERRMD/verdex/packages/jurisdiction v0.0.0 // indirect
 	github.com/YASSERRMD/verdex/packages/knowledgeapi v0.0.0-00010101000000-000000000000 // indirect
 	github.com/YASSERRMD/verdex/packages/knowledgeisolation v0.0.0-00010101000000-000000000000 // indirect
-	github.com/YASSERRMD/verdex/packages/lawapplication v0.0.0-00010101000000-000000000000 // indirect
 	github.com/YASSERRMD/verdex/packages/persistence v0.0.0 // indirect
 	github.com/YASSERRMD/verdex/packages/prompts v0.0.0 // indirect
 	github.com/YASSERRMD/verdex/packages/provider v0.0.0 // indirect
