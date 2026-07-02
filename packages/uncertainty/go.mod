@@ -36,7 +36,6 @@ replace (
 
 require (
 	github.com/YASSERRMD/verdex/packages/evidenceweighing v0.0.0-00010101000000-000000000000
-	github.com/YASSERRMD/verdex/packages/irac v0.0.0
 	github.com/YASSERRMD/verdex/packages/issueagent v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/lawapplication v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/synthesisagent v0.0.0-00010101000000-000000000000
@@ -49,9 +48,10 @@ require (
 	github.com/YASSERRMD/verdex/packages/embedding v0.0.0-00010101000000-000000000000 // indirect
 	github.com/YASSERRMD/verdex/packages/firstpartyagent v0.0.0-00010101000000-000000000000 // indirect
 	github.com/YASSERRMD/verdex/packages/gateway v0.0.0-00010101000000-000000000000 // indirect
-	github.com/YASSERRMD/verdex/packages/graph v0.0.0-00010101000000-000000000000 // indirect
+	github.com/YASSERRMD/verdex/packages/graph v0.0.0-20260702094313-4d74dfa6d3e6 // indirect
 	github.com/YASSERRMD/verdex/packages/hybridretrieval v0.0.0-00010101000000-000000000000 // indirect
 	github.com/YASSERRMD/verdex/packages/identity v0.0.0-00010101000000-000000000000 // indirect
+	github.com/YASSERRMD/verdex/packages/irac v0.0.0 // indirect
 	github.com/YASSERRMD/verdex/packages/knowledgeapi v0.0.0-00010101000000-000000000000 // indirect
 	github.com/YASSERRMD/verdex/packages/knowledgeisolation v0.0.0-00010101000000-000000000000 // indirect
 	github.com/YASSERRMD/verdex/packages/persistence v0.0.0 // indirect
