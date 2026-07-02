@@ -49,4 +49,5 @@ use (
 	./packages/agentframework
 	./packages/issueagent
 	./packages/firstpartyagent
+	./packages/secondpartyagent
 )
