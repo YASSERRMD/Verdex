@@ -73,22 +73,24 @@ func seedTwoCaseTree(t *testing.T, inner graph.GraphStore) (caseANodes, caseBNod
 }
 
 // TestLeakage_GetNode_DirectNodeIDGuess proves that a case-B-scoped
-// store cannot retrieve a case-A fact even when handed case-A's exact
-// node ID directly (the simplest possible leakage attempt).
+// store cannot retrieve any of case-A's private nodes even when handed
+// case-A's exact node IDs directly (the simplest possible leakage
+// attempt), across every case-scoped node type in case-A's tree.
 func TestLeakage_GetNode_DirectNodeIDGuess(t *testing.T) {
 	t.Parallel()
 
 	inner := graph.NewInMemoryGraphStore()
-	_, _, _ = seedTwoCaseTree(t, inner)
+	caseANodes, _, _ := seedTwoCaseTree(t, inner)
 
 	caseBStore, err := knowledgeisolation.NewCaseScopedStore(inner, "case-b", nil)
 	if err != nil {
 		t.Fatalf("NewCaseScopedStore: %v", err)
 	}
 
-	_, err = caseBStore.GetNode(context.Background(), "fact-a")
-	if !errors.Is(err, knowledgeisolation.ErrCrossCaseAccess) {
-		t.Fatalf("expected ErrCrossCaseAccess reading case-a's fact from case-b's store, got %v", err)
+	for _, id := range caseANodes {
+		if _, err := caseBStore.GetNode(context.Background(), id); !errors.Is(err, knowledgeisolation.ErrCrossCaseAccess) {
+			t.Fatalf("expected ErrCrossCaseAccess reading case-a's node %q from case-b's store, got %v", id, err)
+		}
 	}
 }
 
