@@ -8,38 +8,27 @@ import (
 	"github.com/YASSERRMD/verdex/packages/irac"
 )
 
-// caseEdgeIndex indexes a case's edges for repeated lookups by the
-// chain-assembly logic below: outbound groups edges by FromID, inbound
-// groups them by ToID. Building this once per RebuildCase call avoids an
-// O(edges) scan for every hop of every issue's chain.
+// caseEdgeIndex indexes a case's edges by ToID for repeated reverse-hop
+// lookups by the chain-assembly logic below. Building this once per
+// RebuildCase call avoids an O(edges) scan for every hop of every issue's
+// chain. Only reverse (ToID-keyed) lookups are needed: every hop
+// buildReasoningChainPaths walks — EdgeGoverns, EdgeAppliesTo,
+// EdgeSupports, EdgeConcludesFrom — is walked in reverse of its declared
+// direction (see doc.go), so a forward (FromID-keyed) index is unused
+// here.
 type caseEdgeIndex struct {
-	outbound map[string][]irac.Edge
-	inbound  map[string][]irac.Edge
+	inbound map[string][]irac.Edge
 }
 
-// newCaseEdgeIndex indexes edges by both endpoints.
+// newCaseEdgeIndex indexes edges by their ToID endpoint.
 func newCaseEdgeIndex(edges []irac.Edge) *caseEdgeIndex {
 	idx := &caseEdgeIndex{
-		outbound: make(map[string][]irac.Edge),
-		inbound:  make(map[string][]irac.Edge),
+		inbound: make(map[string][]irac.Edge),
 	}
 	for _, e := range edges {
-		idx.outbound[e.FromID] = append(idx.outbound[e.FromID], e)
 		idx.inbound[e.ToID] = append(idx.inbound[e.ToID], e)
 	}
 	return idx
-}
-
-// outEdgesOfType returns every edge of edgeType starting at nodeID,
-// walked forward in its declared irac.Edge direction.
-func (idx *caseEdgeIndex) outEdgesOfType(nodeID string, edgeType irac.EdgeType) []irac.Edge {
-	var out []irac.Edge
-	for _, e := range idx.outbound[nodeID] {
-		if e.Type == edgeType {
-			out = append(out, e)
-		}
-	}
-	return out
 }
 
 // inEdgesOfType returns every edge of edgeType ending at nodeID, i.e.
