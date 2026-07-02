@@ -27,7 +27,7 @@ var knownExpansionHops = map[string]hybridretrieval.ExpansionHop{
 // AnchorNodeID (hybridretrieval.HybridQuery requires at least one
 // semantic or structural starting point).
 func (api *KnowledgeAPI) Retrieve(ctx context.Context, req RetrieveRequest) (RetrieveResponse, error) {
-	if _, err := authorize(ctx); err != nil {
+	if err := authorize(ctx); err != nil {
 		return RetrieveResponse{}, err
 	}
 	if req.CaseID == "" || req.CaseID != api.caseID {

@@ -26,13 +26,20 @@ const requiredPermission = identity.PermViewCase
 // downstream call into a knowledgeisolation-wrapped store separately
 // decides "can this specific data cross a case boundary." A caller must
 // clear both.
-func authorize(ctx context.Context) (*identity.User, error) {
+//
+// authorize deliberately returns only an error, not the authenticated
+// identity.User: every current KnowledgeAPI method only needs the
+// pass/fail outcome. A future method that needs the actor itself (e.g.
+// for per-actor audit logging) should call identity.UserFromContext(ctx)
+// directly after authorize succeeds, rather than this helper's signature
+// growing an unused return value for callers that do not need it.
+func authorize(ctx context.Context) error {
 	user, ok := identity.UserFromContext(ctx)
 	if !ok {
-		return nil, ErrUnauthenticated
+		return ErrUnauthenticated
 	}
 	if !user.HasPermission(requiredPermission) {
-		return nil, ErrForbidden
+		return ErrForbidden
 	}
-	return user, nil
+	return nil
 }

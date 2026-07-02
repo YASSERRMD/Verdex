@@ -36,6 +36,14 @@ func authedContext(roles ...identity.Role) context.Context {
 	return identity.WithUser(context.Background(), newTestUser(roles...))
 }
 
+// testFixtureCaseID is the case every newTestFixture call is scoped to.
+// Every test in this package that needs a second, foreign case (for
+// isolation regression tests) seeds that other case's data directly on
+// the fixture's shared inner store rather than constructing a second
+// KnowledgeAPI, so a single fixture case ID is sufficient across the
+// whole suite.
+const testFixtureCaseID = "case-a"
+
 // testFixture wires up a full KnowledgeAPI over an in-memory GraphStore
 // and VectorStore for a single case, mirroring the composition contract
 // documented on NewKnowledgeAPI: the same case-scoped store/vector-store
@@ -47,9 +55,10 @@ type testFixture struct {
 	api    *knowledgeapi.KnowledgeAPI
 }
 
-func newTestFixture(t *testing.T, caseID string) *testFixture {
+func newTestFixture(t *testing.T) *testFixture {
 	t.Helper()
 
+	caseID := testFixtureCaseID
 	inner := graph.NewInMemoryGraphStore()
 	store, err := knowledgeisolation.NewCaseScopedStore(inner, caseID, nil)
 	if err != nil {

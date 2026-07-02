@@ -16,7 +16,7 @@ import (
 func TestRetrieve_StructuralAnchorOnly_DelegatesToRetriever(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	now := time.Now()
 	f.seedNode(t, irac.Node{ID: "rule-1", Type: irac.NodeRule, CaseID: "case-a", Text: "Rule text", CreatedAt: now})
 	f.seedNode(t, irac.Node{ID: "issue-1", Type: irac.NodeIssue, CaseID: "case-a", Text: "Issue text", CreatedAt: now})
@@ -57,7 +57,7 @@ func TestRetrieve_StructuralAnchorOnly_DelegatesToRetriever(t *testing.T) {
 func TestRetrieve_EmptyQuery_Rejected(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	ctx := authedContext(identity.RoleJudge)
 
 	_, err := f.api.Retrieve(ctx, knowledgeapi.RetrieveRequest{CaseID: "case-a"})
@@ -72,7 +72,7 @@ func TestRetrieve_EmptyQuery_Rejected(t *testing.T) {
 func TestRetrieve_WrongCaseID_Rejected(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	ctx := authedContext(identity.RoleJudge)
 
 	_, err := f.api.Retrieve(ctx, knowledgeapi.RetrieveRequest{CaseID: "case-b", AnchorNodeID: "n1"})

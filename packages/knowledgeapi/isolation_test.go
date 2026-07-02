@@ -19,7 +19,7 @@ import (
 func TestGetNode_ForeignCaseNode_Rejected(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	f.seedNode(t, irac.Node{ID: "fact-foreign", Type: irac.NodeFact, CaseID: "case-b", Text: "Belongs to case-b."})
 
 	ctx := authedContext(identity.RoleJudge)
@@ -37,7 +37,7 @@ func TestGetNode_ForeignCaseNode_Rejected(t *testing.T) {
 func TestGetTree_ForeignCaseNodes_NeverAppear(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	f.seedNode(t, irac.Node{ID: "issue-a", Type: irac.NodeIssue, CaseID: "case-a", Text: "Case A's issue."})
 	f.seedNode(t, irac.Node{ID: "issue-b", Type: irac.NodeIssue, CaseID: "case-b", Text: "Case B's issue."})
 
@@ -60,7 +60,7 @@ func TestGetTree_ForeignCaseNodes_NeverAppear(t *testing.T) {
 func TestGetNode_SharedLawNode_ReadableAcrossCases(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	f.seedNode(t, irac.Node{ID: "rule-shared", Type: irac.NodeRule, CaseID: "case-b", Text: "Shared statute text."})
 
 	ctx := authedContext(identity.RoleJudge)
@@ -80,7 +80,7 @@ func TestGetNode_SharedLawNode_ReadableAcrossCases(t *testing.T) {
 func TestLookupPaths_NeverSurfacesForeignCasePaths(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	f.seedNode(t, irac.Node{ID: "rule-a", Type: irac.NodeRule, CaseID: "case-a"})
 	f.seedNode(t, irac.Node{ID: "issue-a", Type: irac.NodeIssue, CaseID: "case-a"})
 	f.seedEdge(t, irac.Edge{FromID: "rule-a", ToID: "issue-a", Type: irac.EdgeGoverns})

@@ -30,7 +30,7 @@ import (
 // treat as finalizable, so this endpoint does not let that ambiguity
 // leak through its CanFinalize field.
 func (api *KnowledgeAPI) ValidationStatus(ctx context.Context, req ValidationStatusRequest) (ValidationStatusResponse, error) {
-	if _, err := authorize(ctx); err != nil {
+	if err := authorize(ctx); err != nil {
 		return ValidationStatusResponse{}, err
 	}
 	if req.CaseID == "" || req.CaseID != api.caseID {

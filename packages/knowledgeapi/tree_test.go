@@ -16,7 +16,7 @@ import (
 func TestGetTree_ReturnsSeededNodesAndEdges(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	now := time.Now().UTC().Truncate(time.Second)
 
 	issue := irac.Node{ID: "issue-1", Type: irac.NodeIssue, CaseID: "case-a", Text: "Was notice given?", CreatedAt: now, Confidence: 0.9}
@@ -75,7 +75,7 @@ func TestGetTree_ReturnsSeededNodesAndEdges(t *testing.T) {
 func TestGetTree_NodeTypeFilter(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	now := time.Now()
 	f.seedNode(t, irac.Node{ID: "issue-1", Type: irac.NodeIssue, CaseID: "case-a", CreatedAt: now})
 	f.seedNode(t, irac.Node{ID: "fact-1", Type: irac.NodeFact, CaseID: "case-a", CreatedAt: now})
@@ -97,7 +97,7 @@ func TestGetTree_NodeTypeFilter(t *testing.T) {
 func TestGetTree_WrongCaseID_Rejected(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	ctx := authedContext(identity.RoleJudge)
 
 	_, err := f.api.GetTree(ctx, knowledgeapi.GetTreeRequest{CaseID: "case-b"})
@@ -111,7 +111,7 @@ func TestGetTree_WrongCaseID_Rejected(t *testing.T) {
 func TestGetNode_DelegatesToStore(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	f.seedNode(t, irac.Node{ID: "fact-1", Type: irac.NodeFact, CaseID: "case-a", Text: "The lease began in March.", Confidence: 0.8})
 
 	ctx := authedContext(identity.RoleJudge)
@@ -129,7 +129,7 @@ func TestGetNode_DelegatesToStore(t *testing.T) {
 func TestGetNode_EmptyNodeID_Rejected(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	ctx := authedContext(identity.RoleJudge)
 
 	_, err := f.api.GetNode(ctx, knowledgeapi.GetNodeRequest{CaseID: "case-a"})
@@ -144,7 +144,7 @@ func TestGetNode_EmptyNodeID_Rejected(t *testing.T) {
 func TestLookupPaths_DelegatesToIndexer(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	now := time.Now()
 	f.seedNode(t, irac.Node{ID: "rule-1", Type: irac.NodeRule, CaseID: "case-a", CreatedAt: now})
 	f.seedNode(t, irac.Node{ID: "issue-1", Type: irac.NodeIssue, CaseID: "case-a", CreatedAt: now})

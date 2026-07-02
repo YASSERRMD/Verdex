@@ -16,7 +16,7 @@ import (
 func TestResolveCitation_VerifiedNode(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	f.seedNode(t, irac.Node{
 		ID: "rule-1", Type: irac.NodeRule, CaseID: "case-a",
 		Text: "Notice must be in writing.", Confidence: 0.95,
@@ -61,7 +61,7 @@ func TestResolveCitation_VerifiedNode(t *testing.T) {
 func TestResolveCitation_DefaultResolver_NoCitation(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	f.seedNode(t, irac.Node{ID: "fact-1", Type: irac.NodeFact, CaseID: "case-a", Text: "The lease began in March."})
 
 	ctx := authedContext(identity.RoleJudge)
@@ -83,7 +83,7 @@ func TestResolveCitation_DefaultResolver_NoCitation(t *testing.T) {
 func TestResolveCitation_UnknownNode_PropagatesNotFound(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	ctx := authedContext(identity.RoleJudge)
 
 	_, err := f.api.ResolveCitation(ctx, knowledgeapi.ResolveCitationRequest{CaseID: "case-a", NodeID: "does-not-exist"})

@@ -32,7 +32,7 @@ type edgeLister interface {
 // node present in the (unpaginated) node set for this case, so the edge
 // list never dangles past a node this case cannot see.
 func (api *KnowledgeAPI) GetTree(ctx context.Context, req GetTreeRequest) (GetTreeResponse, error) {
-	if _, err := authorize(ctx); err != nil {
+	if err := authorize(ctx); err != nil {
 		return GetTreeResponse{}, err
 	}
 	if req.CaseID == "" || req.CaseID != api.caseID {
@@ -138,7 +138,7 @@ func loadCaseEdges(ctx context.Context, store *knowledgeisolation.CaseScopedStor
 // knowledgeisolation.ErrCrossCaseAccess (shared-law nodes are always
 // readable regardless of case, per knowledgeisolation's design).
 func (api *KnowledgeAPI) GetNode(ctx context.Context, req GetNodeRequest) (GetNodeResponse, error) {
-	if _, err := authorize(ctx); err != nil {
+	if err := authorize(ctx); err != nil {
 		return GetNodeResponse{}, err
 	}
 	if req.CaseID == "" || req.CaseID != api.caseID {
@@ -170,7 +170,7 @@ func (api *KnowledgeAPI) GetNode(ctx context.Context, req GetNodeRequest) (GetNo
 // calling RebuildCase once, on first use, when the underlying Indexer
 // reports the case has never been indexed.
 func (api *KnowledgeAPI) LookupPaths(ctx context.Context, req LookupPathsRequest) (LookupPathsResponse, error) {
-	if _, err := authorize(ctx); err != nil {
+	if err := authorize(ctx); err != nil {
 		return LookupPathsResponse{}, err
 	}
 	if req.CaseID == "" || req.CaseID != api.caseID {

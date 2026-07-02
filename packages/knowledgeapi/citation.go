@@ -24,7 +24,7 @@ import (
 // never bypasses the case-isolation boundary any other read on this
 // KnowledgeAPI respects.
 func (api *KnowledgeAPI) ResolveCitation(ctx context.Context, req ResolveCitationRequest) (ResolveCitationResponse, error) {
-	if _, err := authorize(ctx); err != nil {
+	if err := authorize(ctx); err != nil {
 		return ResolveCitationResponse{}, err
 	}
 	if req.CaseID == "" || req.CaseID != api.caseID {

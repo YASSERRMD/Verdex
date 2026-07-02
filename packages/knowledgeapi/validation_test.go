@@ -16,7 +16,7 @@ import (
 func TestValidationStatus_EmptyTree_CannotFinalize(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	ctx := authedContext(identity.RoleJudge)
 
 	resp, err := f.api.ValidationStatus(ctx, knowledgeapi.ValidationStatusRequest{CaseID: "case-a"})
@@ -35,7 +35,7 @@ func TestValidationStatus_EmptyTree_CannotFinalize(t *testing.T) {
 func TestValidationStatus_OrphanNode_SurfacesFinding(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	f.seedNode(t, irac.Node{
 		ID: "issue-1", Type: irac.NodeIssue, CaseID: "case-a",
 		Text: "An orphan issue with no edges.", CreatedAt: time.Now(), Confidence: 0.9,
@@ -67,7 +67,7 @@ func TestValidationStatus_OrphanNode_SurfacesFinding(t *testing.T) {
 func TestValidationStatus_WrongCaseID_Rejected(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	ctx := authedContext(identity.RoleJudge)
 
 	_, err := f.api.ValidationStatus(ctx, knowledgeapi.ValidationStatusRequest{CaseID: "case-b"})

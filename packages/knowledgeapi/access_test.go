@@ -15,7 +15,7 @@ import (
 func TestGetTree_Unauthenticated_Rejected(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 
 	_, err := f.api.GetTree(context.Background(), knowledgeapi.GetTreeRequest{CaseID: "case-a"})
 	if !errors.Is(err, knowledgeapi.ErrUnauthenticated) {
@@ -30,7 +30,7 @@ func TestGetTree_Unauthenticated_Rejected(t *testing.T) {
 func TestGetTree_MissingPermission_Rejected(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 
 	ctx := authedContext() // no roles => no permissions
 	_, err := f.api.GetTree(ctx, knowledgeapi.GetTreeRequest{CaseID: "case-a"})
@@ -53,7 +53,7 @@ func TestGetTree_AuthorizedRole_Allowed(t *testing.T) {
 		t.Run(string(role), func(t *testing.T) {
 			t.Parallel()
 
-			f := newTestFixture(t, "case-a")
+			f := newTestFixture(t)
 			ctx := authedContext(role)
 
 			_, err := f.api.GetTree(ctx, knowledgeapi.GetTreeRequest{CaseID: "case-a"})
@@ -71,7 +71,7 @@ func TestGetTree_AuthorizedRole_Allowed(t *testing.T) {
 func TestEveryMethod_RequiresAuthentication(t *testing.T) {
 	t.Parallel()
 
-	f := newTestFixture(t, "case-a")
+	f := newTestFixture(t)
 	ctx := context.Background()
 
 	checks := []struct {
