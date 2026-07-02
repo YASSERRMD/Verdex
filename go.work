@@ -20,4 +20,5 @@ use (
 	./packages/tenancy
 	./packages/provenance
 	./packages/stt
+	./packages/ocr
 )
