@@ -39,4 +39,5 @@ use (
 	./packages/treeassembly
 	./packages/treevalidation
 	./packages/vectorindex
+	./packages/treeindex
 )
