@@ -65,19 +65,31 @@ func ExtractHoldingAndRatio(fullText string) (HoldingExtractionResult, error) {
 
 	holdingStart := holdingLoc[2] // start of captured group 1 (text after the marker)
 	holdingSectionEnd := nextMarkerOffset(fullText, holdingLoc[1])
-	holding := strings.TrimSpace(fullText[holdingStart:holdingSectionEnd])
 
 	ratioLoc := ratioMarkerRe.FindStringSubmatchIndex(fullText)
-	var ratio string
+	var holding, ratio string
 	if ratioLoc != nil {
+		holding = strings.TrimSpace(fullText[holdingStart:holdingSectionEnd])
 		ratioStart := ratioLoc[2]
 		ratioSectionEnd := nextMarkerOffset(fullText, ratioLoc[1])
 		ratio = strings.TrimSpace(fullText[ratioStart:ratioSectionEnd])
 	} else {
-		// Fallback: text immediately following the holding section, up to
-		// the next marker or end of input.
-		fallbackEnd := nextMarkerOffset(fullText, holdingSectionEnd)
-		ratio = strings.TrimSpace(fullText[holdingSectionEnd:fallbackEnd])
+		// No explicit RATIO/REASONING marker: split the holding section on
+		// its first sentence boundary (the first ". " or end of the first
+		// line, whichever comes first). The first sentence becomes the
+		// Holding; any remaining text within the same section (up to the
+		// next marker or end of input) becomes the RatioDecidendi
+		// fallback, so RatioDecidendi is rarely left empty when the
+		// judgment text continues past the court's core determination.
+		section := fullText[holdingStart:holdingSectionEnd]
+		splitAt := firstSentenceBoundary(section)
+		if splitAt < 0 {
+			holding = strings.TrimSpace(section)
+			ratio = ""
+		} else {
+			holding = strings.TrimSpace(section[:splitAt])
+			ratio = strings.TrimSpace(section[splitAt:])
+		}
 	}
 
 	return HoldingExtractionResult{
@@ -114,4 +126,27 @@ func nextMarkerOffset(text string, from int) int {
 func collapseWhitespace(s string) string {
 	fields := strings.Fields(s)
 	return strings.Join(fields, " ")
+}
+
+// firstSentenceBoundary returns the byte offset immediately after the
+// first sentence-ending punctuation (". ", "! ", "? ") in s, or the
+// offset of the first blank-line paragraph break, whichever comes first.
+// Returns -1 if s contains neither (i.e. it is a single sentence/
+// paragraph in its entirety).
+func firstSentenceBoundary(s string) int {
+	best := -1
+	for _, sep := range []string{". ", "! ", "? ", ".\n", "!\n", "?\n"} {
+		if idx := strings.Index(s, sep); idx >= 0 {
+			end := idx + 1 // position right after the punctuation
+			if best == -1 || end < best {
+				best = end
+			}
+		}
+	}
+	if idx := strings.Index(s, "\n\n"); idx >= 0 {
+		if best == -1 || idx < best {
+			best = idx
+		}
+	}
+	return best
 }
