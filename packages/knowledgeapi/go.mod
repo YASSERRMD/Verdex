@@ -32,7 +32,9 @@ require (
 	github.com/YASSERRMD/verdex/packages/identity v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/irac v0.0.0
 	github.com/YASSERRMD/verdex/packages/knowledgeisolation v0.0.0-00010101000000-000000000000
+	github.com/YASSERRMD/verdex/packages/treeassembly v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/treeindex v0.0.0-00010101000000-000000000000
+	github.com/YASSERRMD/verdex/packages/treevalidation v0.0.0-00010101000000-000000000000
 )
 
 require (
