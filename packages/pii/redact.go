@@ -8,7 +8,26 @@ import (
 
 // RedactionMode selects how a detected PIIMatch is transformed when applied
 // to text by a Redactor.
+//
+// Reversibility: ModePseudonymize is the only reversible mode -- the
+// original value is retained in a PseudonymMap (see mapping.go) and can be
+// recovered by an authorized caller via PseudonymMap.Reveal. ModeRedact and
+// ModeIrreversibleRedact are both irreversible: neither ever causes the
+// original value to be written to a PseudonymMap or anywhere else Redactor
+// controls. ModeIrreversibleRedact exists as a distinct mode (rather than
+// reusing ModeRedact) so callers, jurisdiction rules (see
+// jurisdiction_rules.go), and storage-boundary policy (see policy.go) can
+// explicitly require "this category must never be recoverable, even if the
+// pipeline's general default is pseudonymization" and have that requirement
+// be visible in code and audit logs, not just an accidental side effect of
+// configuration.
 type RedactionMode string
+
+// IsReversible reports whether mode retains a recoverable mapping to the
+// original value. Only ModePseudonymize is reversible.
+func (m RedactionMode) IsReversible() bool {
+	return m == ModePseudonymize
+}
 
 const (
 	// ModeRedact replaces each match with a fixed placeholder of the form
