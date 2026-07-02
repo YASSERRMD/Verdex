@@ -21,4 +21,5 @@ use (
 	./packages/provenance
 	./packages/stt
 	./packages/ocr
+	./packages/multilingual
 )
