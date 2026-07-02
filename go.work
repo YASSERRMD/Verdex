@@ -45,4 +45,5 @@ use (
 	./packages/adaptiveretrieval
 	./packages/citation
 	./packages/knowledgeisolation
+	./packages/knowledgeapi
 )
