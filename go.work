@@ -56,4 +56,5 @@ use (
 	./packages/uncertainty
 	./packages/guardrail
 	./packages/reasoningprofile
+	./packages/reasoningorchestration
 )
