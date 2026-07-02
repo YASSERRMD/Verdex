@@ -99,6 +99,23 @@ func splitByTerminators(text string, terminators map[rune]bool, suppress func(ru
 	unitStart := 0
 	for i := 0; i < len(runes); i++ {
 		r := runes[i]
+
+		// A blank line (two or more consecutive newlines) is always a
+		// paragraph boundary, independent of punctuation, so a heading or
+		// short line with no terminal punctuation still ends its own unit.
+		if r == '\n' && i+1 < len(runes) && runes[i+1] == '\n' {
+			end := i + 1
+			for end < len(runes) && runes[end] == '\n' {
+				end++
+			}
+			if trimmed := strings.TrimSpace(string(runes[unitStart:i])); trimmed != "" {
+				spans = append(spans, Span{Start: unitStart, End: end, Text: trimmed})
+			}
+			unitStart = end
+			i = end - 1
+			continue
+		}
+
 		if !terminators[r] {
 			continue
 		}
