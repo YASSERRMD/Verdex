@@ -24,4 +24,5 @@ use (
 	./packages/multilingual
 	./packages/segmentation
 	./packages/pii
+	./packages/evidence
 )
