@@ -46,8 +46,10 @@ func mustCreateEdge(t *testing.T, store graph.GraphStore, edge irac.Edge) {
 // store for caseID: one Issue, one Rule governing it, one Fact, one
 // Application applying the Rule to the Fact, and one Conclusion
 // concluding from the Application. Mirrors packages/traversal's and
-// packages/treeindex's seedCleanTree fixture.
-func seedCleanTree(t *testing.T, store graph.GraphStore, caseID string) (issueID, ruleID, factID, appID, conclusionID string) {
+// packages/treeindex's seedCleanTree fixture. Returns the Issue's node ID,
+// the only one of the tree's five nodes every adaptiveretrieval test
+// anchors a build from.
+func seedCleanTree(t *testing.T, store graph.GraphStore, caseID string) (issueID string) {
 	t.Helper()
 	now := time.Now()
 
@@ -69,27 +71,28 @@ func seedCleanTree(t *testing.T, store graph.GraphStore, caseID string) (issueID
 	mustCreateEdge(t, store, irac.Edge{FromID: fact.ID, ToID: app.ID, Type: irac.EdgeSupports})
 	mustCreateEdge(t, store, irac.Edge{FromID: conclusion.ID, ToID: app.ID, Type: irac.EdgeConcludesFrom})
 
-	return issue.ID, rule.ID, fact.ID, app.ID, conclusion.ID
+	return issue.ID
 }
 
-// seedLargeFanout builds one RuleNode governing n distinct IssueNodes
+// seedLargeFanout builds one IssueNode governed by n distinct RuleNodes
 // under caseID, for tests exercising BuildBudget.MaxNodes enforcement
-// against a wide (rather than deep) tree.
-func seedLargeFanout(t *testing.T, store graph.GraphStore, caseID string, n int) (ruleID string, issueIDs []string) {
+// against a wide (rather than deep) tree. n governing rules are reachable
+// in a single hop from issueID via ViaGoverningRule (Issue --reverse
+// EdgeGoverns--> Rule), matching DefaultHopSequence's first hop. Returns
+// the Issue's node ID, the anchor every caller builds from.
+func seedLargeFanout(t *testing.T, store graph.GraphStore, caseID string, n int) (issueID string) {
 	t.Helper()
 	now := time.Now()
 
-	rule := irac.NewRuleNode(caseID+"-rule-1", caseID, "A wide-fanout governing rule.", "us-ny", "common_law", now, 0.9, testProvenance(), testSpan())
-	mustCreateNode(t, store, rule.Node)
+	issue := irac.NewIssueNode(caseID+"-issue-1", caseID, "A wide-fanout issue.", now, 0.9, testProvenance(), testSpan())
+	mustCreateNode(t, store, issue.Node)
 
-	ids := make([]string, 0, n)
 	for i := 0; i < n; i++ {
-		issue := irac.NewIssueNode(caseID+"-issue-"+strconv.Itoa(i), caseID, "Fanout issue", now, 0.9, testProvenance(), testSpan())
-		mustCreateNode(t, store, issue.Node)
+		rule := irac.NewRuleNode(caseID+"-rule-"+strconv.Itoa(i), caseID, "Fanout governing rule.", "us-ny", "common_law", now, 0.9, testProvenance(), testSpan())
+		mustCreateNode(t, store, rule.Node)
 		mustCreateEdge(t, store, irac.Edge{FromID: rule.ID, ToID: issue.ID, Type: irac.EdgeGoverns})
-		ids = append(ids, issue.ID)
 	}
-	return rule.ID, ids
+	return issue.ID
 }
 
 // newSeededStore returns an InMemoryGraphStore seeded with the standard
