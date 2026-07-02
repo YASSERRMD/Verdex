@@ -34,4 +34,5 @@ use (
 	./packages/fact
 	./packages/statute
 	./packages/precedent
+	./packages/application
 )
