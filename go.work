@@ -40,4 +40,5 @@ use (
 	./packages/treevalidation
 	./packages/vectorindex
 	./packages/treeindex
+	./packages/traversal
 )
