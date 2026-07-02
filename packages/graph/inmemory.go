@@ -28,19 +28,22 @@ type InMemoryGraphStore struct {
 	// CreateEdge time.
 	edges map[string][]irac.Edge
 
-	// byCase maps case id -> set of node ids belonging to that case.
-	// Commit 5 (index.go) replaces this with a dedicated secondary-index
-	// type shared by Traverse's CaseID and NodeType filters; this field
-	// is the minimal version that ships with the base implementation.
+	// byCase maps case id -> set of node ids belonging to that case,
+	// backing Traverse's mandatory CaseID filter.
 	byCase map[string]map[string]struct{}
+
+	// typeIndex is the NodeType secondary index (index.go), backing
+	// Traverse's optional NodeType filter without a full scan.
+	typeIndex *inMemoryIndex
 }
 
 // NewInMemoryGraphStore constructs an empty InMemoryGraphStore.
 func NewInMemoryGraphStore() *InMemoryGraphStore {
 	return &InMemoryGraphStore{
-		nodes:  make(map[string]irac.Node),
-		edges:  make(map[string][]irac.Edge),
-		byCase: make(map[string]map[string]struct{}),
+		nodes:     make(map[string]irac.Node),
+		edges:     make(map[string][]irac.Edge),
+		byCase:    make(map[string]map[string]struct{}),
+		typeIndex: newInMemoryIndex(),
 	}
 }
 
@@ -54,11 +57,17 @@ func (s *InMemoryGraphStore) CreateNode(_ context.Context, node irac.Node) error
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if existing, ok := s.nodes[node.ID]; ok && existing.CaseID != node.CaseID {
-		s.removeFromCaseIndexLocked(existing)
+	if existing, ok := s.nodes[node.ID]; ok {
+		if existing.CaseID != node.CaseID {
+			s.removeFromCaseIndexLocked(existing)
+		}
+		if existing.Type != node.Type {
+			s.typeIndex.removeType(string(existing.Type), existing.ID)
+		}
 	}
 	s.nodes[node.ID] = node
 	s.addToCaseIndexLocked(node)
+	s.typeIndex.addType(string(node.Type), node.ID)
 	return nil
 }
 
@@ -125,8 +134,8 @@ func (s *InMemoryGraphStore) GetNode(_ context.Context, id string) (irac.Node, e
 }
 
 // Traverse returns every node matching query, using the secondary
-// indexes in index.go for the CaseID/NodeType filters and a
-// breadth-first edge walk when FromNodeID is set.
+// indexes (byCase, typeIndex — see index.go) for the CaseID/NodeType
+// filters and a breadth-first edge walk when FromNodeID is set.
 func (s *InMemoryGraphStore) Traverse(_ context.Context, query TraversalQuery) ([]irac.Node, error) {
 	if query.CaseID == "" {
 		return nil, ErrEmptyCaseID
@@ -137,6 +146,10 @@ func (s *InMemoryGraphStore) Traverse(_ context.Context, query TraversalQuery) (
 
 	candidateIDs := s.caseNodeIDsLocked(query.CaseID)
 
+	if query.NodeType != "" {
+		candidateIDs = intersect(candidateIDs, s.typeIndex.nodeIDsByType(string(query.NodeType)))
+	}
+
 	if query.FromNodeID != "" {
 		reachable := s.reachableIDsLocked(query.CaseID, query.FromNodeID, query.MaxDepth)
 		candidateIDs = intersect(candidateIDs, reachable)
@@ -144,14 +157,9 @@ func (s *InMemoryGraphStore) Traverse(_ context.Context, query TraversalQuery) (
 
 	out := make([]irac.Node, 0, len(candidateIDs))
 	for _, id := range candidateIDs {
-		node, ok := s.nodes[id]
-		if !ok {
-			continue
+		if node, ok := s.nodes[id]; ok {
+			out = append(out, node)
 		}
-		if query.NodeType != "" && node.Type != query.NodeType {
-			continue
-		}
-		out = append(out, node)
 	}
 	return out, nil
 }
@@ -214,6 +222,9 @@ func (s *InMemoryGraphStore) DeleteTree(_ context.Context, caseID string) error 
 	defer s.mu.Unlock()
 
 	for _, id := range s.caseNodeIDsLocked(caseID) {
+		if node, ok := s.nodes[id]; ok {
+			s.typeIndex.removeType(string(node.Type), id)
+		}
 		delete(s.nodes, id)
 	}
 	delete(s.byCase, caseID)
