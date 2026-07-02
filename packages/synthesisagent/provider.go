@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/YASSERRMD/verdex/packages/guardrail"
 	"github.com/YASSERRMD/verdex/packages/irac"
 	"github.com/YASSERRMD/verdex/packages/treeassembly"
 )
@@ -27,11 +28,14 @@ const generatedBy = "synthesisagent-v1"
 // only ever constructs an irac.ConclusionNode via irac.NewConclusionNode
 // (which unconditionally attaches the mandatory draft_analysis label),
 // and it rejects — logging rather than emitting a node for — any
-// TentativeConclusion whose Text trips irac.ContainsVerdictLanguage. A
-// caller wanting stronger-than-log handling of a rejected conclusion
-// (blocking the whole run, surfacing a review flag, etc.) is Phase 057's
-// guardrail-POLICY layer, layered on top of this package rather than
-// duplicated here.
+// TentativeConclusion whose Text fails guardrail.CheckText (Phase 057's
+// project-wide, error-returning wrapper around
+// irac.ContainsVerdictLanguage). A caller wanting stronger-than-log
+// handling of a rejected conclusion (blocking the whole run, surfacing a
+// review flag, recording a guardrail.Event, etc.) can layer that on top
+// using packages/guardrail directly; this package guarantees only that a
+// verdict-flavored TentativeConclusion never reaches
+// irac.NewConclusionNode, via any path.
 type Provider struct {
 	// Opinion is the already-synthesized draft opinion this Provider
 	// converts into irac.ConclusionNodes.
@@ -50,20 +54,19 @@ type Provider struct {
 // same evidence).
 //
 // A TentativeConclusion whose Text contains verdict/directive language
-// (per irac.ContainsVerdictLanguage) is rejected: it is logged and
-// excluded from the returned slice rather than ever reaching
-// irac.NewConclusionNode. Provide never returns a non-nil error for this
-// case — a rejected conclusion is a data-quality finding, not a
-// synthesis-provider failure — mirroring
-// treeassembly.NoOpConclusionProvider's own "no error path" convention
-// for the common case.
+// (per guardrail.CheckText) is rejected: it is logged and excluded from
+// the returned slice rather than ever reaching irac.NewConclusionNode.
+// Provide never returns a non-nil error for this case — a rejected
+// conclusion is a data-quality finding, not a synthesis-provider
+// failure — mirroring treeassembly.NoOpConclusionProvider's own "no
+// error path" convention for the common case.
 func (p Provider) Provide(_ context.Context, input treeassembly.AssemblyInput) ([]irac.ConclusionNode, error) {
 	appsByUpstream := indexApplicationsByUpstreamRef(input.Applications)
 
 	nodes := make([]irac.ConclusionNode, 0, len(p.Opinion.Conclusions))
 	for i, tc := range p.Opinion.Conclusions {
-		if irac.ContainsVerdictLanguage(tc.Text) {
-			log.Printf("synthesisagent: rejecting conclusion for issue %q: %v: text contains verdict language", tc.IssueNodeID, ErrVerdictLanguage)
+		if err := guardrail.CheckText(tc.Text); err != nil {
+			log.Printf("synthesisagent: rejecting conclusion for issue %q: %v: %v", tc.IssueNodeID, ErrVerdictLanguage, err)
 			continue
 		}
 
