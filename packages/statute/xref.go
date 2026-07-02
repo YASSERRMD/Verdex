@@ -41,7 +41,7 @@ func (c CrossReference) IsResolved() bool {
 // xrefRe matches citation-shaped references within free text, e.g.
 // "see Section 12", "under Section 5(a)", "pursuant to section 3".
 // Capture groups: (1) section number, (2) optional clause identifier.
-var xrefRe = regexp.MustCompile(`(?i)\bSection\s+(\S+?)(?:\(([a-zA-Z0-9]+)\))?\b`)
+var xrefRe = regexp.MustCompile(`(?i)\bSection\s+([^\s.(]+)\.?(?:\(([a-zA-Z0-9]+)\))?`)
 
 // DetectCrossReferences scans text for citation-shaped references and
 // returns one CrossReference per match, unresolved (ResolvedRuleID

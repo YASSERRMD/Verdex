@@ -87,7 +87,7 @@ func (n *StatuteNode) Leaves() []*StatuteNode {
 // sectionHeaderRe matches a line introducing a new section, e.g.
 // "Section 12. Definitions" or "Section 12: Definitions" or bare
 // "Section 12".
-var sectionHeaderRe = regexp.MustCompile(`(?i)^Section\s+(\S+)\.?\s*[:.\-]?\s*(.*)$`)
+var sectionHeaderRe = regexp.MustCompile(`(?i)^Section\s+([^\s.]+)\.?\s*[:.\-]?\s*(.*)$`)
 
 // clauseHeaderRe matches a line introducing a new clause within a
 // section, e.g. "(a) the parties shall..." or "(1) ...".
