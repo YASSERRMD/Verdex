@@ -5,6 +5,7 @@ import { apiFetch } from '@/lib/api';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
+import { validateCaseCreationInput } from './validation';
 import type { CaseCategory, CaseCreationInput } from '@/types';
 
 const CATEGORY_OPTIONS: { value: CaseCategory; label: string }[] = [
@@ -34,10 +35,7 @@ export function CaseCreationForm({ onCreated }: CaseCreationFormProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const validate = (): boolean => {
-    const e: Partial<Record<keyof CaseCreationInput, string>> = {};
-    if (!value.category) e.category = 'Please select a case category.';
-    if (!value.firstPartyName.trim()) e.firstPartyName = 'First party name is required.';
-    if (!value.secondPartyName.trim()) e.secondPartyName = 'Second party name is required.';
+    const e = validateCaseCreationInput(value);
     setErrors(e);
     return Object.keys(e).length === 0;
   };
