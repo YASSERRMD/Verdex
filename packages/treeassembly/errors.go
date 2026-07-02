@@ -26,4 +26,8 @@ var (
 	// ErrNilStore is returned by persistence operations when no
 	// graph.GraphStore is supplied.
 	ErrNilStore = errors.New("treeassembly: graph store must not be nil")
+
+	// ErrSnapshotNotFound is returned by SnapshotStore.GetSnapshot when
+	// no snapshot exists under the requested SnapshotKey.
+	ErrSnapshotNotFound = errors.New("treeassembly: snapshot not found")
 )

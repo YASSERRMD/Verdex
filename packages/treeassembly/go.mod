@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/YASSERRMD/verdex/packages/application v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/fact v0.0.0-00010101000000-000000000000
-	github.com/YASSERRMD/verdex/packages/graph v0.0.0-00010101000000-000000000000
+	github.com/YASSERRMD/verdex/packages/graph v0.0.0-20260702094313-4d74dfa6d3e6
 	github.com/YASSERRMD/verdex/packages/irac v0.0.0
 	github.com/YASSERRMD/verdex/packages/issue v0.0.0-00010101000000-000000000000
 )
