@@ -181,10 +181,7 @@ func (a *Agent) Interpret(ctx context.Context, pad *agentframework.Scratchpad, r
 		return agentframework.Decision{}, err
 	}
 
-	result, err := assembleArgumentSet(ctx, a.api, pad.CaseID(), a.partyID, evidence, modelResp)
-	if err != nil {
-		return agentframework.Decision{}, err
-	}
+	result := assembleArgumentSet(ctx, a.api, pad.CaseID(), a.partyID, evidence, modelResp)
 
 	encoded, err := encodeResult(result)
 	if err != nil {

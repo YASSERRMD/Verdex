@@ -22,7 +22,7 @@ import (
 // fail — a caller inspecting SkippedIssueNodeIDs can distinguish "this
 // issue's arguments were all fabricated" from "this issue was never
 // framed to begin with".
-func assembleArgumentSet(ctx context.Context, api *knowledgeapi.KnowledgeAPI, caseID string, partyID PartyID, evidence []issueEvidence, modelResp modelArgumentResponse) (ArgumentSet, error) {
+func assembleArgumentSet(ctx context.Context, api *knowledgeapi.KnowledgeAPI, caseID string, partyID PartyID, evidence []issueEvidence, modelResp modelArgumentResponse) ArgumentSet {
 	byIssue := modelResp.byIssueNodeID()
 
 	var arguments []Argument
@@ -41,12 +41,7 @@ func assembleArgumentSet(ctx context.Context, api *knowledgeapi.KnowledgeAPI, ca
 			}
 			arg.ID = fmt.Sprintf("%s-arg-%d", ev.Issue.SourceIssueNodeID, i)
 			arg.PartyID = partyID
-
-			citations, err := resolveCitations(ctx, api, caseID, arg.SupportingRuleIDs)
-			if err != nil {
-				return ArgumentSet{}, err
-			}
-			arg.Citations = citations
+			arg.Citations = resolveCitations(ctx, api, caseID, arg.SupportingRuleIDs)
 			arg.Strength = strengthScore(arg, factsByID)
 
 			groundedForIssue = append(groundedForIssue, arg)
@@ -67,7 +62,7 @@ func assembleArgumentSet(ctx context.Context, api *knowledgeapi.KnowledgeAPI, ca
 		Arguments:           arguments,
 		SkippedIssueNodeIDs: skipped,
 		GeneratedAt:         time.Now().UTC(),
-	}, nil
+	}
 }
 
 // resolveCitations resolves a CitationRef for every ruleID via
@@ -76,8 +71,12 @@ func assembleArgumentSet(ctx context.Context, api *knowledgeapi.KnowledgeAPI, ca
 // legitimate, common outcome (e.g. no citation.Resolver configured, or
 // the rule genuinely has no external citation), not a fabrication signal;
 // fabrication is already handled by ground.go before this function is
-// ever reached.
-func resolveCitations(ctx context.Context, api *knowledgeapi.KnowledgeAPI, caseID string, ruleIDs []string) ([]CitationRef, error) {
+// ever reached. Errors from ResolveCitation itself (as opposed to a
+// clean "not resolvable" outcome) are likewise treated as "no citation
+// for this rule" rather than failing the whole assemble step, since a
+// citation is an enrichment of an already-grounded Argument, not a
+// precondition for one existing.
+func resolveCitations(ctx context.Context, api *knowledgeapi.KnowledgeAPI, caseID string, ruleIDs []string) []CitationRef {
 	var out []CitationRef
 	for _, ruleID := range ruleIDs {
 		resp, err := api.ResolveCitation(ctx, knowledgeapi.ResolveCitationRequest{CaseID: caseID, NodeID: ruleID})
@@ -92,7 +91,7 @@ func resolveCitations(ctx context.Context, api *knowledgeapi.KnowledgeAPI, caseI
 			ConfidenceScore:    resp.Citation.ConfidenceScore,
 		})
 	}
-	return out, nil
+	return out
 }
 
 // indexNodesByID indexes nodes by ID for O(1) lookup during scoring.
