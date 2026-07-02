@@ -31,4 +31,5 @@ use (
 	./packages/irac
 	./packages/graph
 	./packages/issue
+	./packages/fact
 )
