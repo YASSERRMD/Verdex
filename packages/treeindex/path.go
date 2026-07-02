@@ -70,23 +70,39 @@ func (k PathKind) IsValid() bool {
 	return ok
 }
 
-// Hop describes one edge traversed between two consecutive NodeRef values
-// in a Path. Direction records whether the edge was walked in its
-// declared irac.Edge direction (Forward, From -> To) or against it
-// (Reverse, To -> From) to assemble a human-meaningful chain — see doc.go
-// for why EdgeSupports and EdgeConcludesFrom are walked in Reverse.
+// Hop describes one edge that produced a node in a Path. A Path is not
+// always a strict linear chain — buildReasoningChainPaths (chain.go) fans
+// out from a single ApplicationNode to every supporting FactNode and every
+// derived ConclusionNode, so a Hop records which node it originated from
+// (FromIndex) rather than assuming it always originates from the
+// immediately preceding element of Nodes.
 type Hop struct {
+	// FromIndex is the index into the owning Path's Nodes slice that this
+	// hop originates from. The hop's destination is implicitly the Nodes
+	// element at the same position as this Hop in Hops (i.e. Hops[i]
+	// produced Nodes[i+1]).
+	FromIndex int
+
 	// EdgeType is the irac.EdgeType connecting the two hops.
 	EdgeType irac.EdgeType
 
 	// Reverse reports whether this hop was walked against the edge's
-	// declared irac.Edge.FromID -> irac.Edge.ToID direction.
+	// declared irac.Edge.FromID -> irac.Edge.ToID direction (Forward,
+	// From -> To) or against it (Reverse, To -> From) to assemble a
+	// human-meaningful chain — see doc.go for why EdgeSupports and
+	// EdgeConcludesFrom are walked in Reverse.
 	Reverse bool
 }
 
-// Path is one materialized, ordered chain of NodeRef values discovered by
-// walking a case's reasoning tree, plus the Hops connecting each
-// consecutive pair. len(Hops) is always len(Nodes)-1.
+// Path is one materialized set of NodeRef values discovered by walking a
+// case's reasoning tree, plus the Hops describing how each non-root node
+// was reached. Nodes[0] is always the root (see RootID). For a
+// PathKindRuleGroupedIssues Path, every Hop originates from Nodes[0] (a
+// simple one-level fan-out). For a PathKindReasoningChain Path, Hops forms
+// a short tree rooted at Nodes[0] (Issue -> Rule -> Application, then
+// Application fanning out to every supporting Fact and derived
+// Conclusion) — see Hop.FromIndex. len(Hops) is always len(Nodes)-1: every
+// non-root node was produced by exactly one hop.
 type Path struct {
 	// Kind classifies which materialization strategy produced this Path.
 	Kind PathKind
@@ -94,12 +110,12 @@ type Path struct {
 	// CaseID identifies the case this Path belongs to.
 	CaseID string
 
-	// Nodes is the ordered chain of node references making up this Path,
+	// Nodes is the ordered set of node references making up this Path,
 	// root first.
 	Nodes []NodeRef
 
-	// Hops describes the edge connecting each consecutive pair of Nodes.
-	// len(Hops) == len(Nodes)-1.
+	// Hops describes the edge that produced each non-root element of
+	// Nodes: Hops[i] produced Nodes[i+1]. len(Hops) == len(Nodes)-1.
 	Hops []Hop
 }
 
@@ -112,30 +128,75 @@ func (p Path) RootID() string {
 	return p.Nodes[0].ID
 }
 
-// Depth returns the number of edge hops in the path (len(Nodes)-1), or 0
-// for an empty or single-node path.
+// nodeDepths returns, for each index into p.Nodes, the number of hops
+// from the root (index 0) required to reach it: depths[0] is always 0,
+// and depths[i] for i > 0 is 1 + the depth of Hops[i-1].FromIndex. This
+// walks Hops in order, which is always safe because every builder in this
+// package appends a node's producing Hop before appending any node that
+// descends from it (FromIndex never refers to a not-yet-populated index).
+func (p Path) nodeDepths() []int {
+	depths := make([]int, len(p.Nodes))
+	for i, hop := range p.Hops {
+		nodeIndex := i + 1
+		depths[nodeIndex] = depths[hop.FromIndex] + 1
+	}
+	return depths
+}
+
+// Depth returns the maximum number of edge hops from the root (Nodes[0])
+// to any other node in the path, or 0 for an empty or single-node path.
 func (p Path) Depth() int {
 	if len(p.Nodes) == 0 {
 		return 0
 	}
-	return len(p.Nodes) - 1
+	max := 0
+	for _, d := range p.nodeDepths() {
+		if d > max {
+			max = d
+		}
+	}
+	return max
 }
 
-// Truncate returns a copy of p containing only the first maxDepth hops
-// (i.e. at most maxDepth+1 nodes). maxDepth <= 0 returns p unchanged,
-// mirroring graph.TraversalQuery.MaxDepth's "zero means unbounded"
-// convention.
+// Truncate returns a copy of p containing only the nodes reachable from
+// the root within maxDepth hops (and the Hops connecting them), discarding
+// everything deeper. maxDepth <= 0 returns p unchanged, mirroring
+// graph.TraversalQuery.MaxDepth's "zero means unbounded" convention.
 func (p Path) Truncate(maxDepth int) Path {
 	if maxDepth <= 0 || p.Depth() <= maxDepth {
 		return p
 	}
+
+	depths := p.nodeDepths()
+
+	// oldToNew maps a surviving node's original index to its index in the
+	// truncated output, so Hop.FromIndex can be rewritten consistently.
+	oldToNew := make(map[int]int, len(p.Nodes))
 	out := Path{
 		Kind:   p.Kind,
 		CaseID: p.CaseID,
-		Nodes:  make([]NodeRef, maxDepth+1),
-		Hops:   make([]Hop, maxDepth),
+		Nodes:  make([]NodeRef, 0, len(p.Nodes)),
+		Hops:   make([]Hop, 0, len(p.Hops)),
 	}
-	copy(out.Nodes, p.Nodes[:maxDepth+1])
-	copy(out.Hops, p.Hops[:maxDepth])
+
+	for i, node := range p.Nodes {
+		if depths[i] > maxDepth {
+			continue
+		}
+		oldToNew[i] = len(out.Nodes)
+		out.Nodes = append(out.Nodes, node)
+	}
+	for i, hop := range p.Hops {
+		nodeIndex := i + 1
+		if depths[nodeIndex] > maxDepth {
+			continue
+		}
+		out.Hops = append(out.Hops, Hop{
+			FromIndex: oldToNew[hop.FromIndex],
+			EdgeType:  hop.EdgeType,
+			Reverse:   hop.Reverse,
+		})
+	}
+
 	return out
 }
