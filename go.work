@@ -30,4 +30,5 @@ use (
 	./packages/ingestion
 	./packages/irac
 	./packages/graph
+	./packages/issue
 )
