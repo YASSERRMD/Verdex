@@ -25,4 +25,5 @@ use (
 	./packages/segmentation
 	./packages/pii
 	./packages/evidence
+	./packages/category
 )
