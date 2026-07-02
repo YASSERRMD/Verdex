@@ -48,4 +48,5 @@ use (
 	./packages/knowledgeapi
 	./packages/agentframework
 	./packages/issueagent
+	./packages/firstpartyagent
 )
