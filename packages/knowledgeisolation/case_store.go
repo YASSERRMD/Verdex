@@ -191,6 +191,43 @@ func (s *CaseScopedStore) Traverse(ctx context.Context, query graph.TraversalQue
 	return out, nil
 }
 
+// EdgesForCase forwards to the inner store's own EdgesForCase, when the
+// inner store implements that opportunistic capability (see
+// packages/graph/backup.go and packages/treeindex/edges.go, which both
+// type-assert for it rather than widening graph.GraphStore's interface),
+// but only for this store's own authorized case — a request for any other
+// case returns an empty slice rather than the inner store's edges,
+// preserving CaseScopedStore's isolation guarantee for this accessor the
+// same way DeleteTree refuses to touch a foreign case's data. Returns nil
+// if the inner store does not implement the capability, matching a
+// natural "no edges known" answer for a caller that type-asserts for
+// EdgesForCase the same way loadEdges/loadCaseEdges do in
+// packages/treeindex and packages/traversal.
+//
+// This exists so a CaseScopedStore composed underneath treeindex.Indexer
+// or packages/traversal.Walker does not silently lose EdgeType fidelity
+// by falling back to those packages' Traverse-based edge reconstruction,
+// which cannot recover exact EdgeType/direction (see their doc comments).
+func (s *CaseScopedStore) EdgesForCase(caseID string) []irac.Edge {
+	if caseID != s.caseID {
+		s.auditor.record(AccessAttempt{
+			Kind:            ViolationGetNode,
+			AuthorizedCases: []CaseID{s.caseID},
+			AttemptedCase:   caseID,
+			Detail:          fmt.Sprintf("EdgesForCase: requested case %q, not authorized case %q", caseID, s.caseID),
+		})
+		return []irac.Edge{}
+	}
+
+	lister, ok := s.inner.(interface {
+		EdgesForCase(caseID string) []irac.Edge
+	})
+	if !ok {
+		return nil
+	}
+	return lister.EdgesForCase(caseID)
+}
+
 // DeleteTree deletes caseID's tree only if caseID matches this store's
 // authorized case. Deleting a different case's tree is rejected with
 // ErrCrossCaseAccess without touching the inner store.
