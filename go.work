@@ -50,4 +50,5 @@ use (
 	./packages/issueagent
 	./packages/firstpartyagent
 	./packages/secondpartyagent
+	./packages/evidenceweighing
 )
