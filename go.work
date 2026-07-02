@@ -53,4 +53,5 @@ use (
 	./packages/evidenceweighing
 	./packages/lawapplication
 	./packages/synthesisagent
+	./packages/uncertainty
 )
