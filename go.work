@@ -29,4 +29,5 @@ use (
 	./packages/timeline
 	./packages/ingestion
 	./packages/irac
+	./packages/graph
 )
