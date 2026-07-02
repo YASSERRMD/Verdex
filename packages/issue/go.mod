@@ -6,6 +6,7 @@ require (
 	github.com/YASSERRMD/verdex/packages/evidence v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/irac v0.0.0
 	github.com/YASSERRMD/verdex/packages/segmentation v0.0.0
+	github.com/YASSERRMD/verdex/packages/timeline v0.0.0-00010101000000-000000000000
 )
 
 replace (
