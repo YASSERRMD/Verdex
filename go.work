@@ -54,4 +54,5 @@ use (
 	./packages/lawapplication
 	./packages/synthesisagent
 	./packages/uncertainty
+	./packages/guardrail
 )
