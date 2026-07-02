@@ -2,6 +2,7 @@ package knowledgeapi
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/YASSERRMD/verdex/packages/graph"
@@ -162,6 +163,12 @@ func (api *KnowledgeAPI) GetNode(ctx context.Context, req GetNodeRequest) (GetNo
 // following req.EdgeType, paginated. When req.MaxDepth is positive,
 // treeindex.Indexer.LookupPathsWithDepth is used instead of LookupPaths so
 // each returned path is truncated to that depth.
+//
+// treeindex.Indexer requires a case to be built via RebuildCase before
+// LookupPaths will serve it (see treeindex.ErrCaseNotIndexed); this
+// facade hides that lifecycle detail from callers by transparently
+// calling RebuildCase once, on first use, when the underlying Indexer
+// reports the case has never been indexed.
 func (api *KnowledgeAPI) LookupPaths(ctx context.Context, req LookupPathsRequest) (LookupPathsResponse, error) {
 	if _, err := authorize(ctx); err != nil {
 		return LookupPathsResponse{}, err
@@ -180,11 +187,12 @@ func (api *KnowledgeAPI) LookupPaths(ctx context.Context, req LookupPathsRequest
 
 	edgeType := irac.EdgeType(req.EdgeType)
 
-	var paths []treeindex.Path
-	if req.MaxDepth > 0 {
-		paths, err = api.indexer.LookupPathsWithDepth(ctx, api.caseID, req.FromNodeID, edgeType, req.MaxDepth)
-	} else {
-		paths, err = api.indexer.LookupPaths(ctx, api.caseID, req.FromNodeID, edgeType)
+	paths, err := api.lookupPaths(ctx, req.FromNodeID, edgeType, req.MaxDepth)
+	if errors.Is(err, treeindex.ErrCaseNotIndexed) {
+		if rebuildErr := api.indexer.RebuildCase(ctx, api.caseID); rebuildErr != nil {
+			return LookupPathsResponse{}, rebuildErr
+		}
+		paths, err = api.lookupPaths(ctx, req.FromNodeID, edgeType, req.MaxDepth)
 	}
 	if err != nil {
 		return LookupPathsResponse{}, err
@@ -202,6 +210,15 @@ func (api *KnowledgeAPI) LookupPaths(ctx context.Context, req LookupPathsRequest
 		Paths:   pathDTOs,
 		Meta:    meta,
 	}, nil
+}
+
+// lookupPaths calls the appropriate treeindex.Indexer lookup method
+// depending on whether maxDepth was requested.
+func (api *KnowledgeAPI) lookupPaths(ctx context.Context, fromNodeID string, edgeType irac.EdgeType, maxDepth int) ([]treeindex.Path, error) {
+	if maxDepth > 0 {
+		return api.indexer.LookupPathsWithDepth(ctx, api.caseID, fromNodeID, edgeType, maxDepth)
+	}
+	return api.indexer.LookupPaths(ctx, api.caseID, fromNodeID, edgeType)
 }
 
 // pathDTOFromPath converts a treeindex.Path into a PathDTO.
