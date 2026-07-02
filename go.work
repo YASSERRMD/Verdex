@@ -38,4 +38,5 @@ use (
 	./packages/ontology
 	./packages/treeassembly
 	./packages/treevalidation
+	./packages/vectorindex
 )
