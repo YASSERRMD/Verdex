@@ -232,6 +232,64 @@ func (s *InMemoryGraphStore) DeleteTree(_ context.Context, caseID string) error 
 	return nil
 }
 
+// inMemorySnapshot is a deep copy of InMemoryGraphStore's mutable state,
+// captured by snapshot and reapplied by restore to implement
+// WithTransaction's rollback-on-error strategy (see tx.go).
+type inMemorySnapshot struct {
+	nodes     map[string]irac.Node
+	edges     map[string][]irac.Edge
+	byCase    map[string]map[string]struct{}
+	typeIndex *inMemoryIndex
+}
+
+// snapshot captures a deep copy of s's current state.
+func (s *InMemoryGraphStore) snapshot() inMemorySnapshot {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	nodes := make(map[string]irac.Node, len(s.nodes))
+	for k, v := range s.nodes {
+		nodes[k] = v
+	}
+
+	edges := make(map[string][]irac.Edge, len(s.edges))
+	for k, v := range s.edges {
+		cp := make([]irac.Edge, len(v))
+		copy(cp, v)
+		edges[k] = cp
+	}
+
+	byCase := make(map[string]map[string]struct{}, len(s.byCase))
+	for k, set := range s.byCase {
+		cp := make(map[string]struct{}, len(set))
+		for id := range set {
+			cp[id] = struct{}{}
+		}
+		byCase[k] = cp
+	}
+
+	typeIndex := newInMemoryIndex()
+	for typeKey, set := range s.typeIndex.byType {
+		for id := range set {
+			typeIndex.addType(typeKey, id)
+		}
+	}
+
+	return inMemorySnapshot{nodes: nodes, edges: edges, byCase: byCase, typeIndex: typeIndex}
+}
+
+// restore replaces s's current state with snap, undoing any writes made
+// since snap was captured.
+func (s *InMemoryGraphStore) restore(snap inMemorySnapshot) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.nodes = snap.nodes
+	s.edges = snap.edges
+	s.byCase = snap.byCase
+	s.typeIndex = snap.typeIndex
+}
+
 // intersect returns the elements present in both a and b.
 func intersect(a, b []string) []string {
 	bSet := make(map[string]struct{}, len(b))
