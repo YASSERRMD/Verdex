@@ -35,4 +35,5 @@ use (
 	./packages/statute
 	./packages/precedent
 	./packages/application
+	./packages/ontology
 )
