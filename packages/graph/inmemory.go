@@ -290,6 +290,22 @@ func (s *InMemoryGraphStore) restore(snap inMemorySnapshot) {
 	s.typeIndex = snap.typeIndex
 }
 
+// EdgesForCase returns every edge belonging to caseID's tree. Not part
+// of the GraphStore interface (Neo4j-backed stores answer this via a
+// Cypher MATCH instead of an in-memory lookup); backup.go's Export type-
+// asserts for this method opportunistically so it can reconstruct a
+// case's edges purely in terms of what a given GraphStore
+// implementation is able to expose.
+func (s *InMemoryGraphStore) EdgesForCase(caseID string) []irac.Edge {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	edges := s.edges[caseID]
+	out := make([]irac.Edge, len(edges))
+	copy(out, edges)
+	return out
+}
+
 // intersect returns the elements present in both a and b.
 func intersect(a, b []string) []string {
 	bSet := make(map[string]struct{}, len(b))
