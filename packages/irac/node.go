@@ -103,17 +103,24 @@ type NodeLike interface {
 // reasoning tree must resolve.
 type IssueNode struct {
 	Node
+
+	// Spans traces this issue's text back to the ingested source
+	// document(s) it was drawn from.
+	Spans []SourceSpan `json:"spans,omitempty"`
 }
 
 // NewIssueNode constructs an IssueNode with Type fixed to NodeIssue.
-func NewIssueNode(id, caseID, text string, createdAt time.Time) IssueNode {
-	return IssueNode{Node: Node{
-		ID:        id,
-		Type:      NodeIssue,
-		CaseID:    caseID,
-		Text:      text,
-		CreatedAt: createdAt,
-	}}
+func NewIssueNode(id, caseID, text string, createdAt time.Time, spans ...SourceSpan) IssueNode {
+	return IssueNode{
+		Node: Node{
+			ID:        id,
+			Type:      NodeIssue,
+			CaseID:    caseID,
+			Text:      text,
+			CreatedAt: createdAt,
+		},
+		Spans: spans,
+	}
 }
 
 // RuleNode is a Node of Type NodeRule: a legal rule, statute, or precedent
@@ -131,10 +138,14 @@ type RuleNode struct {
 	// (e.g. "common_law", "civil_law"). Opaque string here (no hard
 	// dependency on packages/jurisdiction) — see jurisdiction.go.
 	LegalFamily string `json:"legal_family"`
+
+	// Spans traces this rule's text back to the ingested source
+	// document(s) it was drawn from (e.g. the statute or precedent text).
+	Spans []SourceSpan `json:"spans,omitempty"`
 }
 
 // NewRuleNode constructs a RuleNode with Type fixed to NodeRule.
-func NewRuleNode(id, caseID, text, jurisdictionCode, legalFamily string, createdAt time.Time) RuleNode {
+func NewRuleNode(id, caseID, text, jurisdictionCode, legalFamily string, createdAt time.Time, spans ...SourceSpan) RuleNode {
 	return RuleNode{
 		Node: Node{
 			ID:        id,
@@ -145,6 +156,7 @@ func NewRuleNode(id, caseID, text, jurisdictionCode, legalFamily string, created
 		},
 		JurisdictionCode: jurisdictionCode,
 		LegalFamily:      legalFamily,
+		Spans:            spans,
 	}
 }
 
@@ -152,35 +164,49 @@ func NewRuleNode(id, caseID, text, jurisdictionCode, legalFamily string, created
 // case record.
 type FactNode struct {
 	Node
+
+	// Spans traces this fact's text back to the ingested source
+	// document(s) it was drawn from.
+	Spans []SourceSpan `json:"spans,omitempty"`
 }
 
 // NewFactNode constructs a FactNode with Type fixed to NodeFact.
-func NewFactNode(id, caseID, text string, createdAt time.Time) FactNode {
-	return FactNode{Node: Node{
-		ID:        id,
-		Type:      NodeFact,
-		CaseID:    caseID,
-		Text:      text,
-		CreatedAt: createdAt,
-	}}
+func NewFactNode(id, caseID, text string, createdAt time.Time, spans ...SourceSpan) FactNode {
+	return FactNode{
+		Node: Node{
+			ID:        id,
+			Type:      NodeFact,
+			CaseID:    caseID,
+			Text:      text,
+			CreatedAt: createdAt,
+		},
+		Spans: spans,
+	}
 }
 
 // ApplicationNode is a Node of Type NodeApplication: the reasoning step
 // that applies a Rule to a set of Facts.
 type ApplicationNode struct {
 	Node
+
+	// Spans traces this application's reasoning text back to the
+	// ingested source document(s) it was drawn from.
+	Spans []SourceSpan `json:"spans,omitempty"`
 }
 
 // NewApplicationNode constructs an ApplicationNode with Type fixed to
 // NodeApplication.
-func NewApplicationNode(id, caseID, text string, createdAt time.Time) ApplicationNode {
-	return ApplicationNode{Node: Node{
-		ID:        id,
-		Type:      NodeApplication,
-		CaseID:    caseID,
-		Text:      text,
-		CreatedAt: createdAt,
-	}}
+func NewApplicationNode(id, caseID, text string, createdAt time.Time, spans ...SourceSpan) ApplicationNode {
+	return ApplicationNode{
+		Node: Node{
+			ID:        id,
+			Type:      NodeApplication,
+			CaseID:    caseID,
+			Text:      text,
+			CreatedAt: createdAt,
+		},
+		Spans: spans,
+	}
 }
 
 // ConclusionNode is a Node of Type NodeConclusion: the outcome reasoned
@@ -197,4 +223,8 @@ type ConclusionNode struct {
 	// is rejected by construction: NewConclusionNode is the only exported
 	// way to build a ConclusionNode with this field set correctly.
 	Label string `json:"label"`
+
+	// Spans traces this conclusion's text back to the ingested source
+	// document(s) and/or reasoning it was drawn from.
+	Spans []SourceSpan `json:"spans,omitempty"`
 }
