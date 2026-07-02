@@ -47,4 +47,5 @@ use (
 	./packages/knowledgeisolation
 	./packages/knowledgeapi
 	./packages/agentframework
+	./packages/issueagent
 )
