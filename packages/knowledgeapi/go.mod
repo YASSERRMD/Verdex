@@ -27,6 +27,7 @@ replace (
 require (
 	github.com/YASSERRMD/verdex/packages/citation v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/embedding v0.0.0-00010101000000-000000000000
+	github.com/YASSERRMD/verdex/packages/gateway v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/graph v0.0.0-20260702094313-4d74dfa6d3e6
 	github.com/YASSERRMD/verdex/packages/hybridretrieval v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/identity v0.0.0-00010101000000-000000000000
