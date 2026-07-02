@@ -153,12 +153,12 @@ func TestInMemoryRepositoryConcurrentAccess(t *testing.T) {
 	var wg sync.WaitGroup
 	for i := 0; i < 50; i++ {
 		wg.Add(1)
-		go func(i int) {
+		go func() {
 			defer wg.Done()
 			_ = repo.Save(ctx, citation.CitedUnit{NodeID: "n", CaseID: "case-1"})
 			_, _ = repo.Get(ctx, "case-1", "n")
 			_, _ = repo.ListByCase(ctx, "case-1")
-		}(i)
+		}()
 	}
 	wg.Wait()
 
