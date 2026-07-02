@@ -3,6 +3,7 @@ package reasoningorchestration
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/YASSERRMD/verdex/packages/evidenceweighing"
@@ -115,9 +116,23 @@ func drive(ctx context.Context, caseID string, cfg RunConfig, state RunState) Ru
 	budget := cfg.Budget.withDefaults()
 	telemetry := newTelemetryRecorder()
 
+	// checkpointWG tracks every fire-and-forget SaveCheckpoint goroutine
+	// (see persistCheckpointAsync) started during this drive call. The
+	// pipeline's own next stage never waits on it — that is the whole
+	// point of making persistence async — but drive itself waits for
+	// every outstanding save to land before returning, so a caller
+	// holding a RunResult can immediately read back every checkpoint
+	// for a case whose run has already returned, without a durability
+	// race. This preserves the documented safety property (no ordering
+	// dependency between a checkpoint save and the NEXT STAGE starting)
+	// while still guaranteeing "checkpoints exist once Run/Resume
+	// returns" for the audit-trail use case.
+	var checkpointWG sync.WaitGroup
+	defer checkpointWG.Wait()
+
 	pc, err := loadCompletedStageOutputs(ctx, cfg, caseID, state.CompletedStages)
 	if err != nil {
-		return failRun(ctx, cfg, state, StageIssueFraming, err)
+		return failRun(ctx, cfg, state, telemetry, StageIssueFraming, err)
 	}
 
 	for _, stage := range stageOrder {
@@ -131,7 +146,11 @@ func drive(ctx context.Context, caseID string, cfg RunConfig, state RunState) Ru
 			state.Termination = TerminationBudgetExhausted
 			state.UpdatedAt = nowFunc()
 			persistRunState(ctx, cfg, state)
-			return RunResult{State: state, Err: fmt.Errorf("%w: stage %q not started after %s", ErrBudgetExhausted, stage, elapsed)}
+			return RunResult{
+				State:     state,
+				Telemetry: telemetry.snapshot(),
+				Err:       fmt.Errorf("%w: stage %q not started after %s", ErrBudgetExhausted, stage, elapsed),
+			}
 		}
 
 		stageStart := nowFunc()
@@ -141,15 +160,15 @@ func drive(ctx context.Context, caseID string, cfg RunConfig, state RunState) Ru
 		telemetry.record(StageTelemetry{Stage: stage, Duration: duration, Err: stageErr})
 
 		if stageErr != nil {
-			return failRun(ctx, cfg, state, stage, stageErr)
+			return failRun(ctx, cfg, state, telemetry, stage, stageErr)
 		}
 
-		persistCheckpointAsync(cfg, caseID, checkpoint)
+		persistCheckpointAsync(&checkpointWG, cfg, caseID, checkpoint)
 
 		state.CompletedStages = append(state.CompletedStages, stage)
 		next, nextErr := nextStage(stage)
 		if nextErr != nil {
-			return failRun(ctx, cfg, state, stage, nextErr)
+			return failRun(ctx, cfg, state, telemetry, stage, nextErr)
 		}
 		state.CurrentStage = next
 		state.UpdatedAt = nowFunc()
@@ -161,18 +180,18 @@ func drive(ctx context.Context, caseID string, cfg RunConfig, state RunState) Ru
 	state.UpdatedAt = nowFunc()
 	persistRunState(ctx, cfg, state)
 
-	return RunResult{State: state}
+	return RunResult{State: state, Telemetry: telemetry.snapshot()}
 }
 
 // failRun finalizes state as TerminationFailed at failedStage, persists
 // it, and returns the corresponding RunResult.
-func failRun(ctx context.Context, cfg RunConfig, state RunState, failedStage Stage, err error) RunResult {
+func failRun(ctx context.Context, cfg RunConfig, state RunState, telemetry *telemetryRecorder, failedStage Stage, err error) RunResult {
 	state.Termination = TerminationFailed
 	state.FailedStage = failedStage
 	state.FailureReason = err.Error()
 	state.UpdatedAt = nowFunc()
 	persistRunState(ctx, cfg, state)
-	return RunResult{State: state, Err: err}
+	return RunResult{State: state, Telemetry: telemetry.snapshot(), Err: err}
 }
 
 // persistRunState saves state to cfg.Checkpoints, swallowing (not
@@ -185,17 +204,22 @@ func persistRunState(ctx context.Context, cfg RunConfig, state RunState) {
 }
 
 // persistCheckpointAsync saves checkpoint for caseID in a separate
-// goroutine: checkpoint persistence has no ordering dependency on the
-// next stage starting (the next stage reads from pipelineContext, an
-// in-process value, never from cfg.Checkpoints), so making it
-// fire-and-forget keeps a slow or momentarily-unavailable
-// CheckpointStore off the pipeline's critical path. See doc/
-// reasoning-orchestration.md for why this is safe: each goroutine only
-// ever touches its own Checkpoint value (no shared mutable state) and
-// InMemoryCheckpointStore (and any real implementation) is expected to
-// serialize its own internal state.
-func persistCheckpointAsync(cfg RunConfig, caseID string, checkpoint Checkpoint) {
+// goroutine registered on wg: checkpoint persistence has no ordering
+// dependency on the NEXT STAGE starting (the next stage reads from
+// pipelineContext, an in-process value, never from cfg.Checkpoints), so
+// making it fire-and-forget relative to stage progression keeps a slow
+// or momentarily-unavailable CheckpointStore off the pipeline's critical
+// path. See doc/reasoning-orchestration.md for why this is safe: each
+// goroutine only ever touches its own Checkpoint value (no shared
+// mutable state) and InMemoryCheckpointStore (and any real
+// implementation) is expected to serialize its own internal state.
+// drive still waits on wg before returning (see its own doc comment), so
+// this is "off the critical path between stages", not "may never
+// happen".
+func persistCheckpointAsync(wg *sync.WaitGroup, cfg RunConfig, caseID string, checkpoint Checkpoint) {
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		_ = cfg.Checkpoints.SaveCheckpoint(context.Background(), caseID, checkpoint)
 	}()
 }
@@ -264,6 +288,10 @@ func applyCheckpoint(pc *pipelineContext, checkpoint Checkpoint) {
 	case StageGuardrailCheck:
 		// No pipelineContext field: StageGuardrailCheck is terminal and
 		// carries no output any later stage consumes.
+	case StageComplete:
+		// Not a runnable stage (see stageOrder): a Checkpoint is never
+		// saved with this Stage value, so this case is unreachable in
+		// practice. Listed to satisfy exhaustive switch-checking.
 	}
 }
 

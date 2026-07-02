@@ -32,12 +32,20 @@ func runIssueFraming(ctx context.Context, cfg RunConfig, caseID string, pc *pipe
 		weightsDone <- resolveWeights(cfg.LegalFamily)
 	}()
 
-	agent, err := issueagent.New(cfg.API,
-		issueagent.WithLocale(cfg.Locale),
-		issueagent.WithLegalFamily(cfg.LegalFamily),
-		issueagent.WithJurisdictionName(cfg.JurisdictionName),
-		issueagent.WithJurisdictionCode(cfg.JurisdictionCode),
-	)
+	var opts []issueagent.Option
+	if cfg.Locale != "" {
+		opts = append(opts, issueagent.WithLocale(cfg.Locale))
+	}
+	if cfg.LegalFamily != "" {
+		opts = append(opts, issueagent.WithLegalFamily(cfg.LegalFamily))
+	}
+	if cfg.JurisdictionName != "" {
+		opts = append(opts, issueagent.WithJurisdictionName(cfg.JurisdictionName))
+	}
+	if cfg.JurisdictionCode != "" {
+		opts = append(opts, issueagent.WithJurisdictionCode(cfg.JurisdictionCode))
+	}
+	agent, err := issueagent.New(cfg.API, opts...)
 	if err != nil {
 		<-weightsDone
 		return Checkpoint{}, fmt.Errorf("reasoningorchestration: construct issue agent: %w", err)
@@ -65,13 +73,23 @@ func runIssueFraming(ctx context.Context, cfg RunConfig, caseID string, pc *pipe
 // packages/firstpartyagent.Argue, constructing the first party's
 // affirmative case over pc.issues.
 func runFirstPartyArguments(ctx context.Context, cfg RunConfig, caseID string, pc *pipelineContext) (Checkpoint, error) {
-	agent, err := firstpartyagent.New(cfg.API, firstpartyagent.PartyID(cfg.FirstParty.ID), pc.issues.Issues,
-		firstpartyagent.WithLocale(cfg.Locale),
-		firstpartyagent.WithLegalFamily(cfg.LegalFamily),
-		firstpartyagent.WithJurisdictionName(cfg.JurisdictionName),
-		firstpartyagent.WithJurisdictionCode(cfg.JurisdictionCode),
-		firstpartyagent.WithPartyLabel(cfg.FirstParty.Label),
-	)
+	var opts []firstpartyagent.Option
+	if cfg.Locale != "" {
+		opts = append(opts, firstpartyagent.WithLocale(cfg.Locale))
+	}
+	if cfg.LegalFamily != "" {
+		opts = append(opts, firstpartyagent.WithLegalFamily(cfg.LegalFamily))
+	}
+	if cfg.JurisdictionName != "" {
+		opts = append(opts, firstpartyagent.WithJurisdictionName(cfg.JurisdictionName))
+	}
+	if cfg.JurisdictionCode != "" {
+		opts = append(opts, firstpartyagent.WithJurisdictionCode(cfg.JurisdictionCode))
+	}
+	if cfg.FirstParty.Label != "" {
+		opts = append(opts, firstpartyagent.WithPartyLabel(cfg.FirstParty.Label))
+	}
+	agent, err := firstpartyagent.New(cfg.API, firstpartyagent.PartyID(cfg.FirstParty.ID), pc.issues.Issues, opts...)
 	if err != nil {
 		return Checkpoint{}, fmt.Errorf("reasoningorchestration: construct first-party agent: %w", err)
 	}
@@ -94,13 +112,23 @@ func runFirstPartyArguments(ctx context.Context, cfg RunConfig, caseID string, p
 // packages/secondpartyagent.Argue, constructing the second party's case
 // and rebuttal over pc.issues and pc.firstParty.
 func runSecondPartyArguments(ctx context.Context, cfg RunConfig, caseID string, pc *pipelineContext) (Checkpoint, error) {
-	agent, err := secondpartyagent.New(cfg.API, secondpartyagent.PartyID(cfg.SecondParty.ID), pc.issues.Issues, pc.firstParty,
-		secondpartyagent.WithLocale(cfg.Locale),
-		secondpartyagent.WithLegalFamily(cfg.LegalFamily),
-		secondpartyagent.WithJurisdictionName(cfg.JurisdictionName),
-		secondpartyagent.WithJurisdictionCode(cfg.JurisdictionCode),
-		secondpartyagent.WithPartyLabel(cfg.SecondParty.Label),
-	)
+	var opts []secondpartyagent.Option
+	if cfg.Locale != "" {
+		opts = append(opts, secondpartyagent.WithLocale(cfg.Locale))
+	}
+	if cfg.LegalFamily != "" {
+		opts = append(opts, secondpartyagent.WithLegalFamily(cfg.LegalFamily))
+	}
+	if cfg.JurisdictionName != "" {
+		opts = append(opts, secondpartyagent.WithJurisdictionName(cfg.JurisdictionName))
+	}
+	if cfg.JurisdictionCode != "" {
+		opts = append(opts, secondpartyagent.WithJurisdictionCode(cfg.JurisdictionCode))
+	}
+	if cfg.SecondParty.Label != "" {
+		opts = append(opts, secondpartyagent.WithPartyLabel(cfg.SecondParty.Label))
+	}
+	agent, err := secondpartyagent.New(cfg.API, secondpartyagent.PartyID(cfg.SecondParty.ID), pc.issues.Issues, pc.firstParty, opts...)
 	if err != nil {
 		return Checkpoint{}, fmt.Errorf("reasoningorchestration: construct second-party agent: %w", err)
 	}
@@ -129,15 +157,15 @@ func runEvidenceWeighing(ctx context.Context, cfg RunConfig, caseID string, pc *
 		return Checkpoint{}, err
 	}
 
-	issueIDs := make([]string, 0, len(pc.issues.Issues))
-	for _, fi := range pc.issues.Issues {
-		issueIDs = append(issueIDs, fi.SourceIssueNodeID)
-	}
-
+	// snap.allIssueNodeIDs (every IssueNode in the tree) is used here
+	// rather than only pc.issues.Issues (the issues issueagent chose to
+	// frame): DetectGaps's GapKindUncitedIssue finding is meant to catch
+	// an issue nobody argued evidence for at all, which is a strictly
+	// broader set than "issues the framing agent successfully framed".
 	result, err := evidenceweighing.Weigh(evidenceweighing.WeighRequest{
 		CaseID:       caseID,
 		Facts:        snap.facts,
-		IssueNodeIDs: issueIDs,
+		IssueNodeIDs: snap.allIssueNodeIDs,
 		FirstParty:   pc.firstParty,
 		SecondParty:  pc.secondParty,
 		LegalFamily:  evidenceweighing.LegalFamily(cfg.LegalFamily),
@@ -183,12 +211,20 @@ func runLawApplication(ctx context.Context, cfg RunConfig, caseID string, pc *pi
 // runSynthesis runs StageSynthesis: packages/synthesisagent.Synthesize,
 // producing the case's draft Opinion from every prior stage's output.
 func runSynthesis(ctx context.Context, cfg RunConfig, caseID string, pc *pipelineContext) (Checkpoint, error) {
-	agent, err := synthesisagent.New(cfg.API, pc.issues.Issues, pc.firstParty, pc.secondParty, pc.evidence, pc.law,
-		synthesisagent.WithLocale(cfg.Locale),
-		synthesisagent.WithLegalFamily(cfg.LegalFamily),
-		synthesisagent.WithJurisdictionName(cfg.JurisdictionName),
-		synthesisagent.WithJurisdictionCode(cfg.JurisdictionCode),
-	)
+	var opts []synthesisagent.Option
+	if cfg.Locale != "" {
+		opts = append(opts, synthesisagent.WithLocale(cfg.Locale))
+	}
+	if cfg.LegalFamily != "" {
+		opts = append(opts, synthesisagent.WithLegalFamily(cfg.LegalFamily))
+	}
+	if cfg.JurisdictionName != "" {
+		opts = append(opts, synthesisagent.WithJurisdictionName(cfg.JurisdictionName))
+	}
+	if cfg.JurisdictionCode != "" {
+		opts = append(opts, synthesisagent.WithJurisdictionCode(cfg.JurisdictionCode))
+	}
+	agent, err := synthesisagent.New(cfg.API, pc.issues.Issues, pc.firstParty, pc.secondParty, pc.evidence, pc.law, opts...)
 	if err != nil {
 		return Checkpoint{}, fmt.Errorf("reasoningorchestration: construct synthesis agent: %w", err)
 	}

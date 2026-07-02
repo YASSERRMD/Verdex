@@ -45,6 +45,12 @@ func fetchTreeSnapshot(ctx context.Context, api *knowledgeapi.KnowledgeAPI, case
 			snap.rules = append(snap.rules, lawapplication.RuleRef{ID: n.ID, Text: n.Text})
 		case irac.NodeIssue:
 			snap.allIssueNodeIDs = append(snap.allIssueNodeIDs, n.ID)
+		case irac.NodeApplication, irac.NodeConclusion:
+			// Not needed by this package's stages: ApplicationNodes and
+			// ConclusionNodes are produced later by
+			// packages/treeassembly/packages/synthesisagent, not
+			// consumed as inputs to evidence weighing or law
+			// application.
 		}
 	}
 

@@ -205,8 +205,22 @@ type RunResult struct {
 	// State is the run's final RunState.
 	State RunState
 
+	// Telemetry is this drive call's Stats: one StageTelemetry per stage
+	// actually attempted during this Run/Resume call (not including
+	// stages skipped because they were already completed on a prior
+	// Resume) — see Stats() for a convenience accessor mirroring
+	// treeindex/adaptiveretrieval's Stats()/Telemetry() convention.
+	Telemetry Stats
+
 	// Err is non-nil whenever State.Termination is not
 	// TerminationComplete. It wraps ErrBudgetExhausted for a budget halt,
 	// or carries the underlying stage error (unwrapped) for a failure.
 	Err error
+}
+
+// Stats returns r.Telemetry, mirroring treeindex/adaptiveretrieval's
+// Stats()/Telemetry() package-local accessor convention so a caller
+// reading this package's exported API by either name finds it.
+func (r RunResult) Stats() Stats {
+	return r.Telemetry
 }
