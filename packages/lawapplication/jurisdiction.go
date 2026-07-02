@@ -26,23 +26,47 @@ type LegalFamily string
 //     judicial decisions are persuasive but not formally binding — the
 //     weighting is reversed: statute-origin rules outweigh
 //     precedent-origin rules.
+//   - "mixed" jurisdictions are weighted at the midpoint between
+//     CommonLawProfile and CivilLawProfile, rather than defaulting to
+//     neutral, since a mixed-family jurisdiction still leans measurably
+//     on both statute and precedent rather than having no lean at all.
+//   - "islamic_law" jurisdictions are weighted per IslamicLawProfile; see
+//     that constructor's doc comment for the rationale and limitations.
 //   - Any other/unrecognized LegalFamily (including OriginUnknown-origin
 //     rules) is treated as neutral: every Origin weights equally (1.0),
 //     mirroring packages/application's and packages/evidenceweighing's
 //     shared neutral-default convention.
 //
-// | LegalFamily   | OriginStatute | OriginPrecedent | OriginUnknown |
-// |---------------|---------------|-----------------|---------------|
-// | "common_law"  | 0.8           | 1.0             | 1.0           |
-// | "civil_law"   | 1.0           | 0.8             | 1.0           |
-// | anything else | 1.0           | 1.0             | 1.0           |
+// The weights below are this package's own copy of the canonical values
+// defined in packages/reasoningprofile (Weights.StatuteEmphasis /
+// Weights.PrecedentEmphasis) — see doc/law-application.md and
+// packages/reasoningprofile/doc/jurisdiction-reasoning.md for the
+// cross-package derivation. This package does not import
+// packages/reasoningprofile; the values are kept in sync by convention
+// and by packages/reasoningprofile's own cross-package alignment tests.
+//
+// | LegalFamily    | OriginStatute | OriginPrecedent | OriginUnknown |
+// |----------------|---------------|-----------------|---------------|
+// | "common_law"   | 0.8           | 1.0             | 1.0           |
+// | "civil_law"    | 1.0           | 0.8             | 1.0           |
+// | "mixed"        | 0.9           | 0.9             | 1.0           |
+// | "islamic_law"  | 1.0           | 0.95            | 1.0           |
+// | anything else  | 1.0           | 1.0             | 1.0           |
 const (
-	CommonLawFamily LegalFamily = "common_law"
-	CivilLawFamily  LegalFamily = "civil_law"
+	CommonLawFamily  LegalFamily = "common_law"
+	CivilLawFamily   LegalFamily = "civil_law"
+	MixedFamily      LegalFamily = "mixed"
+	IslamicLawFamily LegalFamily = "islamic_law"
 
 	dominantOriginWeight    = 1.0
 	subordinateOriginWeight = 0.8
 	neutralOriginWeight     = 1.0
+
+	mixedStatuteWeight   = 0.9
+	mixedPrecedentWeight = 0.9
+
+	islamicLawStatuteWeight   = 1.0
+	islamicLawPrecedentWeight = 0.95
 )
 
 // OriginProfile is a LegalFamily-keyed weighting profile: a multiplier
@@ -86,6 +110,38 @@ func CivilLawProfile() OriginProfile {
 	}
 }
 
+// MixedProfile returns a blended weighting profile for LegalFamily
+// MixedFamily: the midpoint between CommonLawProfile and CivilLawProfile,
+// reflecting a jurisdiction that draws meaningfully on both the
+// precedent-favoring and statute-favoring traditions rather than having
+// no lean at all.
+func MixedProfile() OriginProfile {
+	return OriginProfile{
+		Family:    MixedFamily,
+		Statute:   mixedStatuteWeight,
+		Precedent: mixedPrecedentWeight,
+	}
+}
+
+// IslamicLawProfile returns a weighting profile for LegalFamily
+// IslamicLawFamily. Many modern Islamic-law jurisdictions operate through
+// heavy statutory codification (Gulf civil and commercial codes
+// influenced by Sharia are frequently fully codified) while also
+// affording strong, near-equal weight to established juristic
+// consensus/precedent. This is a simplified computational model of a
+// highly diverse family of legal systems, not a claim to legal or
+// religious authority — see
+// packages/reasoningprofile/doc/jurisdiction-reasoning.md's "Islamic-law
+// profile rationale and limitations" section, which this package's
+// weights are derived from, for the full discussion and caveats.
+func IslamicLawProfile() OriginProfile {
+	return OriginProfile{
+		Family:    IslamicLawFamily,
+		Statute:   islamicLawStatuteWeight,
+		Precedent: islamicLawPrecedentWeight,
+	}
+}
+
 // NeutralProfile returns a profile that weights every Origin equally,
 // used as the default when no LegalFamily signal is available.
 func NeutralProfile() OriginProfile {
@@ -97,7 +153,8 @@ func NeutralProfile() OriginProfile {
 
 // ProfileForFamily resolves the OriginProfile for a given LegalFamily:
 // CommonLawProfile for CommonLawFamily, CivilLawProfile for
-// CivilLawFamily, and NeutralProfile for anything else (including
+// CivilLawFamily, MixedProfile for MixedFamily, IslamicLawProfile for
+// IslamicLawFamily, and NeutralProfile for anything else (including
 // empty).
 func ProfileForFamily(family LegalFamily) OriginProfile {
 	switch family {
@@ -105,6 +162,10 @@ func ProfileForFamily(family LegalFamily) OriginProfile {
 		return CommonLawProfile()
 	case CivilLawFamily:
 		return CivilLawProfile()
+	case MixedFamily:
+		return MixedProfile()
+	case IslamicLawFamily:
+		return IslamicLawProfile()
 	default:
 		return NeutralProfile()
 	}
