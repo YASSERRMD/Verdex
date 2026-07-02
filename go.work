@@ -37,4 +37,5 @@ use (
 	./packages/application
 	./packages/ontology
 	./packages/treeassembly
+	./packages/treevalidation
 )
