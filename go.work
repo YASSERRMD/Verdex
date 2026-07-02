@@ -23,4 +23,5 @@ use (
 	./packages/ocr
 	./packages/multilingual
 	./packages/segmentation
+	./packages/pii
 )
