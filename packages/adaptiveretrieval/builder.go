@@ -153,9 +153,12 @@ func (b *Builder) Build(ctx context.Context, query AdaptiveQuery) (Subgraph, err
 }
 
 // build performs the actual adaptive traversal.Walker walk for query,
-// bounded by b.budget. Returns ErrBudgetExceeded if the resolved node
-// count would exceed BuildBudget.MaxNodes before the walk even starts (a
-// cheap upfront check) or if the walk's context deadline expires.
+// bounded by b.budget. Returns ErrBudgetExceeded if the walk visited more
+// nodes than BuildBudget.MaxNodes allows, or if the walk did not finish
+// before BuildBudget.MaxWallClock elapsed — checked both via the walk
+// context's own deadline (for a graph.GraphStore that observes ctx
+// cancellation) and via a direct wall-clock check after Execute returns
+// (for one that does not, e.g. InMemoryGraphStore's synchronous lookups).
 func (b *Builder) build(ctx context.Context, query AdaptiveQuery, hops []hybridretrieval.ExpansionHop, depth int) (Subgraph, error) {
 	tracker := newBuildTracker(b.budget)
 	buildCtx, cancel := tracker.withDeadline(ctx)
@@ -179,6 +182,16 @@ func (b *Builder) build(ctx context.Context, query AdaptiveQuery, hops []hybridr
 	if result.VisitedCount > b.budget.withDefaults().MaxNodes {
 		return Subgraph{}, fmt.Errorf("adaptiveretrieval: %w: visited %d nodes, max %d", ErrBudgetExceeded, result.VisitedCount, b.budget.withDefaults().MaxNodes)
 	}
+	// Even when the underlying graph.GraphStore never observes ctx
+	// cancellation mid-walk (e.g. an in-memory store's synchronous,
+	// non-blocking lookups), a build that only finished after its
+	// wall-clock deadline had already elapsed is still a budget breach:
+	// the caller waited longer than BuildBudget.MaxWallClock allows, and
+	// should degrade to the fallback the same as an explicit
+	// context.DeadlineExceeded would trigger.
+	if tracker.exceeded() {
+		return Subgraph{}, fmt.Errorf("adaptiveretrieval: %w: wall-clock budget %s elapsed", ErrBudgetExceeded, b.budget.withDefaults().MaxWallClock)
+	}
 
 	return Subgraph{
 		CaseID:       query.CaseID,
@@ -186,7 +199,7 @@ func (b *Builder) build(ctx context.Context, query AdaptiveQuery, hops []hybridr
 		Paths:        result.Paths,
 		Depth:        depth,
 		NodesVisited: result.VisitedCount,
-		Truncated:    result.Truncated || tracker.exceeded(),
+		Truncated:    result.Truncated,
 		Source:       SourceBuilt,
 	}, nil
 }
