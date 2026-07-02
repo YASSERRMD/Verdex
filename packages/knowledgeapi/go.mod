@@ -36,6 +36,7 @@ require (
 	github.com/YASSERRMD/verdex/packages/treeassembly v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/treeindex v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/treevalidation v0.0.0-00010101000000-000000000000
+	github.com/YASSERRMD/verdex/packages/vectorindex v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -43,7 +44,6 @@ require (
 	github.com/YASSERRMD/verdex/packages/persistence v0.0.0 // indirect
 	github.com/YASSERRMD/verdex/packages/provider v0.0.0 // indirect
 	github.com/YASSERRMD/verdex/packages/traversal v0.0.0-00010101000000-000000000000 // indirect
-	github.com/YASSERRMD/verdex/packages/vectorindex v0.0.0-00010101000000-000000000000 // indirect
 	github.com/golang-migrate/migrate/v4 v4.19.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
