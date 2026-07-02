@@ -36,7 +36,7 @@
 //     cited any fact for.
 //   - Produces one FactWeight per referenced fact, each carrying a
 //     human-readable Rationale explaining how its score was derived, and
-//     persists the full EvidenceWeighingResult per case via a Repository.
+//     persists the full Result per case via a Repository.
 //
 // See doc/evidence-weighing.md for the rubric's exact coefficients, the
 // jurisdiction weighting profiles, and how this feeds Phase 054 and

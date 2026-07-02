@@ -17,6 +17,6 @@ var (
 	ErrCaseIDMismatch = errors.New("evidenceweighing: case id mismatch across inputs")
 
 	// ErrResultNotFound is returned by a Repository's Get when no
-	// EvidenceWeighingResult was ever saved for the requested case.
+	// Result was ever saved for the requested case.
 	ErrResultNotFound = errors.New("evidenceweighing: no weighing result found for case")
 )

@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-// Repository persists an EvidenceWeighingResult per case, so a caller
+// Repository persists a Result per case, so a caller
 // (e.g. Phase 054's law-application module or Phase 055's synthesis
 // agent) can retrieve a case's evidence weights without recomputing them.
 // Implementations:
@@ -21,13 +21,13 @@ type Repository interface {
 	// with the same CaseID overwrites the previously stored result
 	// (idempotent upsert), mirroring citation.Repository.Save's
 	// overwrite convention.
-	Save(ctx context.Context, result EvidenceWeighingResult) error
+	Save(ctx context.Context, result Result) error
 
-	// Get returns the EvidenceWeighingResult stored for caseID, or
+	// Get returns the Result stored for caseID, or
 	// ErrResultNotFound if none was ever saved.
-	Get(ctx context.Context, caseID string) (EvidenceWeighingResult, error)
+	Get(ctx context.Context, caseID string) (Result, error)
 
-	// DeleteByCase removes the EvidenceWeighingResult saved for caseID.
+	// DeleteByCase removes the Result saved for caseID.
 	// Not an error to delete a case with none saved.
 	DeleteByCase(ctx context.Context, caseID string) error
 }
@@ -38,17 +38,17 @@ type Repository interface {
 type InMemoryRepository struct {
 	mu sync.RWMutex
 
-	// results maps case id -> EvidenceWeighingResult.
-	results map[string]EvidenceWeighingResult
+	// results maps case id -> Result.
+	results map[string]Result
 }
 
 // NewInMemoryRepository constructs an empty InMemoryRepository.
 func NewInMemoryRepository() *InMemoryRepository {
-	return &InMemoryRepository{results: make(map[string]EvidenceWeighingResult)}
+	return &InMemoryRepository{results: make(map[string]Result)}
 }
 
 // Save implements Repository.
-func (r *InMemoryRepository) Save(_ context.Context, result EvidenceWeighingResult) error {
+func (r *InMemoryRepository) Save(_ context.Context, result Result) error {
 	if result.CaseID == "" {
 		return ErrEmptyCaseID
 	}
@@ -61,9 +61,9 @@ func (r *InMemoryRepository) Save(_ context.Context, result EvidenceWeighingResu
 }
 
 // Get implements Repository.
-func (r *InMemoryRepository) Get(_ context.Context, caseID string) (EvidenceWeighingResult, error) {
+func (r *InMemoryRepository) Get(_ context.Context, caseID string) (Result, error) {
 	if caseID == "" {
-		return EvidenceWeighingResult{}, ErrEmptyCaseID
+		return Result{}, ErrEmptyCaseID
 	}
 
 	r.mu.RLock()
@@ -71,7 +71,7 @@ func (r *InMemoryRepository) Get(_ context.Context, caseID string) (EvidenceWeig
 
 	result, ok := r.results[caseID]
 	if !ok {
-		return EvidenceWeighingResult{}, ErrResultNotFound
+		return Result{}, ErrResultNotFound
 	}
 	return result, nil
 }

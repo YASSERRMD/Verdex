@@ -189,10 +189,10 @@ type FactWeight struct {
 	Rationale string `json:"rationale"`
 }
 
-// EvidenceWeighingResult is the full output of one Weigh call for a case:
+// Result is the full output of one Weigh call for a case:
 // every FactWeight computed, every Contradiction detected, and every Gap
 // surfaced.
-type EvidenceWeighingResult struct {
+type Result struct {
 	// CaseID is the case this result was computed for.
 	CaseID string `json:"case_id"`
 

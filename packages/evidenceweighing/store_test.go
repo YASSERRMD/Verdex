@@ -12,7 +12,7 @@ func TestInMemoryRepository_SaveGetRoundTrip(t *testing.T) {
 	repo := evidenceweighing.NewInMemoryRepository()
 	ctx := context.Background()
 
-	result := evidenceweighing.EvidenceWeighingResult{
+	result := evidenceweighing.Result{
 		CaseID: "case-1",
 		FactWeights: []evidenceweighing.FactWeight{
 			{FactNodeID: "fact-1", Weight: 0.75, Rationale: "test rationale"},
@@ -45,8 +45,8 @@ func TestInMemoryRepository_SaveOverwrites(t *testing.T) {
 	repo := evidenceweighing.NewInMemoryRepository()
 	ctx := context.Background()
 
-	first := evidenceweighing.EvidenceWeighingResult{CaseID: "case-1", LegalFamily: evidenceweighing.CommonLawFamily}
-	second := evidenceweighing.EvidenceWeighingResult{CaseID: "case-1", LegalFamily: evidenceweighing.CivilLawFamily}
+	first := evidenceweighing.Result{CaseID: "case-1", LegalFamily: evidenceweighing.CommonLawFamily}
+	second := evidenceweighing.Result{CaseID: "case-1", LegalFamily: evidenceweighing.CivilLawFamily}
 
 	if err := repo.Save(ctx, first); err != nil {
 		t.Fatalf("Save first returned error: %v", err)
@@ -71,7 +71,7 @@ func TestInMemoryRepository_DeleteByCase(t *testing.T) {
 	repo := evidenceweighing.NewInMemoryRepository()
 	ctx := context.Background()
 
-	if err := repo.Save(ctx, evidenceweighing.EvidenceWeighingResult{CaseID: "case-1"}); err != nil {
+	if err := repo.Save(ctx, evidenceweighing.Result{CaseID: "case-1"}); err != nil {
 		t.Fatalf("Save returned error: %v", err)
 	}
 	if err := repo.DeleteByCase(ctx, "case-1"); err != nil {
@@ -93,7 +93,7 @@ func TestInMemoryRepository_EmptyCaseID(t *testing.T) {
 	repo := evidenceweighing.NewInMemoryRepository()
 	ctx := context.Background()
 
-	if err := repo.Save(ctx, evidenceweighing.EvidenceWeighingResult{}); !errors.Is(err, evidenceweighing.ErrEmptyCaseID) {
+	if err := repo.Save(ctx, evidenceweighing.Result{}); !errors.Is(err, evidenceweighing.ErrEmptyCaseID) {
 		t.Errorf("Save with empty case id: err = %v, want ErrEmptyCaseID", err)
 	}
 	if _, err := repo.Get(ctx, ""); !errors.Is(err, evidenceweighing.ErrEmptyCaseID) {

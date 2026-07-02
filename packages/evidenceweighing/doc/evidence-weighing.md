@@ -199,7 +199,7 @@ base score 0.612 (confidence=0.80*w0.45 + corroboration=0.67*w0.30 + citation_st
 ```
 
 `Weigh` (`weigh.go`) ties fact scoring, contradiction detection, and gap
-surfacing together into one `EvidenceWeighingResult` per case.
+surfacing together into one `Result` per case.
 `Repository`/`InMemoryRepository` (`store.go`) persist that result
 per-case, mirroring `citation.Repository`'s upsert-by-key convention, so
 Phase 054 and Phase 055 can retrieve a case's evidence weights without
@@ -214,7 +214,7 @@ recomputing them.
   corroborated, contradicted, jurisdiction-adjusted — feeds directly into
   how strongly a legal test is treated as satisfied.
 - **Phase 055 (synthesis agent)** is expected to consume the full
-  `EvidenceWeighingResult` — `FactWeights`, `Contradictions`, and `Gaps`
+  `Result` — `FactWeights`, `Contradictions`, and `Gaps`
   — alongside both parties' `ArgumentSet`s and Phase 054's law-application
   output, to produce "weakest-link reasoning" (per the plan's Phase 055
   goal): an issue resting on a low-weight, contradicted, or gapped fact

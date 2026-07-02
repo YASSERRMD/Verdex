@@ -51,30 +51,29 @@ type WeighRequest struct {
 	LegalFamily LegalFamily
 }
 
-// Weigh computes an EvidenceWeighingResult for req: per-fact weights (see
-// ScoreFacts), contradictions (see DetectContradictions), and gaps (see
-// DetectGaps).
+// Weigh computes a Result for req: per-fact weights (see ScoreFacts),
+// contradictions (see DetectContradictions), and gaps (see DetectGaps).
 //
 // Returns ErrEmptyCaseID if req.CaseID is empty, ErrNoArgumentSets if both
 // req.FirstParty and req.SecondParty carry zero arguments, and
 // ErrCaseIDMismatch if either non-empty ArgumentSet's CaseID differs from
 // req.CaseID.
-func Weigh(req WeighRequest) (EvidenceWeighingResult, error) {
+func Weigh(req WeighRequest) (Result, error) {
 	if req.CaseID == "" {
-		return EvidenceWeighingResult{}, ErrEmptyCaseID
+		return Result{}, ErrEmptyCaseID
 	}
 
 	firstArgs := req.FirstParty.Arguments
 	secondArgs := req.SecondParty.Arguments
 	if len(firstArgs) == 0 && len(secondArgs) == 0 {
-		return EvidenceWeighingResult{}, ErrNoArgumentSets
+		return Result{}, ErrNoArgumentSets
 	}
 
 	if len(firstArgs) > 0 && req.FirstParty.CaseID != "" && req.FirstParty.CaseID != req.CaseID {
-		return EvidenceWeighingResult{}, ErrCaseIDMismatch
+		return Result{}, ErrCaseIDMismatch
 	}
 	if len(secondArgs) > 0 && req.SecondParty.CaseID != "" && req.SecondParty.CaseID != req.CaseID {
-		return EvidenceWeighingResult{}, ErrCaseIDMismatch
+		return Result{}, ErrCaseIDMismatch
 	}
 
 	rubric := req.Rubric
@@ -93,7 +92,7 @@ func Weigh(req WeighRequest) (EvidenceWeighingResult, error) {
 	contradictions := DetectContradictions(arguments)
 	gaps := DetectGaps(arguments, req.Facts, req.IssueNodeIDs)
 
-	return EvidenceWeighingResult{
+	return Result{
 		CaseID:         req.CaseID,
 		FactWeights:    factWeights,
 		Contradictions: contradictions,

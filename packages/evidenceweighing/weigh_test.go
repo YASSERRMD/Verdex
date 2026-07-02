@@ -50,7 +50,7 @@ func TestWeigh_EndToEnd(t *testing.T) {
 		},
 		IssueNodeIDs: []string{"issue-1", "issue-2"},
 		FirstParty: firstpartyagent.ArgumentSet{
-			CaseID: "case-1",
+			CaseID:  "case-1",
 			PartyID: "plaintiff",
 			Arguments: []firstpartyagent.Argument{
 				{
