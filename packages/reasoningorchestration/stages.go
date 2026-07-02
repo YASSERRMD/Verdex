@@ -51,7 +51,7 @@ func runIssueFraming(ctx context.Context, cfg RunConfig, caseID string, pc *pipe
 		return Checkpoint{}, fmt.Errorf("reasoningorchestration: construct issue agent: %w", err)
 	}
 
-	result, _, err := issueagent.Analyze(ctx, agent, caseID, issueagent.AnalyzeConfig{
+	result, agentResult, err := issueagent.Analyze(ctx, agent, caseID, issueagent.AnalyzeConfig{
 		Router:   cfg.Router,
 		Budget:   cfg.Budget.PerStageBudget,
 		Seed:     cfg.Seed,
@@ -66,7 +66,7 @@ func runIssueFraming(ctx context.Context, cfg RunConfig, caseID string, pc *pipe
 	}
 
 	pc.issues = result
-	return Checkpoint{Stage: StageIssueFraming, IssueAnalysis: result}, nil
+	return Checkpoint{Stage: StageIssueFraming, IssueAnalysis: result, IssueFramingRun: agentResult}, nil
 }
 
 // runFirstPartyArguments runs StageFirstPartyArguments:
@@ -94,7 +94,7 @@ func runFirstPartyArguments(ctx context.Context, cfg RunConfig, caseID string, p
 		return Checkpoint{}, fmt.Errorf("reasoningorchestration: construct first-party agent: %w", err)
 	}
 
-	result, _, err := firstpartyagent.Argue(ctx, agent, caseID, firstpartyagent.ArgueConfig{
+	result, agentResult, err := firstpartyagent.Argue(ctx, agent, caseID, firstpartyagent.ArgueConfig{
 		Router:   cfg.Router,
 		Budget:   cfg.Budget.PerStageBudget,
 		Seed:     cfg.Seed,
@@ -105,7 +105,7 @@ func runFirstPartyArguments(ctx context.Context, cfg RunConfig, caseID string, p
 	}
 
 	pc.firstParty = result
-	return Checkpoint{Stage: StageFirstPartyArguments, FirstPartyArguments: result}, nil
+	return Checkpoint{Stage: StageFirstPartyArguments, FirstPartyArguments: result, FirstPartyRun: agentResult}, nil
 }
 
 // runSecondPartyArguments runs StageSecondPartyArguments:
@@ -133,7 +133,7 @@ func runSecondPartyArguments(ctx context.Context, cfg RunConfig, caseID string, 
 		return Checkpoint{}, fmt.Errorf("reasoningorchestration: construct second-party agent: %w", err)
 	}
 
-	result, _, err := secondpartyagent.Argue(ctx, agent, caseID, secondpartyagent.ArgueConfig{
+	result, agentResult, err := secondpartyagent.Argue(ctx, agent, caseID, secondpartyagent.ArgueConfig{
 		Router:   cfg.Router,
 		Budget:   cfg.Budget.PerStageBudget,
 		Seed:     cfg.Seed,
@@ -144,7 +144,7 @@ func runSecondPartyArguments(ctx context.Context, cfg RunConfig, caseID string, 
 	}
 
 	pc.secondParty = result
-	return Checkpoint{Stage: StageSecondPartyArguments, SecondPartyArguments: result}, nil
+	return Checkpoint{Stage: StageSecondPartyArguments, SecondPartyArguments: result, SecondPartyRun: agentResult}, nil
 }
 
 // runEvidenceWeighing runs StageEvidenceWeighing:
@@ -229,7 +229,7 @@ func runSynthesis(ctx context.Context, cfg RunConfig, caseID string, pc *pipelin
 		return Checkpoint{}, fmt.Errorf("reasoningorchestration: construct synthesis agent: %w", err)
 	}
 
-	result, _, err := synthesisagent.Synthesize(ctx, agent, caseID, synthesisagent.SynthesizeConfig{
+	result, agentResult, err := synthesisagent.Synthesize(ctx, agent, caseID, synthesisagent.SynthesizeConfig{
 		Router:   cfg.Router,
 		Budget:   cfg.Budget.PerStageBudget,
 		Seed:     cfg.Seed,
@@ -240,7 +240,7 @@ func runSynthesis(ctx context.Context, cfg RunConfig, caseID string, pc *pipelin
 	}
 
 	pc.opinion = result
-	return Checkpoint{Stage: StageSynthesis, Opinion: result}, nil
+	return Checkpoint{Stage: StageSynthesis, Opinion: result, SynthesisRun: agentResult}, nil
 }
 
 // runUncertaintySurfacing runs StageUncertaintySurfacing:
