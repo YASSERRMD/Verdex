@@ -43,4 +43,5 @@ use (
 	./packages/traversal
 	./packages/hybridretrieval
 	./packages/adaptiveretrieval
+	./packages/citation
 )
