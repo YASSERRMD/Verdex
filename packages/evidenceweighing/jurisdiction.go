@@ -42,26 +42,53 @@ const (
 //     tradition dominate — written instruments and records are weighted
 //     more heavily than oral testimony, which is treated as more prone to
 //     memory/bias distortion absent corroborating documentation.
+//   - "mixed" jurisdictions blend two or more traditions (e.g. common law
+//     and Islamic law). This package weights them at the midpoint
+//     between CommonLawProfile and CivilLawProfile, rather than
+//     defaulting to neutral, since a mixed-family jurisdiction still
+//     leans measurably toward both parent traditions rather than having
+//     no evidentiary tradition at all.
+//   - "islamic_law" jurisdictions are weighted per IslamicLawProfile; see
+//     that constructor's doc comment for the rationale and its explicit
+//     limitations.
 //   - Any other/unrecognized LegalFamily is treated as neutral: both
 //     evidence kinds weight equally (1.0), since this package has no
 //     basis to prefer one over the other without a recognized
 //     legal-family signal — mirroring packages/application's
 //     WeightByLegalFamily neutral-default convention exactly.
 //
-// | LegalFamily   | Testimony | Documentary |
-// |---------------|-----------|-------------|
-// | "common_law"  | 1.0       | 0.9         |
-// | "civil_law"   | 0.8       | 1.0         |
-// | anything else | 1.0       | 1.0         |
+// The weights below are this package's own copy of the canonical values
+// defined in packages/reasoningprofile (Weights.TestimonyEmphasis /
+// Weights.DocumentaryEmphasis) — see doc/evidence-weighing.md and
+// packages/reasoningprofile/doc/jurisdiction-reasoning.md for the
+// cross-package derivation. This package does not import
+// packages/reasoningprofile; the values are kept in sync by convention
+// and by packages/reasoningprofile's own cross-package alignment tests.
+//
+// | LegalFamily    | Testimony | Documentary |
+// |----------------|-----------|-------------|
+// | "common_law"   | 1.0       | 0.9         |
+// | "civil_law"    | 0.8       | 1.0         |
+// | "mixed"        | 0.9       | 0.95        |
+// | "islamic_law"  | 0.85      | 1.0         |
+// | anything else  | 1.0       | 1.0         |
 const (
-	CommonLawFamily LegalFamily = "common_law"
-	CivilLawFamily  LegalFamily = "civil_law"
+	CommonLawFamily  LegalFamily = "common_law"
+	CivilLawFamily   LegalFamily = "civil_law"
+	MixedFamily      LegalFamily = "mixed"
+	IslamicLawFamily LegalFamily = "islamic_law"
 
 	commonLawTestimonyWeight   = 1.0
 	commonLawDocumentaryWeight = 0.9
 
 	civilLawTestimonyWeight   = 0.8
 	civilLawDocumentaryWeight = 1.0
+
+	mixedTestimonyWeight   = 0.9
+	mixedDocumentaryWeight = 0.95
+
+	islamicLawTestimonyWeight   = 0.85
+	islamicLawDocumentaryWeight = 1.0
 
 	neutralWeight = 1.0
 )
@@ -109,6 +136,38 @@ func CivilLawProfile() JurisdictionProfile {
 	}
 }
 
+// MixedProfile returns a blended weighting profile for LegalFamily
+// MixedFamily: the midpoint between CommonLawProfile and CivilLawProfile,
+// reflecting a jurisdiction that draws meaningfully on both the
+// adversarial/testimony-heavy and inquisitorial/documentary-heavy
+// traditions rather than having no lean at all.
+func MixedProfile() JurisdictionProfile {
+	return JurisdictionProfile{
+		Family:      MixedFamily,
+		Testimony:   mixedTestimonyWeight,
+		Documentary: mixedDocumentaryWeight,
+	}
+}
+
+// IslamicLawProfile returns a weighting profile for LegalFamily
+// IslamicLawFamily. Many modern Islamic-law jurisdictions blend strong
+// documentary formality (contracts, deeds, and instruments carry
+// particular evidentiary weight in Islamic commercial and family law)
+// with a still-significant, if slightly reduced relative to documentary
+// evidence, role for witness testimony. This is a simplified
+// computational model of a highly diverse family of legal systems, not a
+// claim to legal or religious authority — see
+// packages/reasoningprofile/doc/jurisdiction-reasoning.md's "Islamic-law
+// profile rationale and limitations" section, which this package's
+// weights are derived from, for the full discussion and caveats.
+func IslamicLawProfile() JurisdictionProfile {
+	return JurisdictionProfile{
+		Family:      IslamicLawFamily,
+		Testimony:   islamicLawTestimonyWeight,
+		Documentary: islamicLawDocumentaryWeight,
+	}
+}
+
 // NeutralProfile returns a profile that weights every EvidenceKind
 // equally, used as the default when no LegalFamily signal is available.
 func NeutralProfile() JurisdictionProfile {
@@ -120,15 +179,20 @@ func NeutralProfile() JurisdictionProfile {
 
 // ProfileForFamily resolves the JurisdictionProfile for a given
 // LegalFamily: CommonLawProfile for CommonLawFamily, CivilLawProfile for
-// CivilLawFamily, and NeutralProfile for anything else (including empty),
-// mirroring WeightByLegalFamily's exhaustive-switch-with-neutral-default
-// convention.
+// CivilLawFamily, MixedProfile for MixedFamily, IslamicLawProfile for
+// IslamicLawFamily, and NeutralProfile for anything else (including
+// empty), mirroring WeightByLegalFamily's exhaustive-switch-with-
+// neutral-default convention.
 func ProfileForFamily(family LegalFamily) JurisdictionProfile {
 	switch family {
 	case CommonLawFamily:
 		return CommonLawProfile()
 	case CivilLawFamily:
 		return CivilLawProfile()
+	case MixedFamily:
+		return MixedProfile()
+	case IslamicLawFamily:
+		return IslamicLawProfile()
 	default:
 		return NeutralProfile()
 	}

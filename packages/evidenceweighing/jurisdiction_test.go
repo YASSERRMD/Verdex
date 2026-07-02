@@ -28,6 +28,39 @@ func TestProfileForFamily_CivilLawFavorsDocumentary(t *testing.T) {
 	}
 }
 
+func TestProfileForFamily_MixedIsBetweenCommonAndCivilLaw(t *testing.T) {
+	mixed := evidenceweighing.ProfileForFamily(evidenceweighing.MixedFamily)
+	common := evidenceweighing.CommonLawProfile()
+	civil := evidenceweighing.CivilLawProfile()
+
+	if mixed.Testimony == common.Testimony || mixed.Testimony == civil.Testimony {
+		t.Errorf("mixed testimony weight %.2f should differ from both common_law %.2f and civil_law %.2f", mixed.Testimony, common.Testimony, civil.Testimony)
+	}
+	if mixed.Documentary == common.Documentary || mixed.Documentary == civil.Documentary {
+		t.Errorf("mixed documentary weight %.2f should differ from both common_law %.2f and civil_law %.2f", mixed.Documentary, common.Documentary, civil.Documentary)
+	}
+	if mixed == evidenceweighing.NeutralProfile() {
+		t.Errorf("mixed family must not silently fall back to NeutralProfile, got %+v", mixed)
+	}
+}
+
+func TestProfileForFamily_IslamicLawIsDistinct(t *testing.T) {
+	islamic := evidenceweighing.ProfileForFamily(evidenceweighing.IslamicLawFamily)
+
+	if islamic == evidenceweighing.NeutralProfile() {
+		t.Errorf("islamic_law must not silently fall back to NeutralProfile, got %+v", islamic)
+	}
+	if islamic == evidenceweighing.CommonLawProfile() {
+		t.Errorf("islamic_law must not equal common_law profile, got %+v", islamic)
+	}
+	if islamic == evidenceweighing.CivilLawProfile() {
+		t.Errorf("islamic_law must not equal civil_law profile, got %+v", islamic)
+	}
+	if islamic.Family != evidenceweighing.IslamicLawFamily {
+		t.Errorf("IslamicLawProfile().Family = %v, want IslamicLawFamily", islamic.Family)
+	}
+}
+
 func TestProfileForFamily_UnknownFamilyIsNeutral(t *testing.T) {
 	profile := evidenceweighing.ProfileForFamily("some_unrecognized_family")
 
