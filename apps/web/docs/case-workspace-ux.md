@@ -28,7 +28,7 @@ apps/web/src/
 ├── components/workspace/
 │   ├── CaseHeader.tsx                 # Title, reference, state badge, category, jurisdiction
 │   ├── StatusActionsBar.tsx           # Lifecycle state + state-appropriate actions
-│   ├── WorkspaceTabs.tsx              # Overview / Evidence / Evidence Review / Tree / Reasoning / Discussion tab strip
+│   ├── WorkspaceTabs.tsx              # Overview / Evidence / Evidence Review / Tree / Reasoning / Discussion / History tab strip
 │   ├── PartiesCategoryPanel.tsx       # Parties + category/subcategory (Overview tab)
 │   ├── EvidenceTimelinePanel.tsx      # Evidence segments + chronological timeline (read-only)
 │   ├── EvidenceReviewPanel.tsx        # Evidence review/correction UI (Phase 066, see docs/evidence-review.md)
@@ -37,6 +37,7 @@ apps/web/src/
 │   ├── TreeNodeDetail.tsx             # Selected tree-node detail side panel (Phase 065)
 │   ├── ReasoningOpinionPanel.tsx      # Draft opinion entry point (Phase 067 fills in)
 │   ├── AnnotationsPanel.tsx           # Threaded discussion / resolve UI (Phase 070, see docs/annotations-ui.md)
+│   ├── HistoryPanel.tsx               # Version-history timeline, diff, restore (Phase 071, see docs/case-history-ui.md)
 │   ├── WorkspaceLoading.tsx           # Full-panel loading state
 │   └── WorkspaceError.tsx             # Full-panel error / not-found state
 ├── lib/
@@ -54,7 +55,7 @@ apps/web/src/
    subcategory, and jurisdiction, once loaded.
 3. **`StatusActionsBar`** — a second, action-oriented view of the same lifecycle state,
    with buttons for whichever transitions are legal from the current state.
-4. **`WorkspaceTabs`** — quick navigation between the six panels below, integrated with
+4. **`WorkspaceTabs`** — quick navigation between the seven panels below, integrated with
    the existing `Sidebar`'s `/cases` nav item (the sidebar highlights `/cases` for any
    route starting with that prefix, including `/cases/[caseId]`).
 5. The active tab's panel, rendered inside a `role="tabpanel"` region wired to the
@@ -70,6 +71,7 @@ apps/web/src/
 | Reasoning Tree | `TreeVisualizationPanel` | Interactive issue/rule/fact/conclusion tree with node detail, collapse/expand, depth control, path highlighting, and export — see `docs/tree-visualization.md` |
 | Draft Opinion | `ReasoningOpinionPanel` | `Disclaimer` (always rendered first) plus a loading/empty/has-draft placeholder; Phase 067 renders the full per-issue analysis here |
 | Discussion | `AnnotationsPanel` | Threaded case notes (compose box, root + one level of replies, resolve/reopen toggle per thread) — see `docs/annotations-ui.md` |
+| History | `HistoryPanel` | Chronological version-history timeline across case metadata, reasoning tree, evidence, and draft opinion, with per-entry diff and (case-metadata only) restore — see `docs/case-history-ui.md` |
 
 ## Lifecycle State & Actions
 
@@ -113,6 +115,13 @@ State transitions call three further plausible endpoints, matching
 - `POST /api/v1/cases/:caseId/transition` — body `{ toState }`, for ordinary transitions.
 - `POST /api/v1/cases/:caseId/reopen` — body `{ justification }`.
 - `POST /api/v1/cases/:caseId/archive` — body `{ reason }`.
+
+The History tab (Phase 071, see `docs/case-history-ui.md`) fetches lazily, the same
+"only once its tab is opened" pattern the Discussion tab established:
+
+- `GET /api/v1/cases/:caseId/versions` → `SnapshotEntry[]`
+- `GET /api/v1/cases/:caseId/versions/diff?a=:snapshotAId&b=:snapshotBId` → `SnapshotDiff`
+- `POST /api/v1/cases/:caseId/versions/:snapshotId/restore` → the new restore `SnapshotEntry`
 
 ## Loading & Error States
 
@@ -158,5 +167,9 @@ convention:
   callbacks.
 - `CaseWorkspacePage.test.tsx` — the route-level integration test: login redirect, loading/
   not-found/generic-error states, successful render, and tab-driven panel switching.
+- `HistoryPanel.test.tsx` — empty state, newest-first timeline ordering with attribution,
+  computing/rendering a field-level diff, Restore offered only for case-metadata snapshots
+  (never tree/evidence/opinion or a snapshot that is itself a restore record), and the
+  `onRestore` callback — see `docs/case-history-ui.md`.
 
 Run: `npm test` from `apps/web/`.
