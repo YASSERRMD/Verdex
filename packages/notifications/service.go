@@ -119,7 +119,7 @@ func (s *Service) channelsFor(ctx context.Context, tenantID, recipientID uuid.UU
 // narrowed by filter, in newest-first order. The ctx actor must be
 // recipientID (ErrForbidden otherwise).
 func (s *Service) List(ctx context.Context, tenantID, recipientID uuid.UUID, filter Filter) ([]*Notification, error) {
-	if _, err := authorizeSelf(ctx, recipientID); err != nil {
+	if err := authorizeSelf(ctx, recipientID); err != nil {
 		return nil, err
 	}
 	return s.repo.ListForRecipient(ctx, tenantID, recipientID, filter)
@@ -129,7 +129,7 @@ func (s *Service) List(ctx context.Context, tenantID, recipientID uuid.UUID, fil
 // recipientID. The ctx actor must be recipientID (ErrForbidden
 // otherwise).
 func (s *Service) UnreadCount(ctx context.Context, tenantID, recipientID uuid.UUID) (int, error) {
-	if _, err := authorizeSelf(ctx, recipientID); err != nil {
+	if err := authorizeSelf(ctx, recipientID); err != nil {
 		return 0, err
 	}
 	return s.repo.UnreadCount(ctx, tenantID, recipientID)
@@ -139,7 +139,7 @@ func (s *Service) UnreadCount(ctx context.Context, tenantID, recipientID uuid.UU
 // of recipientID. The ctx actor must be recipientID (ErrForbidden
 // otherwise).
 func (s *Service) MarkRead(ctx context.Context, tenantID, recipientID, id uuid.UUID) error {
-	if _, err := authorizeSelf(ctx, recipientID); err != nil {
+	if err := authorizeSelf(ctx, recipientID); err != nil {
 		return err
 	}
 	return s.repo.MarkRead(ctx, tenantID, recipientID, id)
@@ -149,7 +149,7 @@ func (s *Service) MarkRead(ctx context.Context, tenantID, recipientID, id uuid.U
 // recipientID as read, returning the count newly marked. The ctx
 // actor must be recipientID (ErrForbidden otherwise).
 func (s *Service) MarkAllRead(ctx context.Context, tenantID, recipientID uuid.UUID) (int, error) {
-	if _, err := authorizeSelf(ctx, recipientID); err != nil {
+	if err := authorizeSelf(ctx, recipientID); err != nil {
 		return 0, err
 	}
 	return s.repo.MarkAllRead(ctx, tenantID, recipientID)
@@ -159,7 +159,7 @@ func (s *Service) MarkAllRead(ctx context.Context, tenantID, recipientID uuid.UU
 // actor must be userID (ErrForbidden otherwise) — a user may only
 // change their own notification preferences.
 func (s *Service) SetPreference(ctx context.Context, tenantID, userID uuid.UUID, kind Kind, enabled bool, channels []Channel) (*Preference, error) {
-	if _, err := authorizeSelf(ctx, userID); err != nil {
+	if err := authorizeSelf(ctx, userID); err != nil {
 		return nil, err
 	}
 	pref := &Preference{
@@ -178,7 +178,7 @@ func (s *Service) SetPreference(ctx context.Context, tenantID, userID uuid.UUID,
 // Preferences returns every explicit Preference row for userID. The
 // ctx actor must be userID (ErrForbidden otherwise).
 func (s *Service) Preferences(ctx context.Context, tenantID, userID uuid.UUID) ([]*Preference, error) {
-	if _, err := authorizeSelf(ctx, userID); err != nil {
+	if err := authorizeSelf(ctx, userID); err != nil {
 		return nil, err
 	}
 	return s.prefs.ListForUser(ctx, tenantID, userID)

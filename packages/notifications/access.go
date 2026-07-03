@@ -18,13 +18,13 @@ import (
 // event bypass this check entirely — see Service.Notify, which is
 // deliberately not actor-gated, since it is called by trusted
 // server-side event hooks, not directly by an end user.
-func authorizeSelf(ctx context.Context, userID uuid.UUID) (*identity.User, error) {
+func authorizeSelf(ctx context.Context, userID uuid.UUID) error {
 	user, ok := identity.UserFromContext(ctx)
 	if !ok {
-		return nil, ErrUnauthenticated
+		return ErrUnauthenticated
 	}
 	if user.ID != userID {
-		return nil, ErrForbidden
+		return ErrForbidden
 	}
-	return user, nil
+	return nil
 }
