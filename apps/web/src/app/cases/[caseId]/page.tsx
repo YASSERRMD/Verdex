@@ -8,6 +8,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { CaseHeader } from '@/components/workspace/CaseHeader';
 import { PartiesCategoryPanel } from '@/components/workspace/PartiesCategoryPanel';
 import { EvidenceTimelinePanel } from '@/components/workspace/EvidenceTimelinePanel';
+import { EvidenceReviewPanel } from '@/components/workspace/EvidenceReviewPanel';
 import { TreeVisualizationPanel } from '@/components/workspace/TreeVisualizationPanel';
 import { ReasoningOpinionPanel } from '@/components/workspace/ReasoningOpinionPanel';
 import { StatusActionsBar } from '@/components/workspace/StatusActionsBar';
@@ -138,6 +139,14 @@ export default function CaseWorkspacePage() {
               )}
               {activeTab === 'evidence' && (
                 <EvidenceTimelinePanel segments={data.evidence} events={data.events} />
+              )}
+              {activeTab === 'evidence-review' && (
+                <EvidenceReviewPanel
+                  segments={data.evidence}
+                  onSegmentsChange={(evidence) =>
+                    setData((prev) => (prev ? { ...prev, evidence } : prev))
+                  }
+                />
               )}
               {activeTab === 'tree' && <TreeVisualizationPanel caseId={caseId} />}
               {activeTab === 'reasoning' && <ReasoningOpinionPanel />}

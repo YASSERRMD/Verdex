@@ -297,6 +297,32 @@ export interface EvidenceSegment {
     start: number;
     end: number;
   };
+  /**
+   * Whether this segment's classification or attribution is actively
+   * contested by a party. Not yet modeled in packages/evidence, so tracked
+   * client-side pending a real dispute-flag API (see docs/evidence-review.md).
+   */
+  disputed?: boolean;
+}
+
+// ─── Evidence Review (Phase 066) ───────────────────────────────────────────
+
+/**
+ * One entry in a segment's change-audit trail: which field changed, from
+ * what to what, by whom, and when. Client-side/mocked pending a real audit
+ * API — generalizes packages/evidence's ManualOverride audit intent
+ * (override.go: ReviewedBy/ReviewedAt/Previous) to any reviewable field on
+ * a segment (type, party, or disputed status), not just type/party
+ * classification.
+ */
+export interface EvidenceAuditEntry {
+  id: string;
+  segmentId: string;
+  field: 'type' | 'party' | 'disputed';
+  previousValue: string;
+  newValue: string;
+  actor: string;
+  occurredAt: string;
 }
 
 // ─── IRAC Reasoning Tree ─────────────────────────────────────────────────────

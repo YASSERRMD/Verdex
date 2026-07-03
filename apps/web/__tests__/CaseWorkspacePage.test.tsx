@@ -126,4 +126,29 @@ describe('CaseWorkspacePage', () => {
     await userEvent.click(screen.getByRole('tab', { name: /draft opinion/i }));
     expect(screen.getByLabelText(/non-binding disclaimer/i)).toBeInTheDocument();
   });
+
+  it('renders the evidence review tab with the case evidence segments', async () => {
+    mockApiFetch.mockResolvedValueOnce({
+      caseData: CASE_DATA,
+      parties: [],
+      evidence: [
+        {
+          id: 'seg-1',
+          text: 'Witness testimony describing the incident.',
+          type: 'testimony',
+          party: 'first_party',
+          confidence: 0.82,
+          sourceSpan: { start: 0, end: 10 },
+        },
+      ],
+      events: [],
+    });
+    render(<CaseWorkspacePage />);
+
+    await waitFor(() => expect(screen.getByRole('tab', { name: /^evidence review$/i })).toBeInTheDocument());
+
+    await userEvent.click(screen.getByRole('tab', { name: /^evidence review$/i }));
+    expect(screen.getByTestId('evidence-review-segment-seg-1')).toBeInTheDocument();
+    expect(screen.getByText(/review and correct extracted evidence segments/i)).toBeInTheDocument();
+  });
 });

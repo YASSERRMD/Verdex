@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 
-export type WorkspaceTabId = 'overview' | 'evidence' | 'tree' | 'reasoning';
+export type WorkspaceTabId = 'overview' | 'evidence' | 'evidence-review' | 'tree' | 'reasoning';
 
 export interface WorkspaceTab {
   id: WorkspaceTabId;
@@ -12,6 +12,7 @@ export interface WorkspaceTab {
 export const WORKSPACE_TABS: WorkspaceTab[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'evidence', label: 'Evidence & Timeline' },
+  { id: 'evidence-review', label: 'Evidence Review' },
   { id: 'tree', label: 'Reasoning Tree' },
   { id: 'reasoning', label: 'Draft Opinion' },
 ];
