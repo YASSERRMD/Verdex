@@ -61,4 +61,5 @@ use (
 	./packages/grounding
 	./packages/reasoningeval
 	./packages/caselifecycle
+	./packages/signoff
 )
