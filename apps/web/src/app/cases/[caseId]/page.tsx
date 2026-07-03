@@ -12,10 +12,19 @@ import { EvidenceReviewPanel } from '@/components/workspace/EvidenceReviewPanel'
 import { TreeVisualizationPanel } from '@/components/workspace/TreeVisualizationPanel';
 import { ReasoningOpinionPanel } from '@/components/workspace/ReasoningOpinionPanel';
 import { StatusActionsBar } from '@/components/workspace/StatusActionsBar';
+import { AnnotationsPanel } from '@/components/workspace/AnnotationsPanel';
 import { WorkspaceTabs, type WorkspaceTabId } from '@/components/workspace/WorkspaceTabs';
 import { WorkspaceLoading } from '@/components/workspace/WorkspaceLoading';
 import { WorkspaceError } from '@/components/workspace/WorkspaceError';
-import type { CaseLifecycle, CaseParty, CaseState, EvidenceSegment, Role, TimelineEvent } from '@/types';
+import type {
+  AnnotationEntry,
+  CaseLifecycle,
+  CaseParty,
+  CaseState,
+  EvidenceSegment,
+  Role,
+  TimelineEvent,
+} from '@/types';
 
 interface CaseWorkspaceData {
   caseData: CaseLifecycle;
@@ -39,6 +48,9 @@ export default function CaseWorkspacePage() {
   // ReasoningOpinionPanel "view full trace" / "view supporting nodes"
   // action, rather than by clicking the tab directly.
   const [traceNodeId, setTraceNodeId] = useState<string | undefined>(undefined);
+
+  const [annotations, setAnnotations] = useState<AnnotationEntry[]>([]);
+  const [annotationsLoaded, setAnnotationsLoaded] = useState(false);
 
   const loadCase = useCallback(async () => {
     if (!caseId) return;
@@ -113,6 +125,51 @@ export default function CaseWorkspacePage() {
     setActiveTab('tree');
   };
 
+  // Annotations are loaded lazily the first time the Discussion tab is
+  // opened, mirroring how TreeVisualizationPanel/ReasoningOpinionPanel
+  // fetch their own tab-scoped data rather than the page loading every
+  // panel's data up front.
+  useEffect(() => {
+    if (activeTab !== 'discussion' || annotationsLoaded || !caseId) return;
+    let cancelled = false;
+    apiFetch<AnnotationEntry[]>(`/api/v1/cases/${caseId}/annotations`)
+      .then((result) => {
+        if (!cancelled) {
+          setAnnotations(result);
+          setAnnotationsLoaded(true);
+        }
+      })
+      .catch(() => {
+        // No annotations endpoint yet in this build; treat as empty rather
+        // than surfacing a page-level error for an optional tab.
+        if (!cancelled) setAnnotationsLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, annotationsLoaded, caseId]);
+
+  const handleCreateAnnotation = async (input: {
+    body: string;
+    anchorType: AnnotationEntry['anchorType'];
+    anchorId: string;
+    parentId?: string;
+  }) => {
+    const created = await apiFetch<AnnotationEntry>(`/api/v1/cases/${caseId}/annotations`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+    setAnnotations((prev) => [...prev, created]);
+  };
+
+  const handleToggleResolveAnnotation = async (annotation: AnnotationEntry) => {
+    const path = annotation.resolved
+      ? `/api/v1/cases/${caseId}/annotations/${annotation.id}/reopen`
+      : `/api/v1/cases/${caseId}/annotations/${annotation.id}/resolve`;
+    const updated = await apiFetch<AnnotationEntry>(path, { method: 'POST' });
+    setAnnotations((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+  };
+
   if (!session) return null;
 
   const roles = (session.user.roles ?? []) as Role[];
@@ -161,6 +218,14 @@ export default function CaseWorkspacePage() {
                 <TreeVisualizationPanel caseId={caseId} initialSelectedNodeId={traceNodeId} />
               )}
               {activeTab === 'reasoning' && <ReasoningOpinionPanel onViewTrace={handleViewTrace} />}
+              {activeTab === 'discussion' && (
+                <AnnotationsPanel
+                  annotations={annotations}
+                  currentUserId={session.user.id}
+                  onCreate={handleCreateAnnotation}
+                  onToggleResolve={handleToggleResolveAnnotation}
+                />
+              )}
             </div>
           </>
         )}

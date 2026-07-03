@@ -2,7 +2,13 @@
 
 import clsx from 'clsx';
 
-export type WorkspaceTabId = 'overview' | 'evidence' | 'evidence-review' | 'tree' | 'reasoning';
+export type WorkspaceTabId =
+  | 'overview'
+  | 'evidence'
+  | 'evidence-review'
+  | 'tree'
+  | 'reasoning'
+  | 'discussion';
 
 export interface WorkspaceTab {
   id: WorkspaceTabId;
@@ -15,6 +21,7 @@ export const WORKSPACE_TABS: WorkspaceTab[] = [
   { id: 'evidence-review', label: 'Evidence Review' },
   { id: 'tree', label: 'Reasoning Tree' },
   { id: 'reasoning', label: 'Draft Opinion' },
+  { id: 'discussion', label: 'Discussion' },
 ];
 
 export interface WorkspaceTabsProps {
@@ -25,7 +32,8 @@ export interface WorkspaceTabsProps {
 
 /**
  * Quick-navigation tab strip between the case workspace's panels
- * (overview, evidence/timeline, reasoning tree, draft opinion).
+ * (overview, evidence/timeline, reasoning tree, draft opinion,
+ * discussion).
  */
 export function WorkspaceTabs({ activeTab, onTabChange, className }: WorkspaceTabsProps) {
   return (
