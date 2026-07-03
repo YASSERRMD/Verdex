@@ -127,6 +127,27 @@ describe('CaseWorkspacePage', () => {
     expect(screen.getByLabelText(/non-binding disclaimer/i)).toBeInTheDocument();
   });
 
+  it('renders the Draft Opinion tab with the disclaimer prominent and the empty state, pending a real opinion endpoint', async () => {
+    mockApiFetch.mockResolvedValueOnce({
+      caseData: CASE_DATA,
+      parties: [],
+      evidence: [],
+      events: [],
+    });
+    render(<CaseWorkspacePage />);
+
+    await waitFor(() => expect(screen.getByRole('tab', { name: /draft opinion/i })).toBeInTheDocument());
+    await userEvent.click(screen.getByRole('tab', { name: /draft opinion/i }));
+
+    // The case workspace page does not yet fetch a real CaseOpinion (no
+    // /api/v1/cases/:caseId/opinion endpoint exists yet — see
+    // docs/opinion-review.md), so ReasoningOpinionPanel renders its empty
+    // state here. The disclaimer must still be present and precede it.
+    expect(screen.getByLabelText(/non-binding disclaimer/i)).toBeInTheDocument();
+    expect(screen.getByText(/no draft opinion yet/i)).toBeInTheDocument();
+    expect(screen.queryByTestId('reasoning-opinion-content')).not.toBeInTheDocument();
+  });
+
   it('renders the evidence review tab with the case evidence segments', async () => {
     mockApiFetch.mockResolvedValueOnce({
       caseData: CASE_DATA,

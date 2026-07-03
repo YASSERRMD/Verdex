@@ -31,6 +31,14 @@ export interface TreeVisualizationPanelProps {
    * isolation in tests) without requiring a route/session context.
    */
   caseId?: string;
+  /**
+   * Node ID to select as soon as the tree finishes loading — used by the
+   * case workspace to deep-link here from ReasoningOpinionPanel's "view
+   * full trace" / "view supporting nodes" actions (Phase 067) with the
+   * relevant node pre-selected, without this panel needing to know
+   * anything about opinions or conclusions itself.
+   */
+  initialSelectedNodeId?: string;
   className?: string;
 }
 
@@ -58,12 +66,13 @@ const DEPTH_OPTIONS = [
 export function TreeVisualizationPanel({
   loading: loadingProp = false,
   caseId,
+  initialSelectedNodeId,
   className,
 }: TreeVisualizationPanelProps) {
   const [tree, setTree] = useState<ReasoningTree | null>(null);
   const [fetching, setFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(initialSelectedNodeId ?? null);
   const [collapsedNodeIds, setCollapsedNodeIds] = useState<Set<string>>(new Set());
   const [maxDepth, setMaxDepth] = useState(3);
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -92,6 +101,17 @@ export function TreeVisualizationPanel({
   useEffect(() => {
     loadTree();
   }, [loadTree]);
+
+  // Re-select whenever the caller hands down a new initialSelectedNodeId
+  // (e.g. a reviewer clicks a different "view full trace" link from
+  // ReasoningOpinionPanel while already on this tab) — without this effect,
+  // selectedNodeId's own useState initializer would only apply the very
+  // first value, ignoring subsequent deep-link requests to the mounted panel.
+  useEffect(() => {
+    if (initialSelectedNodeId) {
+      setSelectedNodeId(initialSelectedNodeId);
+    }
+  }, [initialSelectedNodeId]);
 
   const nodes = useMemo(() => tree?.nodes ?? [], [tree]);
   const edges = useMemo(() => tree?.edges ?? [], [tree]);

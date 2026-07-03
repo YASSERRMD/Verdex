@@ -416,3 +416,159 @@ export interface ReasoningTree {
   nodes: TreeNode[];
   edges: TreeEdge[];
 }
+
+// ─── Draft Reasoned Opinion (Phase 067) ─────────────────────────────────────
+
+/**
+ * Which side of a case an argument or conclusion favors, mirroring the
+ * plain-string PartyID convention shared by firstpartyagent.PartyID /
+ * secondpartyagent.PartyID / evidenceweighing.CitingArgument.PartyID: an
+ * opaque caller-defined label, not a hard dependency on any one party
+ * package's own type.
+ */
+export type OpinionPartyRole = 'first_party' | 'second_party';
+
+/**
+ * A resolved, verified citation attached to one of an OpinionArgument's
+ * supporting rules, mirroring firstpartyagent.CitationRef /
+ * secondpartyagent.CitationRef field-for-field.
+ */
+export interface OpinionCitation {
+  nodeId: string;
+  citation: string;
+  verificationStatus: string;
+  verified: boolean;
+  confidenceScore: number;
+}
+
+/**
+ * One party's line of reasoning for a single issue, mirroring
+ * firstpartyagent.Argument / secondpartyagent.Argument (structurally
+ * identical, independent types upstream) camelCased: a claim, the fact/rule
+ * node IDs from the case's tree that support it, resolved citations,
+ * anticipated counterarguments, and a [0,1] strength score.
+ */
+export interface OpinionArgument {
+  id: string;
+  issueNodeId: string;
+  partyId: OpinionPartyRole;
+  claim: string;
+  supportingFactIds: string[];
+  supportingRuleIds: string[];
+  citations?: OpinionCitation[];
+  counterarguments?: string[];
+  strength: number;
+  grounded: boolean;
+}
+
+/**
+ * Per-fact evidentiary weight backing an issue's arguments, mirroring
+ * evidenceweighing.FactWeight camelCased: a [0,1] weight, whether the fact
+ * is contradicted by the opposing party, how many arguments corroborate it,
+ * and a human-readable rationale for the score.
+ */
+export interface OpinionEvidenceWeight {
+  factNodeId: string;
+  weight: number;
+  kind: string;
+  contradicted: boolean;
+  corroborationCount: number;
+  rationale: string;
+}
+
+/**
+ * Which upstream pipeline stage an uncertainty finding was derived from,
+ * mirroring packages/uncertainty's Source constants exactly:
+ * "issue_framing" | "evidence" | "law_application" | "conclusion".
+ */
+export type OpinionUncertaintySource =
+  | 'issue_framing'
+  | 'evidence'
+  | 'law_application'
+  | 'conclusion';
+
+/**
+ * A single ranked reason to doubt part of an issue's draft analysis,
+ * mirroring packages/uncertainty.Uncertainty camelCased: which upstream
+ * Source raised it, how severe the signal is on its own, its impact rank
+ * relative to every other uncertainty for the case, and a human-readable
+ * caveat suitable for direct display to a reviewing judge.
+ */
+export interface OpinionUncertainty {
+  issueNodeId: string;
+  source: OpinionUncertaintySource;
+  severity: number;
+  impactRank: number;
+  impactScore: number;
+  caveat: string;
+  detail?: string;
+}
+
+/**
+ * The tentative, non-binding draft resolution for a single issue, mirroring
+ * synthesisagent.TentativeConclusion camelCased: which party (if any) this
+ * draft currently favors, the conclusion's own confidence, its single
+ * weakest supporting element, and every fact/rule node ID it traces back
+ * to. Text here is guaranteed, by the time it reaches this panel, to have
+ * passed packages/guardrail's CheckText verdict-language gate — but the
+ * panel's own tests re-assert that independently rather than trusting the
+ * upstream guarantee blindly (see ReasoningOpinionPanel.test.tsx).
+ */
+export interface OpinionConclusion {
+  issueNodeId: string;
+  text: string;
+  favoredParty?: OpinionPartyRole;
+  confidence: number;
+  weakestLink?: string;
+  supportingFactIds: string[];
+  supportingRuleIds: string[];
+  grounded: boolean;
+}
+
+/**
+ * One issue's full draft-analysis section: the issue framing itself, both
+ * parties' argument chains, the evidence weights those arguments rely on,
+ * the tentative conclusion, and any uncertainty findings scoped to this
+ * issue. This is a UI-side aggregate — no single backend package returns
+ * this exact shape yet — that joins synthesisagent.TentativeConclusion,
+ * firstpartyagent/secondpartyagent.Argument, evidenceweighing.FactWeight,
+ * and uncertainty.Uncertainty by their shared IssueNodeID, the same way a
+ * real /api/v1/cases/:caseId/opinion endpoint is expected to when built
+ * (see packages/reasoningtrace, which assembles the equivalent trace
+ * server-side).
+ */
+export interface IssueOpinion {
+  issueNodeId: string;
+  issueText: string;
+  firstPartyArguments: OpinionArgument[];
+  secondPartyArguments: OpinionArgument[];
+  evidenceWeights: OpinionEvidenceWeight[];
+  conclusion: OpinionConclusion;
+  uncertainties: OpinionUncertainty[];
+}
+
+/**
+ * A judge's comment/annotation on one issue's draft analysis. Client-side/
+ * mocked pending a real annotation API — mirrors EvidenceAuditEntry's
+ * "actor + occurredAt" attribution convention, since no annotation backend
+ * exists yet (same rationale as EvidenceAuditEntry in Phase 066).
+ */
+export interface OpinionComment {
+  id: string;
+  issueNodeId: string;
+  text: string;
+  author: string;
+  occurredAt: string;
+}
+
+/**
+ * A case's full draft reasoned opinion as the workspace expects an API to
+ * expose it: one IssueOpinion per issue addressed, mirroring
+ * synthesisagent.Opinion's case-level envelope (caseId/generatedAt) plus
+ * this panel's per-issue aggregation.
+ */
+export interface CaseOpinion {
+  caseId: string;
+  issues: IssueOpinion[];
+  generatedAt: string;
+}
