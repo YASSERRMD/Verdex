@@ -67,12 +67,15 @@ func encodeEnvelope(env Envelope) ([]byte, error) {
 	out = append(out, envelopeMagic...)
 	out = append(out, env.Version)
 
+	// The two conversions below are guarded by the length checks above
+	// (len(env.KeyID) <= 0xFFFF, len(env.Nonce) <= 0xFF), so neither
+	// can overflow its target width.
 	keyIDLen := make([]byte, 2)
-	binary.BigEndian.PutUint16(keyIDLen, uint16(len(env.KeyID)))
+	binary.BigEndian.PutUint16(keyIDLen, uint16(len(env.KeyID))) // #nosec G115 -- bounds-checked above
 	out = append(out, keyIDLen...)
 	out = append(out, env.KeyID...)
 
-	out = append(out, byte(len(env.Nonce)))
+	out = append(out, byte(len(env.Nonce))) // #nosec G115 -- bounds-checked above
 	out = append(out, env.Nonce...)
 
 	out = append(out, env.Ciphertext...)

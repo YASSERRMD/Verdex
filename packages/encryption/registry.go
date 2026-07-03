@@ -49,7 +49,7 @@ func ScanForPlaintext(v any) ([]PlaintextFinding, error) {
 		return nil, fmt.Errorf("encryption: ScanForPlaintext: value is required")
 	}
 	rv := reflect.ValueOf(v)
-	for rv.Kind() == reflect.Ptr {
+	for rv.Kind() == reflect.Pointer {
 		if rv.IsNil() {
 			return nil, nil
 		}
@@ -83,7 +83,7 @@ func scanStruct(v reflect.Value, prefix string, findings *[]PlaintextFinding) {
 		case reflect.Struct:
 			scanStruct(fv, path, findings)
 			continue
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if !fv.IsNil() && fv.Elem().Kind() == reflect.Struct {
 				scanStruct(fv.Elem(), path, findings)
 				continue
