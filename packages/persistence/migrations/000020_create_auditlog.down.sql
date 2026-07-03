@@ -1,0 +1,10 @@
+DROP TRIGGER IF EXISTS trg_audit_events_reject_recent_delete ON audit_events;
+DROP FUNCTION IF EXISTS audit_events_reject_recent_delete();
+DROP TRIGGER IF EXISTS trg_audit_events_reject_update ON audit_events;
+DROP FUNCTION IF EXISTS audit_events_reject_update();
+DROP INDEX IF EXISTS idx_audit_events_tenant_kind;
+DROP INDEX IF EXISTS idx_audit_events_tenant_actor;
+DROP INDEX IF EXISTS idx_audit_events_tenant_case;
+DROP INDEX IF EXISTS idx_audit_events_tenant_occurred;
+DROP INDEX IF EXISTS idx_audit_events_tenant_id;
+DROP TABLE IF EXISTS audit_events;
