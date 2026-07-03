@@ -30,9 +30,16 @@ type knowledgeAPIFixture struct {
 	api     *knowledgeapi.KnowledgeAPI
 }
 
-func newKnowledgeAPIFixture(t *testing.T, caseID string) *knowledgeAPIFixture {
+// testFixtureCaseID is the case every newKnowledgeAPIFixture call is
+// scoped to, mirroring packages/knowledgeapi/knowledgeapi_test.go's
+// testFixtureCaseID convention: no test in this file needs a second case
+// ID, so the fixture constructor takes no parameter.
+const testFixtureCaseID = "case-a"
+
+func newKnowledgeAPIFixture(t *testing.T) *knowledgeAPIFixture {
 	t.Helper()
 
+	caseID := testFixtureCaseID
 	inner := graph.NewInMemoryGraphStore()
 	store, err := knowledgeisolation.NewCaseScopedStore(inner, caseID, nil)
 	if err != nil {
@@ -107,7 +114,7 @@ func authedContext(roles ...identity.Role) context.Context {
 }
 
 func TestKnowledgeAPISearcher_SearchSemantic_ComposesRealHybridRetrieval(t *testing.T) {
-	f := newKnowledgeAPIFixture(t, "case-a")
+	f := newKnowledgeAPIFixture(t)
 
 	// Two candidate vectors: one very close to the query, one far away.
 	f.seedVector(t, "fact-close", irac.NodeFact, "the tenant paid rent on time every month", embedding.EmbeddingVector{1, 0, 0})
@@ -135,7 +142,7 @@ func TestKnowledgeAPISearcher_SearchSemantic_ComposesRealHybridRetrieval(t *test
 }
 
 func TestKnowledgeAPISearcher_SearchSemantic_NoEmbedFunc_ReturnsError(t *testing.T) {
-	f := newKnowledgeAPIFixture(t, "case-a")
+	f := newKnowledgeAPIFixture(t)
 	searcher, err := casesearch.NewKnowledgeAPISearcher(f.api, nil)
 	if err != nil {
 		t.Fatalf("NewKnowledgeAPISearcher: %v", err)
@@ -148,7 +155,7 @@ func TestKnowledgeAPISearcher_SearchSemantic_NoEmbedFunc_ReturnsError(t *testing
 }
 
 func TestKnowledgeAPISearcher_SearchKeyword_MatchesNodeText(t *testing.T) {
-	f := newKnowledgeAPIFixture(t, "case-a")
+	f := newKnowledgeAPIFixture(t)
 	now := time.Now()
 	f.seedNode(t, irac.Node{ID: "fact-1", Type: irac.NodeFact, CaseID: "case-a", Text: "The lease was breached in March.", CreatedAt: now})
 	f.seedNode(t, irac.Node{ID: "fact-2", Type: irac.NodeFact, CaseID: "case-a", Text: "Unrelated fact about parking.", CreatedAt: now})
@@ -168,7 +175,7 @@ func TestKnowledgeAPISearcher_SearchKeyword_MatchesNodeText(t *testing.T) {
 }
 
 func TestKnowledgeAPISearcher_SearchIssueOrRule_FindsPathFromRoot(t *testing.T) {
-	f := newKnowledgeAPIFixture(t, "case-a")
+	f := newKnowledgeAPIFixture(t)
 	now := time.Now()
 	f.seedNode(t, irac.Node{ID: "rule-1", Type: irac.NodeRule, CaseID: "case-a", Text: "Rule on lease obligations", CreatedAt: now})
 	f.seedNode(t, irac.Node{ID: "issue-1", Type: irac.NodeIssue, CaseID: "case-a", Text: "Was the lease breached?", CreatedAt: now})
@@ -198,7 +205,7 @@ func TestKnowledgeAPISearcher_SearchIssueOrRule_FindsPathFromRoot(t *testing.T) 
 }
 
 func TestKnowledgeAPISearcher_SearchIssueOrRule_UnknownRoot_ReturnsEmptyNotError(t *testing.T) {
-	f := newKnowledgeAPIFixture(t, "case-a")
+	f := newKnowledgeAPIFixture(t)
 	searcher, err := casesearch.NewKnowledgeAPISearcher(f.api, nil)
 	if err != nil {
 		t.Fatalf("NewKnowledgeAPISearcher: %v", err)

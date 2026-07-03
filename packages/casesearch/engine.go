@@ -94,10 +94,7 @@ func (e *Engine) Search(ctx context.Context, tenantID uuid.UUID, q Query) (Resul
 		return Results{}, err
 	}
 
-	candidates, err = e.applyPartyFilter(ctx, candidates, q.Filter.PartyName)
-	if err != nil {
-		return Results{}, err
-	}
+	candidates = e.applyPartyFilter(ctx, candidates, q.Filter.PartyName)
 	candidates = applyDateFilter(candidates, q.Filter)
 
 	results := make([]Result, 0, len(candidates))
@@ -180,30 +177,28 @@ func caseFilterFromQuery(q Query) caselifecycle.CaseFilter {
 // applyPartyFilter narrows cases to those with a party matching
 // filter.PartyName, using e.partyLookup. An empty PartyName is a no-op.
 // A nil partyLookup with a non-empty PartyName narrows to zero cases
-// (see Filter's doc comment on PartyName).
-func (e *Engine) applyPartyFilter(ctx context.Context, cases []*caselifecycle.Case, partyName string) ([]*caselifecycle.Case, error) {
+// (see Filter's doc comment on PartyName). This never fails outright: a
+// case whose parties cannot be resolved is simply excluded, mirroring
+// PartyLookup's documented per-case error tolerance.
+func (e *Engine) applyPartyFilter(ctx context.Context, cases []*caselifecycle.Case, partyName string) []*caselifecycle.Case {
 	if strings.TrimSpace(partyName) == "" {
-		return cases, nil
+		return cases
 	}
 	if e.partyLookup == nil {
-		return nil, nil
+		return nil
 	}
 
 	out := make([]*caselifecycle.Case, 0, len(cases))
 	for _, c := range cases {
 		names, err := e.partyLookup(ctx, c.ID.String())
 		if err != nil {
-			// A case whose parties cannot be resolved is excluded from a
-			// party-filtered search rather than failing the whole
-			// request, mirroring PartyLookup's documented per-case error
-			// tolerance.
 			continue
 		}
 		if matchesPartyName(names, partyName) {
 			out = append(out, c)
 		}
 	}
-	return out, nil
+	return out
 }
 
 // applyDateFilter narrows cases to those whose CreatedAt falls within
