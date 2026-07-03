@@ -3,6 +3,7 @@ import {
   nodeDepth,
   ancestorPath,
   descendantIds,
+  descendantIdsByRank,
   formatConfidence,
   confidenceTier,
   NODE_TYPE_COLORS,
@@ -133,6 +134,35 @@ describe('descendantIds', () => {
 
   it('returns an empty set for a leaf node', () => {
     expect(descendantIds('issue-1', EDGES)).toEqual(new Set());
+  });
+});
+
+describe('descendantIdsByRank', () => {
+  it('collapsing the issue hides every connected node with a higher rank', () => {
+    // fact-1 is transitively connected to issue-1 via application-1, so it
+    // is included too — the whole tree is one connected component here.
+    const descendants = descendantIdsByRank('issue-1', NODES, EDGES);
+    expect(descendants).toEqual(new Set(['rule-1', 'application-1', 'fact-1', 'conclusion-1']));
+  });
+
+  it('collapsing a rule hides only application and conclusion, not the issue', () => {
+    const descendants = descendantIdsByRank('rule-1', NODES, EDGES);
+    expect(descendants.has('issue-1')).toBe(false);
+    expect(descendants.has('application-1')).toBe(true);
+    expect(descendants.has('conclusion-1')).toBe(true);
+  });
+
+  it('collapsing the application hides only the conclusion', () => {
+    const descendants = descendantIdsByRank('application-1', NODES, EDGES);
+    expect(descendants).toEqual(new Set(['conclusion-1']));
+  });
+
+  it('collapsing the conclusion (highest rank) hides nothing', () => {
+    expect(descendantIdsByRank('conclusion-1', NODES, EDGES)).toEqual(new Set());
+  });
+
+  it('returns an empty set for an unknown node id', () => {
+    expect(descendantIdsByRank('missing', NODES, EDGES)).toEqual(new Set());
   });
 });
 

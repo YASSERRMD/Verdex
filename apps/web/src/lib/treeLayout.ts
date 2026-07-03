@@ -229,8 +229,11 @@ export function pathEdgeKey(edge: TreeEdge): string {
 
 /**
  * Returns every node ID reachable by walking forwards (source -> target)
- * from `nodeId`, exclusive of `nodeId` itself. Used by collapse/expand to
- * determine which nodes belong to a subtree rooted at a collapsed node.
+ * from `nodeId`, exclusive of `nodeId` itself. Exposed for callers that
+ * need a literal edge-direction walk; collapse/expand uses
+ * `descendantIdsByRank` instead (see below) because the IRAC edge
+ * directions are not uniformly parent -> child, so a literal forward walk
+ * does not match the visual column layout for every node type.
  */
 export function descendantIds(nodeId: string, edges: TreeEdge[]): Set<string> {
   const forward = buildForwardAdjacency(edges);
@@ -245,6 +248,37 @@ export function descendantIds(nodeId: string, edges: TreeEdge[]): Set<string> {
     }
   }
   return visited;
+}
+
+/**
+ * Returns every node ID connected to `nodeId` (in either edge direction)
+ * whose column rank (NODE_TYPE_DEPTH) is strictly greater than `nodeId`'s
+ * own rank. This is what "collapse this node's subtree" means visually in
+ * the fixed Issue -> Rule/Fact -> Application -> Conclusion column layout:
+ * collapsing an Issue hides the Rule(s) that govern it plus everything
+ * downstream of those Rules; collapsing a Rule or Fact hides the
+ * Application(s) it feeds plus their Conclusion(s); collapsing an
+ * Application hides its Conclusion(s). Rank-based (not a literal edge-
+ * direction walk) because IRAC edges are not uniformly parent -> child
+ * (e.g. Fact --supports--> Application points toward, not away from, the
+ * later-rank node) — see ancestorPath's doc comment for the same issue.
+ */
+export function descendantIdsByRank(nodeId: string, nodes: TreeNode[], edges: TreeEdge[]): Set<string> {
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const origin = byId.get(nodeId);
+  if (!origin) return new Set();
+  const originRank = nodeDepth(origin.type);
+
+  const connected = ancestorPath(nodeId, edges); // connectivity is symmetric; reuse the union walk
+  const result = new Set<string>();
+  connected.forEach((id) => {
+    if (id === nodeId) return;
+    const candidate = byId.get(id);
+    if (candidate && nodeDepth(candidate.type) > originRank) {
+      result.add(id);
+    }
+  });
+  return result;
 }
 
 /** Formats a confidence score in [0, 1] as a percentage string, e.g. "82%". */
