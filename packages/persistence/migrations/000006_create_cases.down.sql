@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS case_transitions;
+DROP TABLE IF EXISTS cases;
