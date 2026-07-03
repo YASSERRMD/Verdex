@@ -1,0 +1,3 @@
+DROP POLICY IF EXISTS tenant_isolation ON saved_searches;
+ALTER TABLE saved_searches NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE saved_searches DISABLE ROW LEVEL SECURITY;

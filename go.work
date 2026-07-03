@@ -62,4 +62,5 @@ use (
 	./packages/reasoningeval
 	./packages/caselifecycle
 	./packages/signoff
+	./packages/casesearch
 )

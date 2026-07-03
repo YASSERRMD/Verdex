@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import {
   LayoutDashboardIcon,
   FolderOpenIcon,
+  SearchIcon,
   GlobeIcon,
   SettingsIcon,
   ShieldIcon,
@@ -22,6 +23,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboardIcon },
   { href: '/cases', label: 'Cases', icon: FolderOpenIcon },
+  { href: '/search', label: 'Search', icon: SearchIcon },
   { href: '/jurisdictions', label: 'Jurisdictions', icon: GlobeIcon },
   { href: '/settings', label: 'Settings', icon: SettingsIcon },
   { href: '/admin', label: 'Admin', icon: ShieldIcon, adminOnly: true },
