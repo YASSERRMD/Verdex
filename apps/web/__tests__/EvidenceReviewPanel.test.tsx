@@ -70,7 +70,7 @@ describe('EvidenceReviewPanel', () => {
     expect(screen.getByTestId('evidence-review-segment-seg-3')).toBeInTheDocument();
 
     expect(screen.getByTestId('evidence-type-badge-seg-1')).toHaveTextContent('Testimony');
-    expect(screen.getByTestId('evidence-type-badge-seg-2')).toHaveTextContent('Exhibit');
+    expect(screen.getByTestId('evidence-type-badge-seg-2')).toHaveTextContent('Documentary');
     expect(screen.getByTestId('evidence-type-badge-seg-3')).toHaveTextContent('Statute Citation');
   });
 

@@ -69,7 +69,7 @@ value to a human label that matches the intent of `packages/evidence/taxonomy.go
 | TS `EvidenceType` | Badge label | Closest `packages/evidence` taxonomy constant |
 |---|---|---|
 | `testimony` | Testimony | `TypeWitnessStatement` |
-| `documentary` | Exhibit | `TypeDocumentaryEvidence` (also covers `TypePhysicalExhibit`) |
+| `documentary` | Documentary | `TypeDocumentaryEvidence` (also covers `TypePhysicalExhibit`) |
 | `statute_citation` | Statute Citation | `TypeStatutoryCitation` |
 | `argument` | Argument | `TypeArgument` |
 | `other` | Other | `TypeOther` |

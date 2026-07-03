@@ -17,7 +17,7 @@ export interface EvidenceReviewPanelProps {
 
 const EVIDENCE_TYPE_LABELS: Record<EvidenceType, string> = {
   testimony: 'Testimony',
-  documentary: 'Exhibit',
+  documentary: 'Documentary',
   statute_citation: 'Statute Citation',
   argument: 'Argument',
   other: 'Other',
@@ -33,7 +33,7 @@ const EVIDENCE_TYPE_BADGE_CLASSES: Record<EvidenceType, string> = {
 
 const EVIDENCE_TYPE_OPTIONS: { value: EvidenceType; label: string }[] = [
   { value: 'testimony', label: 'Testimony' },
-  { value: 'documentary', label: 'Exhibit' },
+  { value: 'documentary', label: 'Documentary' },
   { value: 'statute_citation', label: 'Statute Citation' },
   { value: 'argument', label: 'Argument' },
   { value: 'other', label: 'Other' },
