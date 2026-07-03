@@ -1,6 +1,11 @@
 package signoff
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+
+	"github.com/google/uuid"
+)
 
 // Sentinel errors that callers can test with errors.Is.
 var (
@@ -51,3 +56,21 @@ var (
 	// was looking at stale case content.
 	ErrCaseVersionMismatch = errors.New("signoff: case version has changed since review began")
 )
+
+// requireMatchingTenant returns ErrCrossTenantAccess if entityTenantID
+// is set and does not equal scopeTenantID, mirroring
+// packages/caselifecycle's unexported helper of the same name and
+// behavior. A nil entityTenantID (the zero uuid.UUID) is treated as
+// "not yet assigned" and is not an error here.
+func requireMatchingTenant(scopeTenantID, entityTenantID uuid.UUID) error {
+	if entityTenantID != uuid.Nil && entityTenantID != scopeTenantID {
+		return ErrCrossTenantAccess
+	}
+	return nil
+}
+
+// wrapf is a small helper mirroring the fmt.Errorf("pkg: fn: %w", err)
+// convention used throughout this repository's packages.
+func wrapf(fn string, err error) error {
+	return fmt.Errorf("signoff: %s: %w", fn, err)
+}
