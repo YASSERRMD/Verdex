@@ -60,4 +60,5 @@ use (
 	./packages/reasoningtrace
 	./packages/grounding
 	./packages/reasoningeval
+	./packages/caselifecycle
 )
