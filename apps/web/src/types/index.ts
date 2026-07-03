@@ -298,3 +298,95 @@ export interface EvidenceSegment {
     end: number;
   };
 }
+
+// ─── IRAC Reasoning Tree ─────────────────────────────────────────────────────
+
+/**
+ * Position a node occupies in the Issue-Rule-Fact-Application-Conclusion
+ * reasoning tree, mirroring packages/irac's NodeType constants exactly
+ * (packages/irac/node.go): "issue", "rule", "fact", "application",
+ * "conclusion".
+ */
+export type TreeNodeType = 'issue' | 'rule' | 'fact' | 'application' | 'conclusion';
+
+/**
+ * How two nodes in the reasoning tree relate to one another, mirroring
+ * packages/irac's EdgeType constants exactly (packages/irac/edge.go):
+ *   - "governs": Rule -> Issue
+ *   - "applies_to": Application -> Fact | Application -> Rule
+ *   - "supports": Fact -> Application
+ *   - "concludes_from": Conclusion -> Application
+ */
+export type TreeEdgeType = 'governs' | 'applies_to' | 'supports' | 'concludes_from';
+
+/**
+ * Locates a node's claim within its original ingested source text, mirroring
+ * packages/irac's SourceSpan (packages/irac/span.go). `page` is set for
+ * OCR-derived text, `startMs`/`endMs` for STT-derived text; both are omitted
+ * when the origin does not apply.
+ */
+export interface TreeSourceSpan {
+  start: number;
+  end: number;
+  page?: number;
+  startMs?: number;
+  endMs?: number;
+}
+
+/**
+ * Records how a tree node came to exist, mirroring packages/irac's
+ * Provenance (packages/irac/provenance.go).
+ */
+export interface TreeNodeProvenance {
+  generatedBy: string;
+  generatedAt: string;
+  upstreamNodeIds?: string[];
+}
+
+/**
+ * One node in a case's IRAC reasoning tree, mirroring packages/irac's Node
+ * plus its typed wrappers (IssueNode, RuleNode, FactNode, ApplicationNode,
+ * ConclusionNode). Type-specific fields (`jurisdictionCode`, `legalFamily`
+ * for rules; `label` for conclusions) are optional here since a single flat
+ * shape covers every node type, matching how knowledgeapi's NodeDTO is
+ * transported over the wire (packages/knowledgeapi/dto.go) extended with the
+ * span/provenance/jurisdiction detail this panel needs to render.
+ */
+export interface TreeNode {
+  id: string;
+  type: TreeNodeType;
+  caseId: string;
+  text: string;
+  confidence: number;
+  createdAt: string;
+  spans?: TreeSourceSpan[];
+  provenance?: TreeNodeProvenance;
+  /** RuleNode only: the jurisdiction this rule derives its authority from. */
+  jurisdictionCode?: string;
+  /** RuleNode only: the legal tradition this rule derives from. */
+  legalFamily?: string;
+  /**
+   * ConclusionNode only: the mandatory non-binding guardrail label. Always
+   * "draft_analysis" per packages/irac's guardrail (packages/irac/
+   * guardrail.go) — reasoning output is never presented as a verdict.
+   */
+  label?: string;
+}
+
+/** A directed relationship between two nodes, mirroring packages/irac's Edge. */
+export interface TreeEdge {
+  fromId: string;
+  toId: string;
+  type: TreeEdgeType;
+}
+
+/**
+ * A case's full IRAC reasoning tree as served by the (not-yet-implemented)
+ * `/api/v1/cases/:caseId/tree` endpoint, matching packages/knowledgeapi's
+ * GetTreeResponse shape (packages/knowledgeapi/dto.go) camelCased.
+ */
+export interface ReasoningTree {
+  caseId: string;
+  nodes: TreeNode[];
+  edges: TreeEdge[];
+}

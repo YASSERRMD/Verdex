@@ -139,7 +139,7 @@ export default function CaseWorkspacePage() {
               {activeTab === 'evidence' && (
                 <EvidenceTimelinePanel segments={data.evidence} events={data.events} />
               )}
-              {activeTab === 'tree' && <TreeVisualizationPanel />}
+              {activeTab === 'tree' && <TreeVisualizationPanel caseId={caseId} />}
               {activeTab === 'reasoning' && <ReasoningOpinionPanel />}
             </div>
           </>

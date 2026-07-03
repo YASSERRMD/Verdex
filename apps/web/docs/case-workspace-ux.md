@@ -31,7 +31,9 @@ apps/web/src/
 │   ├── WorkspaceTabs.tsx              # Overview / Evidence / Tree / Reasoning tab strip
 │   ├── PartiesCategoryPanel.tsx       # Parties + category/subcategory (Overview tab)
 │   ├── EvidenceTimelinePanel.tsx      # Evidence segments + chronological timeline
-│   ├── TreeVisualizationPanel.tsx     # IRAC reasoning tree entry point (Phase 065 fills in)
+│   ├── TreeVisualizationPanel.tsx     # Interactive IRAC reasoning tree (Phase 065, see docs/tree-visualization.md)
+│   ├── TreeCanvas.tsx                 # SVG hierarchical graph renderer (Phase 065)
+│   ├── TreeNodeDetail.tsx             # Selected tree-node detail side panel (Phase 065)
 │   ├── ReasoningOpinionPanel.tsx      # Draft opinion entry point (Phase 067 fills in)
 │   ├── WorkspaceLoading.tsx           # Full-panel loading state
 │   └── WorkspaceError.tsx             # Full-panel error / not-found state
@@ -62,7 +64,7 @@ apps/web/src/
 |---|---|---|
 | Overview | `PartiesCategoryPanel` | Category/subcategory, party list with role + counsel |
 | Evidence & Timeline | `EvidenceTimelinePanel` | Evidence segments (type, confidence, source span) and a chronologically sorted event timeline (undated events last) |
-| Reasoning Tree | `TreeVisualizationPanel` | Empty/loading placeholder; Phase 065 renders the interactive issue/rule/fact/conclusion tree here |
+| Reasoning Tree | `TreeVisualizationPanel` | Interactive issue/rule/fact/conclusion tree with node detail, collapse/expand, depth control, path highlighting, and export — see `docs/tree-visualization.md` |
 | Draft Opinion | `ReasoningOpinionPanel` | `Disclaimer` (always rendered first) plus a loading/empty/has-draft placeholder; Phase 067 renders the full per-issue analysis here |
 
 ## Lifecycle State & Actions
@@ -140,10 +142,11 @@ Tests live in `__tests__/` and follow the existing Jest + `@testing-library/reac
 convention:
 
 - `CaseHeader.test.tsx`, `PartiesCategoryPanel.test.tsx`, `EvidenceTimelinePanel.test.tsx`,
-  `TreeVisualizationPanel.test.tsx`, `ReasoningOpinionPanel.test.tsx`,
-  `WorkspaceTabs.test.tsx`, `WorkspaceLoading.test.tsx`, `WorkspaceError.test.tsx` — render
-  and state tests for each component, including empty states and (for the opinion panel)
-  an explicit assertion that no verdict-implying language appears.
+  `TreeVisualizationPanel.test.tsx` (see `docs/tree-visualization.md` for its full scope),
+  `TreeNodeDetail.test.tsx`, `ReasoningOpinionPanel.test.tsx`, `WorkspaceTabs.test.tsx`,
+  `WorkspaceLoading.test.tsx`, `WorkspaceError.test.tsx` — render and state tests for each
+  component, including empty states and (for the opinion panel) an explicit assertion that
+  no verdict-implying language appears.
 - `StatusActionsBar.test.tsx` — the correct action set for every one of the five lifecycle
   states, the required-justification gate on Reopen, and the `onTransition`/`onArchive`
   callbacks.
