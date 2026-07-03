@@ -65,4 +65,5 @@ use (
 	./packages/casesearch
 	./packages/annotations
 	./packages/caseversioning
+	./packages/notifications
 )

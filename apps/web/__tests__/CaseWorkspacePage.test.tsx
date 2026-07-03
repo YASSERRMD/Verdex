@@ -31,6 +31,17 @@ jest.mock('@/lib/auth', () => ({
   getSession: jest.fn(),
 }));
 
+// TopBar's NotificationBell independently polls
+// /api/v1/notifications/unread-count on mount, which would otherwise
+// race with (and consume mock call slots meant for) this page's own
+// apiFetch mockResolvedValueOnce/mockRejectedValueOnce sequencing
+// below. This page's tests are about the case workspace, not the
+// notification bell (covered by NotificationBell.test.tsx), so stub
+// it out entirely here.
+jest.mock('@/components/layout/NotificationBell', () => ({
+  NotificationBell: () => null,
+}));
+
 import { apiFetch, ApiError } from '@/lib/api';
 import { getSession } from '@/lib/auth';
 

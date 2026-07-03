@@ -727,3 +727,35 @@ export interface SnapshotDiff {
   revisionRefAfter?: string;
   identical: boolean;
 }
+
+// ─── Notifications ──────────────────────────────────────────────────────────
+
+/**
+ * What kind of event a notification represents, mirroring
+ * packages/notifications.Kind's string constants exactly.
+ */
+export type NotificationKind =
+  | 'ingestion_complete'
+  | 'pending_signoff'
+  | 'mention'
+  | 'quality_alert'
+  | 'budget_alert'
+  | 'task_assignment';
+
+/**
+ * A single persisted, user-facing notice, mirroring
+ * packages/notifications.Notification. `readAt` is undefined while
+ * unread.
+ */
+export interface NotificationEntry {
+  id: string;
+  tenantId: string;
+  recipientId: string;
+  kind: NotificationKind;
+  title: string;
+  body?: string;
+  caseId?: string;
+  relatedEntityId?: string;
+  createdAt: string;
+  readAt?: string;
+}
