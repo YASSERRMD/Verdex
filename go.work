@@ -67,4 +67,5 @@ use (
 	./packages/caseversioning
 	./packages/notifications
 	./packages/reportexport
+	./packages/analytics
 )
