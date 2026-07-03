@@ -17,13 +17,20 @@ import (
 // pure-Go PDF generator (no cgo, no external renderer process).
 //
 // The returned bytes always begin with the "%PDF-" magic header gofpdf
-// itself writes as part of a standard PDF file's structure.
+// itself writes as part of a standard PDF file's structure. Page
+// content-stream compression is deliberately disabled
+// (SetCompression(false)) so every page's operator stream keeps its
+// text-showing operators as literal, greppable string content instead
+// of zlib-compressed bytes — this is what lets tests (and any other
+// downstream consumer) verify a PDF actually contains expected text
+// without a full PDF-parsing dependency.
 func RenderPDF(r *Report) ([]byte, error) {
 	if r == nil {
 		return nil, ErrNilCase
 	}
 
 	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.SetCompression(false)
 	pdf.SetTitle(fmt.Sprintf("Draft Case Report - %s", reportTitle(r)), true)
 	pdf.SetAutoPageBreak(true, 15)
 	pdf.AddPage()
