@@ -9,6 +9,11 @@ import { AppShell } from '@/components/layout/AppShell';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Disclaimer } from '@/components/Disclaimer';
+import { CaseloadPanel } from '@/components/dashboard/CaseloadPanel';
+import { CategoryBreakdownPanel } from '@/components/dashboard/CategoryBreakdownPanel';
+import { JurisdictionBreakdownPanel } from '@/components/dashboard/JurisdictionBreakdownPanel';
+import { QualityTrendPanel } from '@/components/dashboard/QualityTrendPanel';
+import { UsageCostPanel } from '@/components/dashboard/UsageCostPanel';
 import type { Role } from '@/types';
 
 const QUICK_ACTIONS = [
@@ -63,21 +68,18 @@ export default function DashboardPage() {
         {/* Disclaimer */}
         <Disclaimer />
 
-        {/* Stats row */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {[
-            { label: 'Open Cases', value: '—' },
-            { label: 'Pending Review', value: '—' },
-            { label: 'Closed This Month', value: '—' },
-          ].map((stat) => (
-            <Card key={stat.label} padding="md">
-              <p className="text-xs font-medium uppercase tracking-wider text-neutral-500">
-                {stat.label}
-              </p>
-              <p className="mt-2 text-3xl font-bold text-primary-DEFAULT">{stat.value}</p>
-            </Card>
-          ))}
+        {/* Caseload summary, backed by packages/analytics.Dashboard.Caseload */}
+        <CaseloadPanel />
+
+        {/* Category / jurisdiction breakdowns, and reasoning-quality trend */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <CategoryBreakdownPanel />
+          <JurisdictionBreakdownPanel />
         </div>
+        <QualityTrendPanel />
+
+        {/* Usage & cost — only rendered for roles holding audit permission */}
+        <UsageCostPanel roles={roles} />
 
         {/* Quick Actions */}
         <div>
