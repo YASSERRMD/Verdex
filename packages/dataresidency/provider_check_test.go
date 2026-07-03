@@ -90,3 +90,31 @@ func TestFilterProvidersByLocality_KeepsOnlyAllowedRegions(t *testing.T) {
 		}
 	}
 }
+
+func TestFilterProvidersByLocality_NoMatchesReturnsEmpty(t *testing.T) {
+	policy := &dataresidency.ResidencyPolicy{
+		DeploymentID:   uuid.New(),
+		AllowedRegions: []string{"eu"},
+	}
+	candidates := []provider.Capability{
+		{ProviderID: "a", Region: "us"},
+		{ProviderID: "b", Region: "cn"},
+	}
+
+	got := dataresidency.FilterProvidersByLocality(context.Background(), candidates, policy)
+	if len(got) != 0 {
+		t.Fatalf("expected no candidates to survive filtering, got %+v", got)
+	}
+}
+
+func TestFilterProvidersByLocality_EmptyInputReturnsEmpty(t *testing.T) {
+	policy := &dataresidency.ResidencyPolicy{
+		DeploymentID:   uuid.New(),
+		AllowedRegions: []string{"eu"},
+	}
+
+	got := dataresidency.FilterProvidersByLocality(context.Background(), nil, policy)
+	if len(got) != 0 {
+		t.Fatalf("expected empty input to produce empty output, got %+v", got)
+	}
+}
