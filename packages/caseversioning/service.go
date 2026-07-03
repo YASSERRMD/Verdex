@@ -206,7 +206,7 @@ func (s *Service) SnapshotOpinion(ctx context.Context, tenantID, caseID uuid.UUI
 // Get returns the snapshot with the given id, scoped to tenantID.
 // Requires identity.PermViewCase.
 func (s *Service) Get(ctx context.Context, tenantID, id uuid.UUID) (*Snapshot, error) {
-	if _, err := authorizeView(ctx); err != nil {
+	if err := authorizeView(ctx); err != nil {
 		return nil, err
 	}
 	snap, err := s.repo.Get(ctx, tenantID, id)
@@ -223,7 +223,7 @@ func (s *Service) Get(ctx context.Context, tenantID, id uuid.UUID) (*Snapshot, e
 // optionally narrowed by filter, in chronological order — the version
 // timeline. Requires identity.PermViewCase.
 func (s *Service) History(ctx context.Context, tenantID, caseID uuid.UUID, filter SnapshotFilter) ([]*Snapshot, error) {
-	if _, err := authorizeView(ctx); err != nil {
+	if err := authorizeView(ctx); err != nil {
 		return nil, err
 	}
 	if _, err := s.checkCaseAccess(ctx, tenantID, caseID); err != nil {
@@ -236,7 +236,7 @@ func (s *Service) History(ctx context.Context, tenantID, caseID uuid.UUID, filte
 // identified by snapshotAID and snapshotBID, scoped to tenantID.
 // Requires identity.PermViewCase.
 func (s *Service) Diff(ctx context.Context, tenantID, snapshotAID, snapshotBID uuid.UUID) (Diff, error) {
-	if _, err := authorizeView(ctx); err != nil {
+	if err := authorizeView(ctx); err != nil {
 		return Diff{}, err
 	}
 	a, err := s.repo.Get(ctx, tenantID, snapshotAID)

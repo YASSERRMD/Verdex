@@ -55,7 +55,11 @@ func encodePayload(kind ArtifactKind, payload any) ([]byte, error) {
 	return json.Marshal(payloadEnvelope{Kind: string(kind), Data: data})
 }
 
-func decodePayload(kind ArtifactKind, raw []byte) (any, error) {
+// decodePayload rebuilds the exact Go type a Snapshot's Payload held
+// before persistence, using the kind tag embedded in the envelope
+// itself (written by encodePayload) rather than requiring the caller to
+// pass ArtifactKind back in — the raw bytes are self-describing.
+func decodePayload(raw []byte) (any, error) {
 	if len(raw) == 0 {
 		return nil, nil
 	}
@@ -91,7 +95,7 @@ func scanSnapshot(row rowScanner, s *Snapshot) error {
 		return err
 	}
 	s.ArtifactKind = ArtifactKind(artifactKind)
-	payload, err := decodePayload(s.ArtifactKind, payloadRaw)
+	payload, err := decodePayload(payloadRaw)
 	if err != nil {
 		return err
 	}

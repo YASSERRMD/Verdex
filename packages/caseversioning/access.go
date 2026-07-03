@@ -19,15 +19,18 @@ const writePermission = identity.PermEditCase
 // authorizeView checks that ctx carries an authenticated identity.User
 // who holds viewPermission. Returns ErrUnauthenticated if no user is
 // present on ctx, or ErrForbidden if the user lacks the permission.
-func authorizeView(ctx context.Context) (*identity.User, error) {
+// Unlike authorizeWrite, no Service method here needs the *identity.User
+// itself (there is no author/audit-permission check to make against
+// it), so this returns only the error.
+func authorizeView(ctx context.Context) error {
 	user, ok := identity.UserFromContext(ctx)
 	if !ok {
-		return nil, ErrUnauthenticated
+		return ErrUnauthenticated
 	}
 	if !user.HasPermission(viewPermission) {
-		return nil, ErrForbidden
+		return ErrForbidden
 	}
-	return user, nil
+	return nil
 }
 
 // authorizeWrite checks that ctx carries an authenticated identity.User

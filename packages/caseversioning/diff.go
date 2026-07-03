@@ -164,8 +164,8 @@ func ComputeDiff(snapshotA, snapshotB *Snapshot) (Diff, error) {
 		out.FieldChanges = diffCaseMetadata(pa, pb)
 	}
 
-	switch {
-	case snapshotA.ArtifactKind == ArtifactCaseMetadata:
+	switch snapshotA.ArtifactKind {
+	case ArtifactCaseMetadata:
 		// Field-level diff already accounts for every meaningful
 		// difference in a CaseMetadataPayload.
 		out.Identical = len(out.FieldChanges) == 0
