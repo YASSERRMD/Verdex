@@ -80,7 +80,7 @@ func (r *PostgresRepository) Upsert(ctx context.Context, tenantID uuid.UUID, rec
 		RETURNING id, case_id, tenant_id, status, reviewer_id, notes, case_version, source, decided_at, created_at`
 
 	row := r.exec.QueryRow(ctx, q,
-		rec.ID, rec.CaseID, rec.TenantID, string(statusString(rec.Status)), reviewerID, rec.Notes,
+		rec.ID, rec.CaseID, rec.TenantID, statusString(rec.Status), reviewerID, rec.Notes,
 		rec.CaseVersion, string(rec.Source), rec.DecidedAt, rec.CreatedAt,
 	)
 	if err := scanRecord(row, rec); err != nil {
@@ -115,7 +115,7 @@ func (r *PostgresRepository) AppendAudit(ctx context.Context, tenantID uuid.UUID
 		RETURNING id, case_id, tenant_id, from_status, to_status, actor, source, notes, case_version, occurred_at`
 
 	row := r.exec.QueryRow(ctx, q,
-		e.ID, e.CaseID, e.TenantID, string(statusString(e.FromStatus)), string(statusString(e.ToStatus)),
+		e.ID, e.CaseID, e.TenantID, statusString(e.FromStatus), statusString(e.ToStatus),
 		actor, string(e.Source), e.Notes, e.CaseVersion, e.OccurredAt,
 	)
 	if err := scanAuditEntry(row, e); err != nil {
