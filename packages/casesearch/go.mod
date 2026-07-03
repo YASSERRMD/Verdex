@@ -29,10 +29,16 @@ replace (
 require (
 	github.com/YASSERRMD/verdex/packages/caselifecycle v0.0.0
 	github.com/YASSERRMD/verdex/packages/embedding v0.0.0-00010101000000-000000000000
+	github.com/YASSERRMD/verdex/packages/graph v0.0.0-20260702094313-4d74dfa6d3e6
+	github.com/YASSERRMD/verdex/packages/hybridretrieval v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/identity v0.0.0-00010101000000-000000000000
+	github.com/YASSERRMD/verdex/packages/irac v0.0.0
 	github.com/YASSERRMD/verdex/packages/knowledgeapi v0.0.0-00010101000000-000000000000
+	github.com/YASSERRMD/verdex/packages/knowledgeisolation v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/persistence v0.0.0
 	github.com/YASSERRMD/verdex/packages/tenancy v0.0.0
+	github.com/YASSERRMD/verdex/packages/treeindex v0.0.0-00010101000000-000000000000
+	github.com/YASSERRMD/verdex/packages/vectorindex v0.0.0-00010101000000-000000000000
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.10.0
 )
@@ -41,17 +47,11 @@ require (
 	github.com/YASSERRMD/verdex/packages/citation v0.0.0-00010101000000-000000000000 // indirect
 	github.com/YASSERRMD/verdex/packages/config v0.0.0 // indirect
 	github.com/YASSERRMD/verdex/packages/gateway v0.0.0-00010101000000-000000000000 // indirect
-	github.com/YASSERRMD/verdex/packages/graph v0.0.0-20260702094313-4d74dfa6d3e6 // indirect
-	github.com/YASSERRMD/verdex/packages/hybridretrieval v0.0.0-00010101000000-000000000000 // indirect
-	github.com/YASSERRMD/verdex/packages/irac v0.0.0 // indirect
-	github.com/YASSERRMD/verdex/packages/knowledgeisolation v0.0.0-00010101000000-000000000000 // indirect
 	github.com/YASSERRMD/verdex/packages/observability v0.0.0 // indirect
 	github.com/YASSERRMD/verdex/packages/provider v0.0.0 // indirect
 	github.com/YASSERRMD/verdex/packages/traversal v0.0.0-00010101000000-000000000000 // indirect
 	github.com/YASSERRMD/verdex/packages/treeassembly v0.0.0-00010101000000-000000000000 // indirect
-	github.com/YASSERRMD/verdex/packages/treeindex v0.0.0-00010101000000-000000000000 // indirect
 	github.com/YASSERRMD/verdex/packages/treevalidation v0.0.0-00010101000000-000000000000 // indirect
-	github.com/YASSERRMD/verdex/packages/vectorindex v0.0.0-00010101000000-000000000000 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
