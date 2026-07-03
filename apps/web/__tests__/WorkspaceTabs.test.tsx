@@ -7,10 +7,11 @@ import userEvent from '@testing-library/user-event';
 import { WorkspaceTabs } from '@/components/workspace/WorkspaceTabs';
 
 describe('WorkspaceTabs', () => {
-  it('renders all four workspace tabs', () => {
+  it('renders all five workspace tabs', () => {
     render(<WorkspaceTabs activeTab="overview" onTabChange={jest.fn()} />);
     expect(screen.getByRole('tab', { name: /overview/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /evidence & timeline/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /^evidence review$/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /reasoning tree/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /draft opinion/i })).toBeInTheDocument();
   });
