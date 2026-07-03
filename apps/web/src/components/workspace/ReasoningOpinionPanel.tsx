@@ -18,6 +18,7 @@ import {
   exportOpinionAsMarkdown,
   exportOpinionAsText,
 } from '@/lib/opinionExport';
+import { exportCaseReport, type ReportExportFormat } from '@/lib/reportExport';
 import type {
   CaseOpinion,
   IssueOpinion,
@@ -332,6 +333,24 @@ export function ReasoningOpinionPanel({
   className,
 }: ReasoningOpinionPanelProps) {
   const [comments, setComments] = useState<OpinionComment[]>([]);
+  const [redactOnExport, setRedactOnExport] = useState(false);
+  const [exportingFormat, setExportingFormat] = useState<ReportExportFormat | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const handleServerExport = async (format: ReportExportFormat) => {
+    if (!opinion) return;
+    setExportError(null);
+    setExportingFormat(format);
+    try {
+      await exportCaseReport({ caseId: opinion.caseId, format, redact: redactOnExport });
+    } catch {
+      setExportError(
+        `Could not export the ${format.toUpperCase()} report. Please try again.`,
+      );
+    } finally {
+      setExportingFormat(null);
+    }
+  };
 
   const handleAddComment = (issueNodeId: string, text: string) => {
     setComments((prev) => [
@@ -355,36 +374,75 @@ export function ReasoningOpinionPanel({
 
       <Card
         header={
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold text-neutral-800 dark:text-white">
-              Draft Reasoned Opinion
-            </h2>
-            {hasFullOpinion && opinion && (
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => exportOpinionAsMarkdown(opinion, comments)}
-                  leftIcon={<FileTextIcon className="h-3.5 w-3.5" />}
-                >
-                  Export Markdown
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => exportOpinionAsText(opinion, comments)}
-                  leftIcon={<FileTextIcon className="h-3.5 w-3.5" />}
-                >
-                  Export Text
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => exportOpinionAsJSON(opinion, comments)}
-                  leftIcon={<FileJsonIcon className="h-3.5 w-3.5" />}
-                >
-                  Export JSON
-                </Button>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-base font-semibold text-neutral-800 dark:text-white">
+                Draft Reasoned Opinion
+              </h2>
+              {hasFullOpinion && opinion && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => exportOpinionAsMarkdown(opinion, comments)}
+                    leftIcon={<FileTextIcon className="h-3.5 w-3.5" />}
+                  >
+                    Export Markdown
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => exportOpinionAsText(opinion, comments)}
+                    leftIcon={<FileTextIcon className="h-3.5 w-3.5" />}
+                  >
+                    Export Text
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => exportOpinionAsJSON(opinion, comments)}
+                    leftIcon={<FileJsonIcon className="h-3.5 w-3.5" />}
+                  >
+                    Export JSON
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    loading={exportingFormat === 'pdf'}
+                    onClick={() => handleServerExport('pdf')}
+                    leftIcon={<FileTextIcon className="h-3.5 w-3.5" />}
+                  >
+                    Export PDF
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    loading={exportingFormat === 'docx'}
+                    onClick={() => handleServerExport('docx')}
+                    leftIcon={<FileTextIcon className="h-3.5 w-3.5" />}
+                  >
+                    Export DOCX
+                  </Button>
+                </div>
+              )}
+            </div>
+            {hasFullOpinion && (
+              <div className="flex items-center justify-end gap-3">
+                {exportError && (
+                  <p role="alert" className="text-xs text-red-600 dark:text-red-400">
+                    {exportError}
+                  </p>
+                )}
+                <label className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                  <input
+                    type="checkbox"
+                    aria-label="Redact PII in PDF/DOCX export"
+                    checked={redactOnExport}
+                    onChange={(event) => setRedactOnExport(event.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-neutral-300"
+                  />
+                  Redact PII in PDF/DOCX export
+                </label>
               </div>
             )}
           </div>
