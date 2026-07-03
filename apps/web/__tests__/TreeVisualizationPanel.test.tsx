@@ -139,6 +139,35 @@ describe('TreeVisualizationPanel', () => {
       }
     });
 
+    it('pre-selects the node given via initialSelectedNodeId once the tree loads (deep-link from the opinion panel)', async () => {
+      mockApiFetch.mockResolvedValueOnce(TREE);
+      render(<TreeVisualizationPanel caseId="case-1" initialSelectedNodeId="fact-1" />);
+      await waitFor(() => expect(screen.getByTestId('tree-visualization-content')).toBeInTheDocument());
+
+      const detail = screen.getByTestId('tree-node-detail');
+      expect(within(detail).getByText(TREE.nodes.find((n) => n.id === 'fact-1')!.text)).toBeInTheDocument();
+    });
+
+    it('re-selects when initialSelectedNodeId changes on an already-mounted panel', async () => {
+      mockApiFetch.mockResolvedValueOnce(TREE);
+      const { rerender } = render(
+        <TreeVisualizationPanel caseId="case-1" initialSelectedNodeId="fact-1" />,
+      );
+      await waitFor(() => expect(screen.getByTestId('tree-visualization-content')).toBeInTheDocument());
+      expect(
+        within(screen.getByTestId('tree-node-detail')).getByText(
+          TREE.nodes.find((n) => n.id === 'fact-1')!.text,
+        ),
+      ).toBeInTheDocument();
+
+      rerender(<TreeVisualizationPanel caseId="case-1" initialSelectedNodeId="rule-1" />);
+      expect(
+        within(screen.getByTestId('tree-node-detail')).getByText(
+          TREE.nodes.find((n) => n.id === 'rule-1')!.text,
+        ),
+      ).toBeInTheDocument();
+    });
+
     it('renders the node-type legend', async () => {
       await renderWithTree();
       const legend = screen.getByLabelText(/node type legend/i);
