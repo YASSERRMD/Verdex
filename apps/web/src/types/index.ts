@@ -759,3 +759,109 @@ export interface NotificationEntry {
   createdAt: string;
   readAt?: string;
 }
+
+// ─── Analytics ───────────────────────────────────────────────────────────────
+
+/** Mirrors packages/analytics.StateCount. */
+export interface AnalyticsStateCount {
+  state: CaseState;
+  count: number;
+}
+
+/** Mirrors packages/analytics.CategoryCount. */
+export interface AnalyticsCategoryCount {
+  categoryId: string;
+  count: number;
+}
+
+/** Mirrors packages/analytics.JurisdictionBreakdown. */
+export interface AnalyticsJurisdictionBreakdown {
+  jurisdictionId: string;
+  count: number;
+  byState: AnalyticsStateCount[];
+}
+
+/** Mirrors packages/analytics.DailyCaseCount. */
+export interface AnalyticsDailyCaseCount {
+  date: string; // YYYY-MM-DD
+  count: number;
+}
+
+/**
+ * Mirrors packages/analytics.Metrics: the aggregated caseload view
+ * returned by GET /api/v1/analytics/caseload.
+ */
+export interface AnalyticsMetrics {
+  tenantId: string;
+  generatedAt: string;
+  totalCases: number;
+  byState: AnalyticsStateCount[];
+  byCategory: AnalyticsCategoryCount[];
+  byJurisdiction: AnalyticsJurisdictionBreakdown[];
+  createdTrend: AnalyticsDailyCaseCount[];
+}
+
+/**
+ * Mirrors packages/analytics.QualityTrendPoint, one jurisdiction's
+ * reasoning-quality summary within a QualityTrend.
+ */
+export interface QualityTrendPoint {
+  jurisdictionCode: string;
+  legalFamily?: string;
+  count: number;
+  avgOverall: number;
+  avgPerDimension: Record<string, number>;
+}
+
+/**
+ * Mirrors packages/analytics.QualityTrend, returned by
+ * GET /api/v1/analytics/quality-trend.
+ */
+export interface QualityTrend {
+  points: QualityTrendPoint[];
+}
+
+/** Mirrors packages/accounting.ProviderSummary. */
+export interface UsageProviderSummary {
+  providerId: string;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  totalTokens: number;
+  estimatedCostUsd: number;
+  requestCount: number;
+}
+
+/** Mirrors packages/accounting.TaskSummary. */
+export interface UsageTaskSummary {
+  taskType: string;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  totalTokens: number;
+  estimatedCostUsd: number;
+  requestCount: number;
+}
+
+/** Mirrors packages/accounting.DailyTrend. */
+export interface UsageDailyTrend {
+  date: string; // YYYY-MM-DD
+  totalTokens: number;
+  estimatedCostUsd: number;
+  requestCount: number;
+}
+
+/**
+ * Mirrors packages/accounting.TenantDashboard, returned by
+ * GET /api/v1/analytics/usage. Only rendered client-side for
+ * admin/judge roles — see UsageCostPanel — matching the server-side
+ * identity.PermAuditRead gate on packages/analytics.UsageComposer.
+ */
+export interface UsageDashboard {
+  tenantId: string;
+  generatedAt: string;
+  byProvider: UsageProviderSummary[];
+  byTaskType: UsageTaskSummary[];
+  last7DaysTrend: UsageDailyTrend[];
+  totalTokens: number;
+  estimatedCostUsd: number;
+  requestCount: number;
+}
