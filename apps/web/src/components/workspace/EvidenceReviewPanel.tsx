@@ -238,6 +238,7 @@ export function EvidenceReviewPanel({ segments, onSegmentsChange, className }: E
   };
 
   const allFilteredSelected = filtered.length > 0 && filtered.every((seg) => selected.has(seg.id));
+  const disputedCount = items.filter((seg) => seg.disputed).length;
 
   return (
     <div className={clsx('space-y-6', className)}>
@@ -249,6 +250,17 @@ export function EvidenceReviewPanel({ segments, onSegmentsChange, className }: E
             Review and correct extracted evidence segments for this case. Corrections take
             precedence over the automated classification and are recorded below for audit.
           </p>
+
+          {items.length > 0 && (
+            <p data-testid="evidence-summary" className="text-xs font-medium text-neutral-500">
+              {items.length} segment{items.length === 1 ? '' : 's'} total
+              {disputedCount > 0 && (
+                <span className="ml-1 text-red-600">
+                  · {disputedCount} disputed
+                </span>
+              )}
+            </p>
+          )}
 
           <div data-testid="evidence-filters" className="grid grid-cols-1 gap-3 sm:grid-cols-4">
             <Input

@@ -74,6 +74,12 @@ describe('EvidenceReviewPanel', () => {
     expect(screen.getByTestId('evidence-type-badge-seg-3')).toHaveTextContent('Statute Citation');
   });
 
+  it('summarizes the total and disputed segment counts', () => {
+    render(<EvidenceReviewPanel segments={SEGMENTS} />);
+    expect(screen.getByTestId('evidence-summary')).toHaveTextContent('3 segments total');
+    expect(screen.getByTestId('evidence-summary')).toHaveTextContent('1 disputed');
+  });
+
   it('shows provenance and confidence for each segment', () => {
     render(<EvidenceReviewPanel segments={SEGMENTS} />);
     const seg1 = screen.getByTestId('evidence-review-segment-seg-1');
