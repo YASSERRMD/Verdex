@@ -18,18 +18,24 @@ const (
 	// ID actually exists in the case's tree (reference.go).
 	ClaimReference ClaimKind = "reference"
 
-	// ClaimCitation is a claim that a controlling rule carries a specific
-	// citation. Verified via packages/citation (citations.go).
+	// ClaimCitation is a claim that a controlling rule carries a specific,
+	// existing citation. Never produced by ExtractClaims (extract.go) —
+	// citation verification runs directly over a conclusion's
+	// SupportingRuleIDs against a graph.GraphStore via packages/citation
+	// (citations.go), independent of the pure Claim-extraction pipeline
+	// the other three kinds go through. Retained as a ClaimKind value for
+	// completeness/future use (e.g. a future extractor that pulls
+	// inline citation text out of conclusion prose itself).
 	ClaimCitation ClaimKind = "citation"
 
 	// ClaimNumeric is a numeric figure mentioned in a conclusion's prose
 	// (an amount, a count, a percentage). Verified by cross-checking the
 	// figure appears in at least one of the conclusion's supporting fact
-	// nodes (numeric.go).
+	// nodes (consistency.go).
 	ClaimNumeric ClaimKind = "numeric"
 
 	// ClaimDate is a calendar date mentioned in a conclusion's prose.
-	// Verified the same way as ClaimNumeric (numeric.go).
+	// Verified the same way as ClaimNumeric (consistency.go).
 	ClaimDate ClaimKind = "date"
 )
 

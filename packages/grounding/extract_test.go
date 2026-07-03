@@ -35,6 +35,8 @@ func TestExtractClaims_ReferencesNumericsAndDates(t *testing.T) {
 			if c.Value != "2024-03-15" {
 				t.Fatalf("unexpected date claim value %q", c.Value)
 			}
+		case grounding.ClaimCitation:
+			t.Fatalf("ExtractClaims never produces ClaimCitation claims (citation verification runs directly over SupportingRuleIDs, see citations.go), got %+v", c)
 		}
 	}
 

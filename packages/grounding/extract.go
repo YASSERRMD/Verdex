@@ -7,14 +7,18 @@ import "github.com/YASSERRMD/verdex/packages/synthesisagent"
 // SupportingFactIDs/SupportingRuleIDs entry (what the conclusion says it
 // relies on), plus every numeric figure (ClaimNumeric) and calendar date
 // (ClaimDate) mentioned in the conclusion's Text (what the conclusion's
-// prose actually asserts). Citation claims are not extracted here — see
-// ExtractCitationClaims, which needs the case's tree to know which rules
-// control an issue and is therefore kept separate (extraction here never
-// touches a store).
+// prose actually asserts). ClaimCitation is never produced by
+// ExtractClaims: citation-existence verification (citations.go) runs
+// directly over a conclusion's SupportingRuleIDs against a
+// graph.GraphStore via packages/citation, which needs a store to verify
+// against and therefore cannot be part of this pure extraction step; its
+// results are carried on ConclusionResult.CitationFindings instead of
+// being folded back into a Claim/Finding pair the way the other three
+// kinds are.
 //
 // ExtractClaims is a pure function: it never consults the case's tree, so
 // it can never itself determine whether a claim is grounded — that is
-// verify.go and numeric.go's job.
+// reference.go and consistency.go's job.
 func ExtractClaims(tc synthesisagent.TentativeConclusion) []Claim {
 	var claims []Claim
 
