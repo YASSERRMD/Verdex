@@ -23,4 +23,9 @@ var (
 	// ErrNilMetrics is returned by Export when called with a nil
 	// Metrics pointer.
 	ErrNilMetrics = errors.New("analytics: metrics is required")
+
+	// ErrComposerNotConfigured is returned by Dashboard.QualityTrend or
+	// Dashboard.UsageView when the Dashboard was built without the
+	// corresponding composer.
+	ErrComposerNotConfigured = errors.New("analytics: composer not configured")
 )
