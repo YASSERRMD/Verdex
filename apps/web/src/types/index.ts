@@ -672,3 +672,58 @@ export interface AnnotationEntry {
   createdAt: string;
   updatedAt: string;
 }
+
+// ─── Case versioning & history ──────────────────────────────────────────────
+
+/**
+ * Which case artifact a version-history entry captures, mirroring
+ * packages/caseversioning.ArtifactKind's string constants exactly.
+ */
+export type SnapshotArtifactKind = 'case-metadata' | 'tree' | 'evidence' | 'opinion';
+
+/**
+ * One immutable, point-in-time record of a case artifact's state,
+ * mirroring packages/caseversioning.Snapshot. `payload` is present only
+ * for 'case-metadata' and 'opinion' snapshots (a compact copy); 'tree'
+ * and 'evidence' snapshots carry only `artifactRevisionRef`, a pointer
+ * into packages/irac's/packages/treeassembly's own revision store or
+ * packages/annotations's audit trail, never a duplicated copy.
+ */
+export interface SnapshotEntry {
+  id: string;
+  caseId: string;
+  artifactKind: SnapshotArtifactKind;
+  artifactRevisionRef?: string;
+  payload?: Record<string, unknown>;
+  createdBy: string;
+  createdByName?: string;
+  reason?: string;
+  label?: string;
+  restoredFromId?: string;
+  createdAt: string;
+}
+
+/** One field-level change reported by a case-metadata Diff. */
+export interface SnapshotFieldChange {
+  field: string;
+  before: string;
+  after: string;
+}
+
+/**
+ * The structured comparison between two snapshots, mirroring
+ * packages/caseversioning.Diff. `fieldChanges` is populated for
+ * 'case-metadata' snapshot pairs; 'tree'/'evidence'/'opinion' pairs only
+ * ever populate the revisionRef* fields (a reference-level diff).
+ */
+export interface SnapshotDiff {
+  caseId: string;
+  artifactKind: SnapshotArtifactKind;
+  snapshotAId: string;
+  snapshotBId: string;
+  fieldChanges?: SnapshotFieldChange[];
+  revisionRefChanged: boolean;
+  revisionRefBefore?: string;
+  revisionRefAfter?: string;
+  identical: boolean;
+}
