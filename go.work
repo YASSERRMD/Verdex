@@ -69,4 +69,5 @@ use (
 	./packages/reportexport
 	./packages/analytics
 	./packages/encryption
+	./packages/keymanagement
 )

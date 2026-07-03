@@ -28,6 +28,9 @@ of truth; this table is for human reference only.
 | `users:view`        | List users within the tenant                                   |
 | `audit:read`        | Read the immutable audit trail and aggregate reports           |
 | `settings:manage`   | Change tenant-level configuration (integrations, flags, etc.)  |
+| `keys:view`         | Read key metadata (ID, version, state) -- not key material      |
+| `keys:manage`       | Rotate and revoke the tenant's encryption keys                 |
+| `keys:break_glass`  | Invoke the emergency, justified, time-bound break-glass path   |
 
 ## Matrix
 
@@ -46,6 +49,9 @@ does not.
 | `users:view`        |   ✓   |    –     |   ✓   |   ✓   |    ✓    |
 | `audit:read`        |   ✓   |    –     |   –   |   ✓   |    ✓    |
 | `settings:manage`   |   –   |    –     |   –   |   ✓   |    –    |
+| `keys:view`         |   –   |    –     |   –   |   ✓   |    ✓    |
+| `keys:manage`       |   –   |    –     |   –   |   ✓   |    –    |
+| `keys:break_glass`  |   –   |    –     |   –   |   ✓   |    –    |
 
 ## Design notes
 
@@ -61,3 +67,10 @@ does not.
   `identity.HasPermission` and the `RequirePermission` HTTP middleware.
   The database layer (Row-Level Security, Phase 005) provides a
   second defence-in-depth layer against cross-tenant data access.
+* `keys:manage` and `keys:break_glass` (Phase 076,
+  `packages/keymanagement`) are admin-only by design: key rotation/
+  revocation and emergency break-glass access are the highest-blast-
+  radius operations in the system and are deliberately not delegated
+  to any other role. `auditor` holds `keys:view` (metadata only, never
+  key material) consistent with its read-only, compliance-facing
+  posture elsewhere in this matrix.

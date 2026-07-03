@@ -52,6 +52,30 @@ const (
 	// PermManageSettings allows changing tenant-level configuration such
 	// as integrations, notification rules, and feature flags.
 	PermManageSettings Permission = "settings:manage"
+
+	// Key management permissions (packages/keymanagement, Phase 076).
+
+	// PermViewKeys allows reading key metadata (ID, version, state,
+	// timestamps) for the tenant's encryption keys. It does not grant
+	// access to key material itself -- packages/keymanagement never
+	// returns raw key bytes through any operation gated solely by this
+	// permission.
+	PermViewKeys Permission = "keys:view"
+
+	// PermManageKeys allows rotating and revoking the tenant's
+	// encryption keys. This was genuinely missing before Phase 076:
+	// no existing permission named key lifecycle operations, so this
+	// phase adds it rather than overloading PermManageSettings, which
+	// covers unrelated tenant configuration.
+	PermManageKeys Permission = "keys:manage"
+
+	// PermBreakGlassKeys allows invoking the emergency, time-bound,
+	// justification-required break-glass procedure to retrieve or use
+	// a key outside the normal access flow. Deliberately not granted
+	// to any role except RoleAdmin -- break-glass is an
+	// emergency-only, heavily audited escalation, not a routine
+	// capability.
+	PermBreakGlassKeys Permission = "keys:break_glass"
 )
 
 // PermissionMatrix maps each Role to the full set of Permissions it
@@ -89,12 +113,16 @@ var PermissionMatrix = map[Role][]Permission{
 		PermViewUsers,
 		PermManageSettings,
 		PermAuditRead,
+		PermViewKeys,
+		PermManageKeys,
+		PermBreakGlassKeys,
 	},
 	RoleAuditor: {
 		PermViewCase,
 		PermViewHearing,
 		PermViewUsers,
 		PermAuditRead,
+		PermViewKeys,
 	},
 }
 
