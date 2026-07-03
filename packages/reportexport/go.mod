@@ -49,6 +49,7 @@ require (
 	github.com/YASSERRMD/verdex/packages/identity v0.0.0
 	github.com/YASSERRMD/verdex/packages/observability v0.0.0
 	github.com/YASSERRMD/verdex/packages/pii v0.0.0
+	github.com/YASSERRMD/verdex/packages/reasoningorchestration v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/reasoningtrace v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/synthesisagent v0.0.0
 	github.com/google/uuid v1.6.0
@@ -73,7 +74,6 @@ require (
 	github.com/YASSERRMD/verdex/packages/persistence v0.0.0 // indirect
 	github.com/YASSERRMD/verdex/packages/prompts v0.0.0 // indirect
 	github.com/YASSERRMD/verdex/packages/provider v0.0.0 // indirect
-	github.com/YASSERRMD/verdex/packages/reasoningorchestration v0.0.0-00010101000000-000000000000 // indirect
 	github.com/YASSERRMD/verdex/packages/reasoningprofile v0.0.0-00010101000000-000000000000 // indirect
 	github.com/YASSERRMD/verdex/packages/router v0.0.0-00010101000000-000000000000 // indirect
 	github.com/YASSERRMD/verdex/packages/secondpartyagent v0.0.0-00010101000000-000000000000 // indirect
