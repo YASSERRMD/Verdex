@@ -6,6 +6,25 @@ import (
 	"github.com/google/uuid"
 )
 
+// parseTenantID parses s as a uuid.UUID, returning ErrEmptyTenantID
+// for an empty string and a wrapped parse error otherwise. Provider
+// implementations take tenantID as a string (rather than uuid.UUID)
+// so Provider itself has no hard dependency on how a tenant is
+// identified — see provider.go's doc comment — but every call
+// immediately parses back to uuid.UUID to reach Repository, which
+// mirrors the rest of this package's (and the wider codebase's)
+// uuid.UUID-keyed convention.
+func parseTenantID(s string) (uuid.UUID, error) {
+	if s == "" {
+		return uuid.Nil, ErrEmptyTenantID
+	}
+	id, err := uuid.Parse(s)
+	if err != nil {
+		return uuid.Nil, wrapf("parseTenantID", err)
+	}
+	return id, nil
+}
+
 // Filter narrows ListForTenant to a subset of a tenant's key
 // versions.
 type Filter struct {
