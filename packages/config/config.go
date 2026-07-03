@@ -84,6 +84,17 @@ type DatabaseConfig struct {
 
 	// ConnMaxLifetime bounds how long a connection may be reused.
 	ConnMaxLifetime time.Duration `yaml:"conn_max_lifetime"`
+
+	// RequireTLS, when true, requires DSN to request an encrypted
+	// connection (e.g. Postgres sslmode=require or stronger) before
+	// persistence.Open will use it. It defaults to false so that
+	// local-development and test DSNs (which commonly use
+	// sslmode=disable against a loopback database) keep working
+	// without every caller needing to opt out; production and any
+	// deployment profile handling real data is expected to set this
+	// true. See packages/encryption's AssertEncryptedAtRest, which
+	// persistence.Open delegates this check to.
+	RequireTLS bool `yaml:"require_tls"`
 }
 
 // ObservabilityConfig holds logging, metrics, and tracing settings.
@@ -125,6 +136,7 @@ func Default() Config {
 			MaxOpenConns:    10,
 			MaxIdleConns:    5,
 			ConnMaxLifetime: 30 * time.Minute,
+			RequireTLS:      false,
 		},
 		Observability: ObservabilityConfig{
 			LogLevel:  "info",
