@@ -214,3 +214,87 @@ export interface TimelineEvent {
   partyId?: string;
   confidence?: number;
 }
+
+// ─── Case Workspace ─────────────────────────────────────────────────────────
+
+/**
+ * Case lifecycle state, mirroring packages/caselifecycle's State constants
+ * exactly (draft, active, under_review, closed, archived). Kept distinct
+ * from the older, simpler `CaseStatus` above, which predates the
+ * caselifecycle package and is not reused here.
+ */
+export type CaseState = 'draft' | 'active' | 'under_review' | 'closed' | 'archived';
+
+/**
+ * Case-scoped action, mirroring packages/caselifecycle's Action constants.
+ * Used to drive which buttons the status/actions bar shows for the case's
+ * current state.
+ */
+export type CaseWorkspaceAction =
+  | 'ingest_evidence'
+  | 'edit_category'
+  | 'edit_timeline'
+  | 'generate_reasoning'
+  | 'review_opinion'
+  | 'edit_metadata';
+
+/**
+ * One immutable entry in a case's transition audit log, mirroring
+ * packages/caselifecycle's TransitionRecord.
+ */
+export interface CaseTransitionRecord {
+  id: string;
+  caseId: string;
+  fromState: CaseState;
+  toState: CaseState;
+  actor: string;
+  reason?: string;
+  occurredAt: string;
+}
+
+/**
+ * The canonical case record as the workspace expects an API to expose it,
+ * mirroring packages/caselifecycle.Case field-for-field (camelCased):
+ * id, tenantId, jurisdictionId, categoryId, title, reference, state,
+ * metadata/metadataVersion, createdBy/createdAt/updatedAt, archivedAt.
+ */
+export interface CaseLifecycle {
+  id: string;
+  tenantId: string;
+  jurisdictionId: string;
+  jurisdictionName?: string;
+  categoryId: string;
+  categoryLabel?: string;
+  subcategoryLabel?: string;
+  title: string;
+  reference?: string;
+  state: CaseState;
+  metadata: Record<string, string>;
+  metadataVersion: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt?: string;
+}
+
+/** A party attached to a case, as shown in the parties/category panel. */
+export interface CaseParty {
+  id: string;
+  role: 'first_party' | 'second_party' | 'third_party';
+  name: string;
+  counsel?: string;
+}
+
+/** An evidence segment shown in the workspace's evidence panel. */
+export interface EvidenceSegment {
+  id: string;
+  text: string;
+  type: EvidenceType;
+  party: PartyRole;
+  confidence: number;
+  sourceFileName?: string;
+  sourceSpan: {
+    start: number;
+    end: number;
+  };
+}
