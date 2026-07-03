@@ -102,6 +102,15 @@ export function EvidenceReviewPanel({ segments, onSegmentsChange, className }: E
     });
   }, [items, searchText, typeFilter, partyFilter, disputeFilter]);
 
+  const hasActiveFilters = !!(searchText || typeFilter || partyFilter || disputeFilter);
+
+  const clearFilters = () => {
+    setSearchText('');
+    setTypeFilter('');
+    setPartyFilter('');
+    setDisputeFilter('');
+  };
+
   const updateSegment = (
     segmentId: string,
     patch: Partial<Pick<EvidenceSegment, 'type' | 'party' | 'disputed'>>,
@@ -271,6 +280,21 @@ export function EvidenceReviewPanel({ segments, onSegmentsChange, className }: E
               onChange={(e) => setDisputeFilter(e.target.value as '' | 'disputed' | 'undisputed')}
             />
           </div>
+
+          {hasActiveFilters && (
+            <div className="flex items-center justify-between text-xs text-neutral-500">
+              <span>
+                Showing {filtered.length} of {items.length} segments
+              </span>
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="font-medium text-primary-DEFAULT hover:underline"
+              >
+                Clear filters
+              </button>
+            </div>
+          )}
 
           {items.length === 0 ? (
             <p className="text-sm text-neutral-400">No evidence segments recorded for this case yet.</p>

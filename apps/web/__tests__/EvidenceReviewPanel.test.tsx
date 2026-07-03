@@ -177,6 +177,21 @@ describe('EvidenceReviewPanel', () => {
     expect(screen.queryByTestId('evidence-review-segment-seg-3')).not.toBeInTheDocument();
   });
 
+  it('clears all active filters and restores the full list', async () => {
+    render(<EvidenceReviewPanel segments={SEGMENTS} />);
+    const filters = screen.getByTestId('evidence-filters');
+
+    await userEvent.selectOptions(within(filters).getByLabelText(/^type$/i), 'documentary');
+    expect(screen.getByText(/showing 1 of 3 segments/i)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /clear filters/i }));
+
+    expect(screen.getByTestId('evidence-review-segment-seg-1')).toBeInTheDocument();
+    expect(screen.getByTestId('evidence-review-segment-seg-2')).toBeInTheDocument();
+    expect(screen.getByTestId('evidence-review-segment-seg-3')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /clear filters/i })).not.toBeInTheDocument();
+  });
+
   it('displays audit history after a correction is made', async () => {
     render(<EvidenceReviewPanel segments={SEGMENTS} />);
     const seg1 = screen.getByTestId('evidence-review-segment-seg-1');
