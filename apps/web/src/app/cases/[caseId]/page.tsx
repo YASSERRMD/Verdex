@@ -53,13 +53,19 @@ export default function CaseWorkspacePage() {
     }
   }, [caseId]);
 
+  const hasSession = !!session;
   useEffect(() => {
-    if (!session) {
+    if (!hasSession) {
       router.replace('/login');
       return;
     }
     loadCase();
-  }, [session, router, loadCase]);
+    // router intentionally omitted: Next.js's useRouter() return value is
+    // stable, and including it here would re-run this effect (and re-fetch
+    // the case) on every render where a new router-like object is handed
+    // back by a test double.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasSession, loadCase]);
 
   const applyStateChange = async (mutate: () => Promise<CaseLifecycle>) => {
     setTransitionBusy(true);
