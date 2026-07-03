@@ -572,3 +572,72 @@ export interface CaseOpinion {
   issues: IssueOpinion[];
   generatedAt: string;
 }
+
+// ─── Case search ────────────────────────────────────────────────────────────
+
+/**
+ * Search mode, mirroring packages/casesearch.Mode's string constants
+ * exactly ('' for auto-detection, 'keyword', 'semantic', 'issue_rule').
+ */
+export type SearchMode = '' | 'keyword' | 'semantic' | 'issue_rule';
+
+/**
+ * Structured filters narrowing a case search, mirroring
+ * packages/casesearch.Filter's field set (minus PartyName's backend-only
+ * PartyLookup wiring caveat, which the UI surfaces as a plain text field
+ * regardless).
+ */
+export interface SearchFilters {
+  categoryCode?: string;
+  jurisdictionId?: string;
+  partyName?: string;
+  state?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+/** One content match within a case, mirroring packages/casesearch.Hit. */
+export interface SearchHit {
+  nodeId: string;
+  nodeType: string;
+  text: string;
+  score: number;
+  explanation: string;
+}
+
+/** One ranked case-search result, mirroring packages/casesearch.Result. */
+export interface SearchResultItem {
+  caseId: string;
+  title: string;
+  reference: string;
+  categoryId: string;
+  jurisdictionId: string;
+  state: string;
+  createdAt: string;
+  mode: SearchMode;
+  score: number;
+  snippet: string;
+  hits: SearchHit[];
+}
+
+/** The full search response, mirroring packages/casesearch.Results. */
+export interface SearchResults {
+  items: SearchResultItem[];
+  totalMatches: number;
+  page: { number: number; size: number };
+  mode: SearchMode;
+  skippedCases: number;
+}
+
+/** A persisted search, mirroring packages/casesearch.SavedSearch. */
+export interface SavedSearchEntry {
+  id: string;
+  name: string;
+  query: {
+    text: string;
+    mode: SearchMode;
+    issueOrRuleId?: string;
+    filter?: SearchFilters;
+  };
+  createdAt: string;
+}
