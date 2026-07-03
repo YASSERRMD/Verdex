@@ -157,10 +157,10 @@ func TestService_CurrentKey_AuditsAccess(t *testing.T) {
 
 	var sawCurrentKey, sawRotate bool
 	for _, e := range history {
-		switch e.Action {
-		case keymanagement.AuditActionCurrentKey:
+		if e.Action == keymanagement.AuditActionCurrentKey {
 			sawCurrentKey = true
-		case keymanagement.AuditActionRotate:
+		}
+		if e.Action == keymanagement.AuditActionRotate {
 			sawRotate = true
 		}
 		if e.Outcome != keymanagement.AuditOutcomeSuccess {

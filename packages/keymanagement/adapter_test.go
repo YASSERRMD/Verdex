@@ -21,7 +21,7 @@ func TestAdapter_ImplementsEncryptionKeySource(t *testing.T) {
 
 	repo := keymanagement.NewInMemoryRepository()
 	provider := newInMemoryProvider(repo)
-	if _, err := seedActiveKey(ctx, provider, tenantID); err != nil {
+	if err := seedActiveKey(ctx, provider, tenantID); err != nil {
 		t.Fatalf("seedActiveKey: %v", err)
 	}
 
@@ -63,7 +63,7 @@ func TestAdapter_Rotate_PreservesOldKeyDecryptability(t *testing.T) {
 
 	repo := keymanagement.NewInMemoryRepository()
 	provider := newInMemoryProvider(repo)
-	if _, err := seedActiveKey(ctx, provider, tenantID); err != nil {
+	if err := seedActiveKey(ctx, provider, tenantID); err != nil {
 		t.Fatalf("seedActiveKey: %v", err)
 	}
 

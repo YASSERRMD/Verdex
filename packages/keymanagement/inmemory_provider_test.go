@@ -117,14 +117,10 @@ func (p *inMemoryProvider) Rotate(ctx context.Context, tenantID string) (keymana
 
 var _ keymanagement.Provider = (*inMemoryProvider)(nil)
 
-// seedActiveKey directly registers tenantID's first Active key
-// version in both repo and provider, bypassing Rotate, for tests that
-// want to start from an already-provisioned tenant rather than
-// exercising Rotate itself.
-func seedActiveKey(ctx context.Context, p *inMemoryProvider, tenantID uuid.UUID) (string, error) {
-	meta, err := p.Rotate(ctx, tenantID.String())
-	if err != nil {
-		return "", err
-	}
-	return meta.ID, nil
+// seedActiveKey provisions tenantID's first Active key version via
+// Rotate, for tests that want to start from an already-provisioned
+// tenant rather than asserting on Rotate's own return value.
+func seedActiveKey(ctx context.Context, p *inMemoryProvider, tenantID uuid.UUID) error {
+	_, err := p.Rotate(ctx, tenantID.String())
+	return err
 }
