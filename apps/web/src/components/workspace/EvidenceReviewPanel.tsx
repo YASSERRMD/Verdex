@@ -241,7 +241,7 @@ export function EvidenceReviewPanel({ segments, onSegmentsChange, className }: E
             precedence over the automated classification and are recorded below for audit.
           </p>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+          <div data-testid="evidence-filters" className="grid grid-cols-1 gap-3 sm:grid-cols-4">
             <Input
               label="Search"
               placeholder="Search segment text…"
@@ -250,18 +250,21 @@ export function EvidenceReviewPanel({ segments, onSegmentsChange, className }: E
               aria-label="Search evidence segments"
             />
             <Select
+              id="filter-type"
               label="Type"
               value={typeFilter}
               options={TYPE_FILTER_OPTIONS}
               onChange={(e) => setTypeFilter(e.target.value as EvidenceType | '')}
             />
             <Select
+              id="filter-party"
               label="Party"
               value={partyFilter}
               options={PARTY_FILTER_OPTIONS}
               onChange={(e) => setPartyFilter(e.target.value as PartyRole | '')}
             />
             <Select
+              id="filter-disputed"
               label="Dispute status"
               value={disputeFilter}
               options={DISPUTE_FILTER_OPTIONS}
@@ -342,6 +345,7 @@ export function EvidenceReviewPanel({ segments, onSegmentsChange, className }: E
                             <div className="flex items-start justify-between gap-3">
                               <p className="text-sm text-neutral-800 dark:text-neutral-200">{seg.text}</p>
                               <span
+                                data-testid={`evidence-type-badge-${seg.id}`}
                                 className={clsx(
                                   'flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-medium',
                                   EVIDENCE_TYPE_BADGE_CLASSES[seg.type],
@@ -359,12 +363,14 @@ export function EvidenceReviewPanel({ segments, onSegmentsChange, className }: E
 
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                               <Select
+                                id={`evidence-type-${seg.id}`}
                                 label="Evidence Type"
                                 value={seg.type}
                                 options={EVIDENCE_TYPE_OPTIONS}
                                 onChange={(e) => handleTypeChange(seg, e.target.value as EvidenceType)}
                               />
                               <Select
+                                id={`evidence-party-${seg.id}`}
                                 label="Party"
                                 value={seg.party}
                                 options={PARTY_OPTIONS}
