@@ -35,6 +35,10 @@ export default function CaseWorkspacePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [transitionBusy, setTransitionBusy] = useState(false);
+  // Node to pre-select when the "Reasoning Tree" tab is reached via a
+  // ReasoningOpinionPanel "view full trace" / "view supporting nodes"
+  // action, rather than by clicking the tab directly.
+  const [traceNodeId, setTraceNodeId] = useState<string | undefined>(undefined);
 
   const loadCase = useCallback(async () => {
     if (!caseId) return;
@@ -104,6 +108,11 @@ export default function CaseWorkspacePage() {
       }),
     );
 
+  const handleViewTrace = (_issueNodeId: string, nodeId: string) => {
+    setTraceNodeId(nodeId);
+    setActiveTab('tree');
+  };
+
   if (!session) return null;
 
   const roles = (session.user.roles ?? []) as Role[];
@@ -148,8 +157,10 @@ export default function CaseWorkspacePage() {
                   }
                 />
               )}
-              {activeTab === 'tree' && <TreeVisualizationPanel caseId={caseId} />}
-              {activeTab === 'reasoning' && <ReasoningOpinionPanel />}
+              {activeTab === 'tree' && (
+                <TreeVisualizationPanel caseId={caseId} initialSelectedNodeId={traceNodeId} />
+              )}
+              {activeTab === 'reasoning' && <ReasoningOpinionPanel onViewTrace={handleViewTrace} />}
             </div>
           </>
         )}
