@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BellIcon, UserCircleIcon, LogOutIcon, ChevronDownIcon } from 'lucide-react';
+import { UserCircleIcon, LogOutIcon, ChevronDownIcon } from 'lucide-react';
 import { clearSession } from '@/lib/auth';
 import type { AuthUser } from '@/lib/auth';
+import { NotificationBell } from './NotificationBell';
 
 interface TopBarProps {
   user?: AuthUser | null;
@@ -13,7 +14,6 @@ interface TopBarProps {
 export function TopBar({ user }: TopBarProps) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
 
   const handleLogout = () => {
     clearSession();
@@ -27,37 +27,13 @@ export function TopBar({ user }: TopBarProps) {
 
       {/* Right slot */}
       <div className="flex items-center gap-3">
-        {/* Notifications */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => {
-              setNotifOpen((v) => !v);
-              setMenuOpen(false);
-            }}
-            className="relative flex h-9 w-9 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-700"
-            aria-label="Notifications"
-            aria-expanded={notifOpen}
-          >
-            <BellIcon className="h-5 w-5" aria-hidden="true" />
-            {/* Unread dot (placeholder) */}
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent-DEFAULT" aria-hidden="true" />
-          </button>
-          {notifOpen && (
-            <div className="absolute right-0 top-12 z-50 w-72 rounded-xl border border-neutral-200 bg-white p-4 shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
-              <p className="text-sm text-neutral-500">No new notifications.</p>
-            </div>
-          )}
-        </div>
+        <NotificationBell />
 
         {/* User menu */}
         <div className="relative">
           <button
             type="button"
-            onClick={() => {
-              setMenuOpen((v) => !v);
-              setNotifOpen(false);
-            }}
+            onClick={() => setMenuOpen((v) => !v)}
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700"
             aria-haspopup="menu"
             aria-expanded={menuOpen}
