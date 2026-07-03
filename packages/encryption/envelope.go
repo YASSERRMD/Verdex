@@ -144,3 +144,13 @@ func LooksLikeEnvelope(data []byte) bool {
 	_, err := decodeEnvelope(data)
 	return err == nil
 }
+
+// ParseEnvelope parses data (as produced by Encrypt, Decrypt's input,
+// EncryptBackup, ...) into its Envelope fields without decrypting it.
+// This is useful for audit/inspection tooling that needs to know which
+// key ID protects a stored ciphertext -- e.g. to report which records
+// still depend on a key pending rotation -- without needing access to
+// the key material itself.
+func ParseEnvelope(data []byte) (Envelope, error) {
+	return decodeEnvelope(data)
+}
