@@ -80,6 +80,16 @@ describe('EvidenceReviewPanel', () => {
     expect(screen.getByTestId('evidence-summary')).toHaveTextContent('1 disputed');
   });
 
+  it('re-syncs its list when the segments prop changes after mount', () => {
+    const { rerender } = render(<EvidenceReviewPanel segments={SEGMENTS.slice(0, 1)} />);
+    expect(screen.getByTestId('evidence-review-segment-seg-1')).toBeInTheDocument();
+    expect(screen.queryByTestId('evidence-review-segment-seg-2')).not.toBeInTheDocument();
+
+    rerender(<EvidenceReviewPanel segments={SEGMENTS} />);
+    expect(screen.getByTestId('evidence-review-segment-seg-2')).toBeInTheDocument();
+    expect(screen.getByTestId('evidence-review-segment-seg-3')).toBeInTheDocument();
+  });
+
   it('shows provenance and confidence for each segment', () => {
     render(<EvidenceReviewPanel segments={SEGMENTS} />);
     const seg1 = screen.getByTestId('evidence-review-segment-seg-1');

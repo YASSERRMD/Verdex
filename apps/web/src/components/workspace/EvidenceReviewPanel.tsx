@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { apiFetch } from '@/lib/api';
 import { Card } from '@/components/ui/Card';
@@ -78,6 +78,14 @@ function newAuditId(): string {
 export function EvidenceReviewPanel({ segments, onSegmentsChange, className }: EvidenceReviewPanelProps) {
   const [items, setItems] = useState<EvidenceSegment[]>(segments);
   const [audit, setAudit] = useState<EvidenceAuditEntry[]>([]);
+
+  // Re-sync local working state when the case workspace hands down a new
+  // segments array (e.g. after a case reload or navigating between cases).
+  // useState's initializer only runs once on mount, so without this effect
+  // a parent-driven refresh would leave stale segments in the review list.
+  useEffect(() => {
+    setItems(segments);
+  }, [segments]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [expandedAudit, setExpandedAudit] = useState<Set<string>>(new Set());
