@@ -14,15 +14,17 @@ import (
 	"github.com/YASSERRMD/verdex/packages/synthesisagent"
 )
 
-// newTestUser builds an identity.User scoped to tenantID, mirroring
+// newTestUser builds an identity.User scoped to tenantID, holding
+// identity.RoleJudge (which carries identity.PermViewCase, the
+// permission Service.Export/AuditLog require), mirroring
 // packages/notifications's helpers_test.go newTestUser convention.
-func newTestUser(tenantID uuid.UUID, role identity.Role) *identity.User {
+func newTestUser(tenantID uuid.UUID) *identity.User {
 	return &identity.User{
 		ID:       uuid.New(),
 		TenantID: tenantID,
 		Email:    "judge@example.test",
 		Name:     "Test User",
-		Roles:    []identity.Role{role},
+		Roles:    []identity.Role{identity.RoleJudge},
 		Status:   identity.UserStatusActive,
 	}
 }

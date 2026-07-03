@@ -16,7 +16,7 @@ func TestService_Export_RecordsAuditForEveryFormat(t *testing.T) {
 	c := newTestCase(tenantID)
 	opinion := newTestOpinion(c.ID, "Analysis text.")
 	report := newAssembledReport(t, c, opinion)
-	user := newTestUser(tenantID, identity.RoleJudge)
+	user := newTestUser(tenantID)
 	ctx := ctxWithUser(user)
 
 	svc, repo := newTestService(t)
@@ -57,7 +57,7 @@ func TestService_Export_AuditRecordsRedactionFlag(t *testing.T) {
 	c := newTestCase(tenantID)
 	opinion := newTestOpinion(c.ID, "Contact jane.doe@example.com for details.")
 	report := newAssembledReport(t, c, opinion)
-	user := newTestUser(tenantID, identity.RoleJudge)
+	user := newTestUser(tenantID)
 	ctx := ctxWithUser(user)
 
 	svc, _ := newTestService(t)
@@ -117,7 +117,7 @@ func TestService_Export_InvalidFormat(t *testing.T) {
 	c := newTestCase(tenantID)
 	opinion := newTestOpinion(c.ID, "Analysis text.")
 	report := newAssembledReport(t, c, opinion)
-	user := newTestUser(tenantID, identity.RoleJudge)
+	user := newTestUser(tenantID)
 	ctx := ctxWithUser(user)
 
 	svc, _ := newTestService(t)
@@ -129,7 +129,7 @@ func TestService_Export_InvalidFormat(t *testing.T) {
 
 func TestService_Export_NilReport(t *testing.T) {
 	tenantID := uuid.New()
-	user := newTestUser(tenantID, identity.RoleJudge)
+	user := newTestUser(tenantID)
 	ctx := ctxWithUser(user)
 
 	svc, _ := newTestService(t)
@@ -147,7 +147,7 @@ func TestService_AuditLog_FiltersByCaseAndFormat(t *testing.T) {
 	opinion2 := newTestOpinion(c2.ID, "Analysis 2.")
 	report1 := newAssembledReport(t, c1, opinion1)
 	report2 := newAssembledReport(t, c2, opinion2)
-	user := newTestUser(tenantID, identity.RoleJudge)
+	user := newTestUser(tenantID)
 	ctx := ctxWithUser(user)
 
 	svc, _ := newTestService(t)

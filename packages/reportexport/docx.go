@@ -71,15 +71,11 @@ func RenderDOCX(r *Report) ([]byte, error) {
 
 	if r.TraceAppendix != "" {
 		paragraphs = append(paragraphs, "Appendix: Reasoning Trace")
-		for _, line := range strings.Split(r.TraceAppendix, "\n") {
-			paragraphs = append(paragraphs, line)
-		}
+		paragraphs = append(paragraphs, strings.Split(r.TraceAppendix, "\n")...)
 	}
 
 	paragraphs = append(paragraphs, "Disclaimer")
-	for _, line := range strings.Split(guardrail.RequireDisclaimer(""), "\n") {
-		paragraphs = append(paragraphs, line)
-	}
+	paragraphs = append(paragraphs, strings.Split(guardrail.RequireDisclaimer(""), "\n")...)
 
 	documentXML := buildDocxDocumentXML(paragraphs)
 
