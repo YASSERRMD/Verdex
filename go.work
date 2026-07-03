@@ -70,4 +70,5 @@ use (
 	./packages/analytics
 	./packages/encryption
 	./packages/keymanagement
+	./packages/auditlog
 )
