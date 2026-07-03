@@ -58,4 +58,5 @@ use (
 	./packages/reasoningprofile
 	./packages/reasoningorchestration
 	./packages/reasoningtrace
+	./packages/grounding
 )
