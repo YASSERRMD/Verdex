@@ -21,27 +21,27 @@
 //
 // # The state machine
 //
-//	          Transition (draft->active)
-//	  draft ────────────────────────────► active
-//	                                        │  ▲
-//	              Transition (active->under_review)
-//	                                        │  │
-//	                                        ▼  │ Transition (under_review->active)
-//	                                 under_review
-//	                                        │
-//	              Transition (under_review->closed)
-//	                                        │
-//	                                        ▼
-//	                                     closed
-//	                                        │
-//	                    Reopen (closed->active, requires justification)
-//	                                        │
-//	                                        ▼
-//	                                     active
-//	                                        │
-//	                     Archive (closed->archived, terminal)
-//	                                        ▼
-//	                                    archived
+//	        Transition (draft->active)
+//	draft ────────────────────────────► active
+//	                                      │  ▲
+//	            Transition (active->under_review)
+//	                                      │  │
+//	                                      ▼  │ Transition (under_review->active)
+//	                               under_review
+//	                                      │
+//	            Transition (under_review->closed)
+//	                                      │
+//	                                      ▼
+//	                                   closed
+//	                                      │
+//	                  Reopen (closed->active, requires justification)
+//	                                      │
+//	                                      ▼
+//	                                   active
+//	                                      │
+//	                   Archive (closed->archived, terminal)
+//	                                      ▼
+//	                                  archived
 //
 // draft is the only entry state (a case starts in draft the moment it
 // is created — see NewCase in case.go) and archived is the only true
@@ -87,9 +87,9 @@
 // Every successful Transition, Reopen, and Archive call appends a
 // TransitionRecord (audit.go) capturing the actor (from
 // packages/identity.UserFromContext), timestamp, from/to state, and
-// reason. TransitionAuditRepository persists and queries these
-// records; this reuses packages/observability's AuditEvent shape by
-// projecting every TransitionRecord into one (see
+// reason. Repository.AppendTransition/ListTransitions persist and
+// query these records; this reuses packages/observability's
+// AuditEvent shape by projecting every TransitionRecord into one (see
 // TransitionRecord.ToAuditEvent) rather than inventing a second,
 // parallel audit-logging channel.
 //
