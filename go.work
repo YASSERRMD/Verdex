@@ -66,4 +66,5 @@ use (
 	./packages/annotations
 	./packages/caseversioning
 	./packages/notifications
+	./packages/reportexport
 )
