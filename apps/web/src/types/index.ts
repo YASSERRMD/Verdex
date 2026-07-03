@@ -641,3 +641,34 @@ export interface SavedSearchEntry {
   };
   createdAt: string;
 }
+
+// ─── Annotations & collaboration ────────────────────────────────────────────
+
+/**
+ * What an annotation is attached to, mirroring
+ * packages/annotations.AnchorType's string constants exactly.
+ */
+export type AnnotationAnchorType = 'case' | 'tree_node' | 'evidence_segment';
+
+/**
+ * A single note, highlight, or discussion comment, mirroring
+ * packages/annotations.Annotation. `anchorId` is empty for
+ * anchorType 'case', an irac tree node ID for 'tree_node', and an
+ * evidence segment ID (the same ID space EvidenceReviewPanel uses)
+ * for 'evidence_segment'.
+ */
+export interface AnnotationEntry {
+  id: string;
+  caseId: string;
+  authorId: string;
+  authorName?: string;
+  body: string;
+  anchorType: AnnotationAnchorType;
+  anchorId: string;
+  parentId?: string;
+  resolved: boolean;
+  resolvedBy?: string;
+  resolvedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
