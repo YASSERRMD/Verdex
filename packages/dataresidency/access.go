@@ -19,14 +19,18 @@ const managePermission = identity.PermManageSettings
 // authorizeManage checks that ctx carries an authenticated
 // identity.User who holds managePermission. Returns ErrUnauthenticated
 // if no user is present on ctx, or ErrForbidden if the user lacks the
-// permission.
-func authorizeManage(ctx context.Context) (*identity.User, error) {
+// permission. Unlike packages/keymanagement's authorizeManage, this
+// package has no per-call need for the resolved *identity.User itself
+// (ResidencyPolicy is keyed by DeploymentID, not TenantID, so there is
+// no tenant-match check to perform here) -- callers that need the
+// actor should call identity.UserFromContext directly.
+func authorizeManage(ctx context.Context) error {
 	user, ok := identity.UserFromContext(ctx)
 	if !ok {
-		return nil, ErrUnauthenticated
+		return ErrUnauthenticated
 	}
 	if !user.HasPermission(managePermission) {
-		return nil, ErrForbidden
+		return ErrForbidden
 	}
-	return user, nil
+	return nil
 }
