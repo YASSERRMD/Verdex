@@ -191,10 +191,10 @@ const (
 
 // CheckResult is the outcome of a single Verify check.
 type CheckResult struct {
-	Kind    CheckKind `json:"kind"`
-	Passed  bool      `json:"passed"`
-	Detail  string    `json:"detail,omitempty"`
-	Region  string    `json:"region,omitempty"`
+	Kind   CheckKind `json:"kind"`
+	Passed bool      `json:"passed"`
+	Detail string    `json:"detail,omitempty"`
+	Region string    `json:"region,omitempty"`
 }
 
 // Report is the result of Verify: a point-in-time assessment of

@@ -71,4 +71,5 @@ use (
 	./packages/encryption
 	./packages/keymanagement
 	./packages/auditlog
+	./packages/dataresidency
 )
