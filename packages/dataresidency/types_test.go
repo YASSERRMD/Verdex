@@ -95,3 +95,48 @@ func TestReport_Failures_ReturnsOnlyFailedChecks(t *testing.T) {
 		t.Fatalf("expected exactly the CheckProviderRegions failure, got %+v", fails)
 	}
 }
+
+func TestResidencyPolicy_AllowedRegionsFor_FallsBackWhenRuleHasNoRegions(t *testing.T) {
+	policy := &dataresidency.ResidencyPolicy{
+		DeploymentID:   uuid.New(),
+		AllowedRegions: []string{"eu", "us"},
+		DataClassRules: []dataresidency.DataClassRule{
+			// A rule naming a data class but with an empty region list
+			// falls back to the policy-level AllowedRegions rather than
+			// being treated as "no regions allowed for this class".
+			{DataClass: "case_document"},
+		},
+	}
+
+	got := policy.AllowedRegionsFor("case_document")
+	if len(got) != 2 {
+		t.Fatalf("expected fallback to policy-level AllowedRegions, got %v", got)
+	}
+}
+
+func TestResidencyPolicy_AllowedRegionsFor_MatchesCaseInsensitively(t *testing.T) {
+	policy := &dataresidency.ResidencyPolicy{
+		DeploymentID:   uuid.New(),
+		AllowedRegions: []string{"eu", "us"},
+		DataClassRules: []dataresidency.DataClassRule{
+			{DataClass: "PII", AllowedRegions: []string{"eu"}},
+		},
+	}
+
+	got := policy.AllowedRegionsFor("pii")
+	if len(got) != 1 || got[0] != "eu" {
+		t.Fatalf("expected case-insensitive data class match, got %v", got)
+	}
+}
+
+func TestRegionPin_ValidateDSN_MatchesAnyOfMultiplePatterns(t *testing.T) {
+	pin := &dataresidency.RegionPin{
+		DeploymentID: uuid.New(),
+		Region:       "eu",
+		HostPatterns: []string{"eu-west-1.rds.example.com", "eu-central-1.rds.example.com"},
+	}
+
+	if err := pin.ValidateDSN("postgres://user:pass@eu-central-1.rds.example.com:5432/verdex?sslmode=disable"); err != nil {
+		t.Fatalf("expected second pattern to match: %v", err)
+	}
+}
