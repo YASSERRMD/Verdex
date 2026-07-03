@@ -13,6 +13,7 @@ import { TreeVisualizationPanel } from '@/components/workspace/TreeVisualization
 import { ReasoningOpinionPanel } from '@/components/workspace/ReasoningOpinionPanel';
 import { StatusActionsBar } from '@/components/workspace/StatusActionsBar';
 import { AnnotationsPanel } from '@/components/workspace/AnnotationsPanel';
+import { HistoryPanel } from '@/components/workspace/HistoryPanel';
 import { WorkspaceTabs, type WorkspaceTabId } from '@/components/workspace/WorkspaceTabs';
 import { WorkspaceLoading } from '@/components/workspace/WorkspaceLoading';
 import { WorkspaceError } from '@/components/workspace/WorkspaceError';
@@ -23,6 +24,8 @@ import type {
   CaseState,
   EvidenceSegment,
   Role,
+  SnapshotDiff,
+  SnapshotEntry,
   TimelineEvent,
 } from '@/types';
 
@@ -51,6 +54,9 @@ export default function CaseWorkspacePage() {
 
   const [annotations, setAnnotations] = useState<AnnotationEntry[]>([]);
   const [annotationsLoaded, setAnnotationsLoaded] = useState(false);
+
+  const [snapshots, setSnapshots] = useState<SnapshotEntry[]>([]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
 
   const loadCase = useCallback(async () => {
     if (!caseId) return;
@@ -170,6 +176,45 @@ export default function CaseWorkspacePage() {
     setAnnotations((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
   };
 
+  // Version-history snapshots are loaded lazily the first time the
+  // History tab is opened, mirroring the Discussion tab's lazy-load
+  // convention above.
+  useEffect(() => {
+    if (activeTab !== 'history' || historyLoaded || !caseId) return;
+    let cancelled = false;
+    apiFetch<SnapshotEntry[]>(`/api/v1/cases/${caseId}/versions`)
+      .then((result) => {
+        if (!cancelled) {
+          setSnapshots(result);
+          setHistoryLoaded(true);
+        }
+      })
+      .catch(() => {
+        // No version-history endpoint yet in this build; treat as empty
+        // rather than surfacing a page-level error for an optional tab.
+        if (!cancelled) setHistoryLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, historyLoaded, caseId]);
+
+  const handleDiffSnapshots = (snapshotAId: string, snapshotBId: string) =>
+    apiFetch<SnapshotDiff>(
+      `/api/v1/cases/${caseId}/versions/diff?a=${encodeURIComponent(snapshotAId)}&b=${encodeURIComponent(snapshotBId)}`,
+    );
+
+  const handleRestoreSnapshot = async (snapshotId: string) => {
+    const restored = await apiFetch<SnapshotEntry>(`/api/v1/cases/${caseId}/versions/${snapshotId}/restore`, {
+      method: 'POST',
+    });
+    setSnapshots((prev) => [...prev, restored]);
+    // Restoring case metadata changes the live Case fields CaseHeader/
+    // PartiesCategoryPanel render, so refresh the workspace's case data
+    // too rather than leaving it stale until the next full reload.
+    loadCase();
+  };
+
   if (!session) return null;
 
   const roles = (session.user.roles ?? []) as Role[];
@@ -224,6 +269,13 @@ export default function CaseWorkspacePage() {
                   currentUserId={session.user.id}
                   onCreate={handleCreateAnnotation}
                   onToggleResolve={handleToggleResolveAnnotation}
+                />
+              )}
+              {activeTab === 'history' && (
+                <HistoryPanel
+                  snapshots={snapshots}
+                  onDiff={handleDiffSnapshots}
+                  onRestore={handleRestoreSnapshot}
                 />
               )}
             </div>

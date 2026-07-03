@@ -8,7 +8,8 @@ export type WorkspaceTabId =
   | 'evidence-review'
   | 'tree'
   | 'reasoning'
-  | 'discussion';
+  | 'discussion'
+  | 'history';
 
 export interface WorkspaceTab {
   id: WorkspaceTabId;
@@ -22,6 +23,7 @@ export const WORKSPACE_TABS: WorkspaceTab[] = [
   { id: 'tree', label: 'Reasoning Tree' },
   { id: 'reasoning', label: 'Draft Opinion' },
   { id: 'discussion', label: 'Discussion' },
+  { id: 'history', label: 'History' },
 ];
 
 export interface WorkspaceTabsProps {
