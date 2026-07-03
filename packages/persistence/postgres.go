@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/YASSERRMD/verdex/packages/config"
+	"github.com/YASSERRMD/verdex/packages/encryption"
 )
 
 // Postgres wraps a pooled PostgreSQL connection and owns its
@@ -25,12 +26,27 @@ type Postgres struct {
 // MaxOpenConns bounds the pool's maximum size, MaxIdleConns is used
 // as the pool's minimum warm size, and ConnMaxLifetime bounds how
 // long any single connection is reused before being recycled.
+//
+// If cfg.Database.RequireTLS is true, Open first verifies (via
+// packages/encryption.AssertEncryptedAtRest) that the DSN itself
+// requests an encrypted connection -- e.g. Postgres's sslmode=require
+// or stronger -- and refuses to open a pool otherwise. RequireTLS
+// defaults to false so that local-development and test DSNs (which
+// commonly use sslmode=disable against a loopback database, see
+// integration_test.go) keep working unmodified; a production
+// deployment profile is expected to set it true.
 func Open(ctx context.Context, cfg *config.Config) (*Postgres, error) {
 	if cfg == nil {
 		return nil, fmt.Errorf("persistence: Open: cfg must not be nil")
 	}
 	if cfg.Database.DSN == "" {
 		return nil, fmt.Errorf("persistence: Open: cfg.Database.DSN must not be empty")
+	}
+	if cfg.Database.RequireTLS {
+		atRestCfg := encryption.AtRestConfig{EncryptedAtRest: true, RequireTLSInTransit: true}
+		if err := encryption.AssertEncryptedAtRest(atRestCfg, cfg.Database.DSN); err != nil {
+			return nil, fmt.Errorf("persistence: Open: %w", err)
+		}
 	}
 
 	poolCfg, err := pgxpool.ParseConfig(cfg.Database.DSN)
