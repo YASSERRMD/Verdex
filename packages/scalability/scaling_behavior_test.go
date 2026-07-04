@@ -1,11 +1,3 @@
-// Package scalability's per-file unit tests (contract_test.go,
-// partitioner_test.go, shard_test.go, policy_test.go,
-// backpressure_test.go, capacity_test.go, scaletest_test.go,
-// config_test.go) each cover one type in isolation. This file
-// (task 9: "tests for scaling behavior") instead exercises multiple
-// pieces together in plausible end-to-end scenarios, the way a real
-// deployment would actually combine them, catching integration gaps a
-// per-type test cannot.
 package scalability
 
 import (
@@ -15,6 +7,15 @@ import (
 	"testing"
 	"time"
 )
+
+// scaling_behavior_test.go complements this package's per-file unit
+// tests (contract_test.go, partitioner_test.go, shard_test.go,
+// policy_test.go, backpressure_test.go, capacity_test.go,
+// scaletest_test.go, config_test.go), each of which covers one type
+// in isolation. The tests below (task 9: "tests for scaling
+// behavior") instead exercise multiple pieces together in plausible
+// end-to-end scenarios, the way a real deployment would actually
+// combine them, catching integration gaps a per-type test cannot.
 
 // TestScalingBehaviorAutoscaleThenCapacityConfirms walks through a
 // realistic scaling episode end to end:
