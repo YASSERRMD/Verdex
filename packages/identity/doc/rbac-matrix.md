@@ -43,6 +43,8 @@ of truth; this table is for human reference only.
 | `backupdr:manage`   | Set backup policies, record backups, execute restore drills   |
 | `integration:view`  | Read-only access to connector configs, import/delivery runs, and reconciliation results |
 | `integration:manage` | Register connectors, set credentials, run imports/deliveries/reconciliation |
+| `securitytesting:view` | Read-only access to security findings, run records, and remediation history |
+| `securitytesting:manage` | Record findings, run adversarial scenarios, verify remediation |
 
 ## Matrix
 
@@ -76,6 +78,8 @@ does not.
 | `backupdr:manage`   |   –   |    –     |   –   |   ✓   |    –    |
 | `integration:view`  |   –   |    –     |   –   |   ✓   |    ✓    |
 | `integration:manage` |   –   |    –     |   –   |   ✓   |    –    |
+| `securitytesting:view` |  –  |    –     |   –   |   ✓   |    ✓    |
+| `securitytesting:manage` | – |    –     |   –   |   ✓   |    –    |
 
 ## Design notes
 
@@ -151,4 +155,11 @@ does not.
   `auditor` holds `integration:view` (read-only access to connector
   configurations minus credential material, import/delivery run
   history, and reconciliation results) consistent with its read-only,
+* `securitytesting:manage` (Phase 086, `packages/securitytesting`) is
+  admin-only: recording a finding, running an adversarial scenario
+  against production defenses, and verifying remediation are actions
+  with real security consequences, and are deliberately not delegated
+  beyond the tenant administrator. `auditor` holds
+  `securitytesting:view` (read-only access to findings, run records,
+  and remediation history) consistent with its read-only,
   compliance-facing posture elsewhere in this matrix.
