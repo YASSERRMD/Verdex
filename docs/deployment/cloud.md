@@ -42,7 +42,7 @@ Register this deployment as a `packages/iac.DeploymentProfile` with
 `Tier: TierCloud` and a required `Region` matching the
 `packages/dataresidency` region code this deployment is pinned to
 (`Region` is rejected for any other tier — see
-[`packages/iac`'s design doc](../../packages/iac/doc/iac.md)). Optionally
+[`packages/iac`'s design doc](../../packages/iac/doc/deployment.md)). Optionally
 set `SetupProfileName` to the name of the completed
 [`packages/setup`](../../packages/setup) wizard (see
 [`docs/admin/setup-guide.md`](../admin/setup-guide.md)) this deployment
