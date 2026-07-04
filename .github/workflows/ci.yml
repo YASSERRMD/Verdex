@@ -42,6 +42,49 @@ jobs:
       - name: Test
         run: make test
 
+  # Phase 098 (packages/docsite): the automated "review and link docs"
+  # mechanism -- walks docs/ and every packages/*/doc/*.md file,
+  # extracts every markdown relative link, and fails if any does not
+  # resolve to a real file/directory on disk. Runs independently of
+  # build-go/lint-go (it needs only the repository checkout and a Go
+  # toolchain to `go run` the checker, not the full build/test/lint
+  # pass) so a documentation-only PR gets fast, focused feedback.
+  docs-link-check:
+    name: Documentation link check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+      - name: Check documentation links
+        run: go run ./packages/docsite/cmd/checklinks .
+
+  # Phase 097 (packages/e2e): the full-journey, jurisdiction-aware
+  # end-to-end test suite, run as its own job so it is separately
+  # visible in the PR checks list (a scenario failure here specifically
+  # means a cross-phase composition/journey regression -- ingestion,
+  # reasoningorchestration, signoff, guardrail, knowledgeisolation,
+  # multilingual, or intake no longer compose end to end -- distinct
+  # from a build-go failure in any one of those packages' own unit
+  # tests). Every scenario is in-process/in-memory: no Docker, no
+  # testcontainers, no real LLM provider call (see
+  # packages/e2e/doc.go's "what this suite does NOT cover"), so this
+  # job needs nothing beyond the same Go toolchain setup build-go uses.
+  e2e-tests:
+    name: End-to-end suite (Go)
+    runs-on: ubuntu-latest
+    needs: lint-go
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+      - name: Run E2E suite
+        run: go test ./packages/e2e/... -race -count=1 -timeout=5m -v
+
   secrets-scan:
     name: Secrets scan (gitleaks)
     runs-on: ubuntu-latest
@@ -151,6 +194,99 @@ jobs:
           echo "packages/vulnmanagement.Engine's ScannerSourceContainer Finding pipeline."
           echo "See packages/threatmodel/doc/Dockerfile.hardened for the reference template."
 
+  # Phase 095 (packages/cicdgate): branch-naming and PR commit-count
+  # policy, made checkable in CI rather than left as a
+  # CONTRIBUTING.md/pull_request_template.md checklist item a reviewer
+  # must remember to verify by hand. Runs only on pull_request, since
+  # head.ref and commits are pull_request-event-specific fields. See
+  # packages/cicdgate/doc/cicd.md for why no-squash itself remains a
+  # branch-protection repository setting rather than a workflow check
+  # (there is no pre-merge event field reporting which merge strategy
+  # will be used).
+  branch-policy:
+    name: Branch & commit policy
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+      - name: Validate branch name and commit count
+        working-directory: packages/cicdgate
+        env:
+          # github.event.pull_request.head.ref is attacker-controlled
+          # (a PR author names their own branch), so it is routed
+          # through an environment variable rather than interpolated
+          # directly into this inline script, per
+          # https://docs.github.com/en/actions/reference/security/secure-use#good-practices-for-mitigating-script-injection-attacks
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_COMMIT_COUNT: ${{ github.event.pull_request.commits }}
+        run: go run ./cmd/branchcheck "$PR_HEAD_REF" "$PR_COMMIT_COUNT"
+
+  # Phase 095 (packages/cicdgate): signed builds and release
+  # provenance/attestation (tasks 4-5). Builds packages/cicdgate
+  # itself as a stand-in release artifact, computes its digest,
+  # attaches a BuildAttestation recording this build's commit/builder/
+  # timestamp, and runs cicdgate.Verify against the pair. Records a
+  # SignatureState of "placeholder" -- see
+  # packages/cicdgate/doc/cicd.md's "What is simulated/placeholder
+  # versus real": this environment has no real Sigstore/cosign signing
+  # identity (KMS key or OIDC-to-Fulcio binding) configured, so this
+  # step honestly records a simulated signature reference rather than
+  # claiming to have performed real cryptographic signing.
+  sign-artifacts:
+    name: Sign & attest build artifacts (placeholder)
+    runs-on: ubuntu-latest
+    needs: build-go
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+      - name: Build release artifact
+        working-directory: packages/cicdgate
+        run: go build -o /tmp/cicdgate-artifact .
+      - name: Generate and verify artifact + attestation
+        working-directory: packages/cicdgate
+        run: |
+          go run ./cmd/signartifact /tmp/cicdgate-artifact \
+            "${{ github.sha }}" \
+            "github-actions/${{ github.workflow }}/${{ github.job }}" \
+            | tee /tmp/cicdgate-attestation.json
+      - name: Upload artifact + attestation record
+        uses: actions/upload-artifact@v4
+        with:
+          name: cicdgate-artifact-attestation
+          path: /tmp/cicdgate-attestation.json
+
+  # Phase 095 (packages/cicdgate): staged rollout, automated rollback,
+  # and release-notes automation (tasks 6-8). This repository has no
+  # deployed environment or release-tag trigger to evaluate real
+  # StageHealth samples against yet (mirroring container-scan's own
+  # "no Dockerfile yet" placeholder above), so this job documents the
+  # integration points packages/cicdgate.EvaluatePromotion,
+  # EvaluateRollback, and GenerateReleaseNotes are ready for rather
+  # than running against a real deploy target that does not exist.
+  release-automation:
+    name: Rollout / rollback / release notes (placeholder)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No deploy target to automate against yet
+        run: |
+          echo "TODO(packages/cicdgate): this repository has no deployed environment or"
+          echo "release-tag trigger yet. Once one exists:"
+          echo " - feed real StageHealth samples (from packages/observability) into"
+          echo "   cicdgate.EvaluatePromotion to gate canary -> partial -> full promotion."
+          echo " - feed the same samples into cicdgate.EvaluateRollback on every stage to"
+          echo "   trigger an automatic rollback on the first unhealthy sample."
+          echo " - call cicdgate.GenerateReleaseNotes with this release's commit list to"
+          echo "   produce the release's changelog section automatically."
+          echo "See packages/cicdgate/doc/cicd.md for the full design."
+
   lint-ts:
     name: Lint & Typecheck (TypeScript)
     runs-on: ubuntu-latest
@@ -186,8 +322,34 @@ jobs:
     # blocker, so they are visible in the PR checks list without being
     # wired into this pass/fail decision. container-scan is a no-op
     # placeholder (no Dockerfile exists yet) that always succeeds, so
-    # it is safe to gate on like any other job.
-    needs: [build-go, build-ts, secrets-scan, container-scan]
+    # it is safe to gate on like any other job. Re-verified as of
+    # Phase 095 (packages/cicdgate): neither condition has changed
+    # (same pinned Go toolchain minor version, same accepted
+    # //nolint:gosec suppressions), so this decision is carried
+    # forward rather than revisited -- see
+    # packages/cicdgate/doc/cicd.md's "SCA/SAST gate decision" for the
+    # full re-verification record.
+    #
+    # Phase 095 (packages/cicdgate) adds branch-policy (task 3) and
+    # sign-artifacts (tasks 4-5) as blocking gate dependencies.
+    # branch-policy only runs on pull_request (see its own `if:`
+    # condition), so on a push-triggered run its result is "skipped",
+    # which the check below treats as passing -- skipped is not a
+    # failure. release-automation remains a documentation placeholder
+    # (mirroring container-scan's pre-Phase-095 treatment before a
+    # real Dockerfile/deploy target existed) and is deliberately not a
+    # gate dependency.
+    #
+    # Phase 098 (packages/docsite) adds docs-link-check as a blocking
+    # gate dependency: it runs deterministically (no external network
+    # dependency, no flaky third-party service, unlike sca-scan/
+    # sast-scan above) and directly protects the documentation this
+    # phase adds, so there is no reason to leave it informational-only.
+    #
+    # Phase 097 (packages/e2e) adds e2e-tests as a blocking gate
+    # dependency: a cross-phase journey regression is exactly the kind
+    # of failure this gate exists to catch before merge.
+    needs: [build-go, build-ts, secrets-scan, container-scan, branch-policy, sign-artifacts, docs-link-check, e2e-tests]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -196,8 +358,16 @@ jobs:
           if [[ "${{ needs.build-go.result }}" != "success" || \
                 "${{ needs.build-ts.result }}" != "success" || \
                 "${{ needs.secrets-scan.result }}" != "success" || \
-                "${{ needs.container-scan.result }}" != "success" ]]; then
+                "${{ needs.container-scan.result }}" != "success" || \
+                "${{ needs.sign-artifacts.result }}" != "success" || \
+                "${{ needs.docs-link-check.result }}" != "success" || \
+                "${{ needs.e2e-tests.result }}" != "success" ]]; then
             echo "One or more CI jobs failed"
+            exit 1
+          fi
+          if [[ "${{ needs.branch-policy.result }}" != "success" && \
+                "${{ needs.branch-policy.result }}" != "skipped" ]]; then
+            echo "branch-policy failed"
             exit 1
           fi
           echo "All CI jobs passed"

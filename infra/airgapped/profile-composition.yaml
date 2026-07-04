@@ -1,0 +1,53 @@
+# infra/airgapped/profile-composition.yaml
+#
+# Phase 094 (packages/iac): this is NOT a Kubernetes/compose manifest
+# consumed by an orchestrator -- it is a documented, structurally
+# validated cross-reference between this tier's infra/ manifests and
+# the packages/airgapped.Profile (Phase 079) fields they must agree
+# with, so the composition claimed in prose elsewhere is checkable
+# instead of aspirational. packages/iac.ValidateManifest's air-gapped
+# rules parse this file specifically (in addition to the Deployment/
+# Service/ConfigMap manifests in this same directory) and require the
+# fields below to be present and non-empty.
+#
+# An operator populates the *_ref fields below with the real values
+# from the packages/airgapped.Profile this deployment was constructed
+# and Conformance-checked against (see
+# packages/airgapped.Conformance/ConformanceReport and
+# packages/iac.DeploymentProfile.AirgapConformanceRef, which records
+# the same DeploymentID as profile_deployment_id_ref below).
+tier: airgapped
+
+# Matches packages/airgapped.ConfigProfileName exactly -- the
+# packages/config deployment-profile name every air-gapped deployment
+# is expected to select (packages/airgapped.Profile.ConfigProfile).
+config_profile_name_ref: airgapped
+
+# Matches packages/dataresidency.AirGappedPreset's shape:
+# StrictMode true, AllowedRegions empty -- referenced here by name
+# only, never re-implemented.
+residency_preset_ref: dataresidency.AirGappedPreset
+
+# Matches packages/router.RoutingPolicy.AirGappedOnly being true on
+# the composed packages/airgapped.Profile.Routing.
+routing_air_gapped_only_ref: true
+
+# Matches packages/airgapped.Profile.KeyProviderConfigured: the
+# mandated offline key source is a keymanagement.FileProvider, never a
+# reachable KMS. Composes with VERDEX_KEY_PROVIDER=file in
+# configmap.yaml.
+key_provider_ref: keymanagement.FileProvider
+
+# The packages/airgapped.Profile.DeploymentID (as a string) this
+# deployment's zero-egress conformance was certified against -- the
+# same value packages/iac.DeploymentProfile.AirgapConformanceRef
+# records for this deployment. Placeholder zero UUID here; an operator
+# replaces this with the real value before relying on this file.
+profile_deployment_id_ref: "00000000-0000-0000-0000-000000000000"
+
+# Every image in docker-compose.yml/deployment.yaml in this directory
+# is pinned by digest against this registry host, never a public tag
+# --- see packages/iac.ValidateManifest's airgapped-tier rule that
+# rejects any "image:" value in this tier's manifests that is not
+# "<registry_host>/<name>@sha256:<digest>".
+offline_registry_host: verdex-registry.local

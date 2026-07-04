@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { UserCircleIcon, LogOutIcon, ChevronDownIcon } from 'lucide-react';
 import { clearSession } from '@/lib/auth';
 import type { AuthUser } from '@/lib/auth';
+import { useLocale } from '@/lib/i18n/LocaleContext';
 import { NotificationBell } from './NotificationBell';
+import { LocaleSwitcher } from './LocaleSwitcher';
 
 interface TopBarProps {
   user?: AuthUser | null;
@@ -14,6 +16,7 @@ interface TopBarProps {
 export function TopBar({ user }: TopBarProps) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { t } = useLocale();
 
   const handleLogout = () => {
     clearSession();
@@ -27,6 +30,7 @@ export function TopBar({ user }: TopBarProps) {
 
       {/* Right slot */}
       <div className="flex items-center gap-3">
+        <LocaleSwitcher />
         <NotificationBell />
 
         {/* User menu */}
@@ -63,7 +67,7 @@ export function TopBar({ user }: TopBarProps) {
                 className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
               >
                 <LogOutIcon className="h-4 w-4" aria-hidden="true" />
-                Sign out
+                {t('common.sign_out')}
               </button>
             </div>
           )}

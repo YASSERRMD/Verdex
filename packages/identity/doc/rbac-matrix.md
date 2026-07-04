@@ -41,6 +41,14 @@ of truth; this table is for human reference only.
 | `vulnmanagement:manage` | Record findings, triage them, transition finding status    |
 | `backupdr:view`     | Read-only access to backup policies, backup/drill history, and RPO/RTO evaluations |
 | `backupdr:manage`   | Set backup policies, record backups, execute restore drills   |
+| `integration:view`  | Read-only access to connector configs, import/delivery runs, and reconciliation results |
+| `integration:manage` | Register connectors, set credentials, run imports/deliveries/reconciliation |
+| `securitytesting:view` | Read-only access to security findings, run records, and remediation history |
+| `securitytesting:manage` | Record findings, run adversarial scenarios, verify remediation |
+| `bulkimport:view`   | Read-only access to import job history, per-record outcomes, and progress |
+| `bulkimport:manage` | Register import jobs, run batches, pause/resume, and roll back imports |
+| `corpusupdater:view` | Read-only access to corpus update jobs, staged/effective amendments, and audit trail |
+| `corpusupdater:manage` | Stage amendments, validate/apply a corpus update job, roll one back |
 
 ## Matrix
 
@@ -72,6 +80,14 @@ does not.
 | `vulnmanagement:manage` | – |    –     |   –   |   ✓   |    –    |
 | `backupdr:view`     |   –   |    –     |   –   |   ✓   |    ✓    |
 | `backupdr:manage`   |   –   |    –     |   –   |   ✓   |    –    |
+| `integration:view`  |   –   |    –     |   –   |   ✓   |    ✓    |
+| `integration:manage` |   –   |    –     |   –   |   ✓   |    –    |
+| `securitytesting:view` |  –  |    –     |   –   |   ✓   |    ✓    |
+| `securitytesting:manage` | – |    –     |   –   |   ✓   |    –    |
+| `bulkimport:view`   |   –   |    –     |   –   |   ✓   |    ✓    |
+| `bulkimport:manage` |   –   |    –     |   –   |   ✓   |    –    |
+| `corpusupdater:view` |  –    |    –     |   –   |   ✓   |    ✓    |
+| `corpusupdater:manage` | –   |    –     |   –   |   ✓   |    –    |
 
 ## Design notes
 
@@ -138,3 +154,45 @@ does not.
   record history, restore-drill history, and RPO/RTO evaluation
   results) consistent with its read-only, compliance-facing posture
   elsewhere in this matrix.
+* `integration:manage` (Phase 087, `packages/integration`) is
+  admin-only: registering a connector configuration, setting connector
+  credentials, and triggering an inbound case import or outbound
+  report delivery are the highest-blast-radius operations this package
+  exposes -- they reach an external court case-management system --
+  and are deliberately not delegated beyond the tenant administrator.
+  `auditor` holds `integration:view` (read-only access to connector
+  configurations minus credential material, import/delivery run
+  history, and reconciliation results) consistent with its read-only,
+* `securitytesting:manage` (Phase 086, `packages/securitytesting`) is
+  admin-only: recording a finding, running an adversarial scenario
+  against production defenses, and verifying remediation are actions
+  with real security consequences, and are deliberately not delegated
+  beyond the tenant administrator. `auditor` holds
+  `securitytesting:view` (read-only access to findings, run records,
+  and remediation history) consistent with its read-only,
+  compliance-facing posture elsewhere in this matrix.
+* `bulkimport:manage` (Phase 088, `packages/bulkimport`) is admin-only:
+  registering an import job, running batches against a historical
+  case-corpus source, pausing/resuming a job, and rolling back a
+  completed or failed job are administrative bulk-data operations with
+  real downstream effects on the tenant's case records, and are
+  deliberately not delegated beyond the tenant administrator. `auditor`
+  holds `bulkimport:view` (read-only access to import job history,
+  per-record outcomes, and progress) consistent with its read-only,
+* `corpusupdater:manage` (Phase 089, `packages/corpusupdater`) is
+  admin-only: staging an amendment, validating/applying a corpus
+  update job, and rolling one back change the statute/precedent text
+  every downstream reasoning pipeline reads, and are deliberately not
+  delegated beyond the tenant administrator. `auditor` holds
+  `corpusupdater:view` (read-only access to jobs, staged/effective
+  amendments, and their audit trail) consistent with its read-only,
+  compliance-facing posture elsewhere in this matrix.
+* `alerting:manage` (Phase 096, `packages/alerting`) is admin-only:
+  registering or updating an alert rule, setting a tenant's escalation
+  policy, and running a synthetic check on demand shape how (and
+  whether) this platform pages a human when something goes wrong, and
+  are deliberately not delegated beyond the tenant administrator.
+  `auditor` holds `alerting:view` (read-only access to the alert-rule
+  catalogue, fired alert-event history, escalation policies,
+  dashboards, and synthetic-check results) consistent with its
+  read-only, compliance-facing posture elsewhere in this matrix.

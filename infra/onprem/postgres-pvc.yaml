@@ -1,0 +1,27 @@
+# infra/onprem/postgres-pvc.yaml
+#
+# Phase 094 (packages/iac): explicit local-storage claim for the
+# on-prem tier's database. storageClassName is "local-path" (the
+# convention used by k3s's bundled local-path-provisioner and similar
+# single-node/local distros) rather than a cloud elastic-block storage
+# class -- there is no infra/cloud equivalent of this file because the
+# cloud tier defers to a managed database entirely (see
+# infra/cloud/docker-compose.yml's own comment on this point). This is
+# the Kubernetes-manifest expression of the same "no managed database"
+# assumption docker-compose.yml documents for the compose form of this
+# tier.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: verdex-onprem-postgres-data
+  namespace: verdex
+  labels:
+    app.kubernetes.io/part-of: verdex
+    verdex.io/tier: onprem
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 50Gi

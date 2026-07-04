@@ -1,0 +1,114 @@
+# infra/airgapped/docker-compose.yml
+#
+# Phase 094 (packages/iac): air-gapped-tier composition. Composes with
+# packages/airgapped.Profile (Phase 079) rather than re-deriving its
+# zero-egress guarantee -- this file's job is to make that guarantee
+# hold at the container/orchestration layer too, not just inside the
+# Go process:
+#
+#   - No external registry pulls. Every image reference below is
+#     "verdex-registry.local/<name>@sha256:<digest>" -- an operator
+#     loads these images from a signed offline bundle (`docker load`
+#     from a file transferred by physical media, mirroring
+#     packages/airgapped.ApplyUpdateBundle's signed-bundle-no-network
+#     convention) into a local, air-gapped registry mirror before this
+#     file is ever run. There is no `image: postgres:16`-style public
+#     tag anywhere in this directory, unlike infra/cloud and
+#     infra/onprem, which do pull from a public registry.
+#   - Pinned by digest, never by tag. A tag (":16", ":latest") can
+#     silently resolve to different bytes over time even against a
+#     private mirror; a digest cannot. This mirrors
+#     packages/threatmodel/doc/Dockerfile.hardened's own
+#     pinned_base_image rule, applied one layer up at the compose
+#     level.
+#   - No VERDEX_DATARESIDENCY_REGION and no cloud secret-manager
+#     reference. VERDEX_KEY_PROVIDER selects
+#     keymanagement.FileProvider explicitly (packages/airgapped.Profile
+#     requires KeyProviderConfigured), and every secret is
+#     env://VAR_NAME resolved from a local .env file the operator
+#     provisions offline -- there is no KMS reachable from an
+#     air-gapped network to defer to.
+#   - Networking stays loopback/bridge-local. No published port binds
+#     a public interface; every port mapping below binds
+#     127.0.0.1 only, composing with
+#     packages/airgapped.NetworkPolicy's loopback-only default (see
+#     AllowedNetworkTargets's doc comment in packages/airgapped/types.go
+#     for the one exception: a private-LAN local-model server, which
+#     an operator opts into explicitly, not by default here).
+#
+# Before this compose file is brought up in production, the operator
+# is expected to have already run packages/airgapped.Conformance
+# against the packages/airgapped.Profile this deployment composes
+# with (see packages/iac.DeploymentProfile.AirgapConformanceRef, which
+# records which Profile that conformance check was run against).
+
+services:
+  gateway:
+    image: verdex-registry.local/gateway@sha256:1111111111111111111111111111111111111111111111111111111111111111
+    ports:
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:9090:9090"
+    environment:
+      VERDEX_PROFILE: airgapped
+      VERDEX_SERVER_PORT: "8080"
+      VERDEX_METRICS_PORT: "9090"
+      VERDEX_DATABASE_DSN: "env://VERDEX_DATABASE_DSN"
+      VERDEX_ENCRYPTION_KEY: "env://VERDEX_ENCRYPTION_KEY"
+      VERDEX_KEY_PROVIDER: "file"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  router:
+    image: verdex-registry.local/router@sha256:2222222222222222222222222222222222222222222222222222222222222222
+    environment:
+      VERDEX_PROFILE: airgapped
+      VERDEX_SERVER_PORT: "8081"
+      VERDEX_DATABASE_DSN: "env://VERDEX_DATABASE_DSN"
+      # Composes with packages/airgapped.GuardRegister: only
+      # "local:"-prefixed providers may ever be registered under this
+      # profile. This env var is read by the deployment's own startup
+      # code, not by packages/iac itself -- see
+      # packages/airgapped/providerguard.go.
+      VERDEX_PROVIDER_ALLOWLIST_PREFIX: "local:"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8081/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # First-class, local-only, exactly like infra/onprem's postgres --
+  # an air-gapped deployment has even less access to a managed database
+  # than an on-prem one (no network path to reach one even if it
+  # existed).
+  postgres:
+    image: verdex-registry.local/postgres@sha256:3333333333333333333333333333333333333333333333333333333333333333
+    environment:
+      POSTGRES_DB: verdex
+      POSTGRES_USER: verdex
+      POSTGRES_PASSWORD: "env://VERDEX_DATABASE_PASSWORD"
+    volumes:
+      - airgapped_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U verdex"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    # No published ports at all: postgres is reachable only from
+    # gateway/router over the compose-internal bridge network, never
+    # from the host.
+
+volumes:
+  airgapped_postgres_data:
+    driver: local

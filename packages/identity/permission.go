@@ -128,6 +128,23 @@ const (
 	// PermManageSettings, which covers unrelated tenant configuration.
 	PermManageThreatmodel Permission = "threatmodel:manage"
 
+	// Security-testing / red-team permissions (packages/securitytesting,
+	// Phase 086).
+
+	// PermViewSecuritytesting allows read-only access to recorded
+	// Findings, RunRecords, and the active penetration-test
+	// ScopeDocument. It does not permit running a Scenario/suite,
+	// transitioning a Finding's status, or verifying a remediation --
+	// see PermManageSecuritytesting.
+	PermViewSecuritytesting Permission = "securitytesting:view"
+
+	// PermManageSecuritytesting allows running a Scenario/suite through
+	// the harness, transitioning a Finding's status, and verifying a
+	// remediation. This was genuinely missing before Phase 086: no
+	// existing permission named security-testing/red-team
+	// administration, so this phase adds it rather than overloading
+	// PermManageSettings, which covers unrelated tenant configuration.
+	PermManageSecuritytesting Permission = "securitytesting:manage"
 	// Vulnerability and dependency management permissions
 	// (packages/vulnmanagement, Phase 084).
 
@@ -162,6 +179,119 @@ const (
 	// phase adds it rather than overloading PermManageSettings, which
 	// covers unrelated tenant configuration.
 	PermManageBackupDR Permission = "backupdr:manage"
+
+	// External system integration permissions (packages/integration,
+	// Phase 087).
+
+	// PermViewIntegration allows read-only access to registered
+	// connector configurations (minus credential material), import and
+	// delivery run history, and reconciliation results. It does not
+	// permit registering a connector, triggering an import/delivery, or
+	// changing credentials -- see PermManageIntegration.
+	PermViewIntegration Permission = "integration:view"
+
+	// PermManageIntegration allows registering/updating connector
+	// configurations, setting connector credentials, triggering inbound
+	// case imports and outbound report deliveries, and running
+	// reconciliation. This was genuinely missing before Phase 087: no
+	// existing permission named external-system-integration
+	// administration, so this phase adds it rather than overloading
+	// PermManageSettings, which covers unrelated tenant configuration.
+	PermManageIntegration Permission = "integration:manage"
+
+	// Bulk import / migration-tools permissions (packages/bulkimport,
+	// Phase 088).
+
+	// PermViewBulkImport allows read-only access to a tenant's import
+	// job history, per-record outcomes, and progress/audit trail. It
+	// does not permit registering a job, running a batch, or rolling
+	// back an import -- see PermManageBulkImport.
+	PermViewBulkImport Permission = "bulkimport:view"
+
+	// PermManageBulkImport allows registering an ImportJob, running
+	// batches (Engine.RunBatch), pausing/resuming a job, and rolling
+	// back a completed or failed job. This was genuinely missing
+	// before Phase 088: no existing permission named bulk
+	// case-corpus-import administration, so this phase adds it rather
+	// than overloading PermManageSettings, which covers unrelated
+	// tenant configuration.
+	PermManageBulkImport Permission = "bulkimport:manage"
+	// Statute/precedent corpus-updater permissions
+	// (packages/corpusupdater, Phase 089).
+
+	// PermViewCorpusUpdater allows read-only access to
+	// CorpusUpdateJob records, staged/effective Amendments, and a
+	// job's audit trail. It does not permit staging an amendment,
+	// applying a job, or rolling one back -- see
+	// PermManageCorpusUpdater.
+	PermViewCorpusUpdater Permission = "corpusupdater:view"
+
+	// PermManageCorpusUpdater allows staging Amendments, validating and
+	// applying a CorpusUpdateJob, and rolling one back. This was
+	// genuinely missing before Phase 089: no existing permission named
+	// corpus-update administration, so this phase adds it rather than
+	// overloading PermManageSettings, which covers unrelated tenant
+	// configuration.
+	PermManageCorpusUpdater Permission = "corpusupdater:manage"
+
+	// Monitoring / alerting permissions (packages/alerting, Phase 096).
+
+	// PermViewAlerting allows read-only access to the alert-rule
+	// catalogue, fired alert-event history, escalation policies,
+	// dashboards, and synthetic-check results. It does not permit
+	// registering/updating an AlertRule, setting an EscalationPolicy,
+	// or running a SyntheticCheck on demand -- see
+	// PermManageAlerting.
+	PermViewAlerting Permission = "alerting:view"
+
+	// PermManageAlerting allows registering/updating AlertRules,
+	// setting a tenant's EscalationPolicy, and running a
+	// SyntheticCheck on demand. This was genuinely missing before
+	// Phase 096: no existing permission named monitoring/alerting
+	// administration, so this phase adds it rather than overloading
+	// PermManageSettings, which covers unrelated tenant configuration.
+	PermManageAlerting Permission = "alerting:manage"
+
+	// Pilot deployment / feedback-loop permissions (packages/pilot,
+	// Phase 099).
+
+	// PermViewPilot allows read-only access to a tenant's
+	// PilotDeployments, PilotCases, collected FeedbackEntry records,
+	// PilotFindings, RefinementRecords, and the captured pilot Report.
+	// It does not permit provisioning a deployment, assigning/observing
+	// a case, submitting feedback, triaging a finding, or recording a
+	// refinement -- see PermManagePilot.
+	PermViewPilot Permission = "pilot:view"
+
+	// PermManagePilot allows provisioning and transitioning a
+	// PilotDeployment, assigning and observing PilotCases, submitting
+	// FeedbackEntry records, triaging PilotFindings, recording and
+	// verifying RefinementRecords, and capturing a pilot Report. This
+	// was genuinely missing before Phase 099: no existing permission
+	// named pilot-deployment/feedback-loop administration, so this
+	// phase adds it rather than overloading PermManageSettings, which
+	// covers unrelated tenant configuration.
+	PermManagePilot Permission = "pilot:manage"
+
+	// Release-readiness / GA-release permissions (packages/garelease,
+	// Phase 100).
+
+	// PermViewRelease allows read-only access to ReadinessCheck/
+	// ReleaseReadiness snapshots, ReleaseCandidate records, and Release
+	// records. It does not permit computing a fresh readiness snapshot
+	// for audit purposes, freezing a candidate, cutting a release, or
+	// running the post-release checklist -- see PermManageRelease.
+	PermViewRelease Permission = "release:view"
+
+	// PermManageRelease allows evaluating release readiness
+	// (Engine.CheckReadiness), running the guardrail/audit-trail
+	// verification harnesses, freezing a ReleaseCandidate, cutting a
+	// Release, and running a Release's PostReleaseChecklist. This was
+	// genuinely missing before Phase 100: no existing permission named
+	// release-readiness/GA-cut administration, so this phase adds it
+	// rather than overloading PermManageSettings, which covers
+	// unrelated tenant configuration.
+	PermManageRelease Permission = "release:manage"
 )
 
 // PermissionMatrix maps each Role to the full set of Permissions it
@@ -208,10 +338,24 @@ var PermissionMatrix = map[Role][]Permission{
 		PermManageCompliance,
 		PermViewThreatmodel,
 		PermManageThreatmodel,
+		PermViewSecuritytesting,
+		PermManageSecuritytesting,
 		PermViewVulnmanagement,
 		PermManageVulnmanagement,
 		PermViewBackupDR,
 		PermManageBackupDR,
+		PermViewIntegration,
+		PermManageIntegration,
+		PermViewBulkImport,
+		PermManageBulkImport,
+		PermViewCorpusUpdater,
+		PermManageCorpusUpdater,
+		PermViewAlerting,
+		PermManageAlerting,
+		PermViewPilot,
+		PermManagePilot,
+		PermViewRelease,
+		PermManageRelease,
 	},
 	RoleAuditor: {
 		PermViewCase,
@@ -222,8 +366,15 @@ var PermissionMatrix = map[Role][]Permission{
 		PermViewPrivacy,
 		PermViewCompliance,
 		PermViewThreatmodel,
+		PermViewSecuritytesting,
 		PermViewVulnmanagement,
 		PermViewBackupDR,
+		PermViewIntegration,
+		PermViewBulkImport,
+		PermViewCorpusUpdater,
+		PermViewAlerting,
+		PermViewPilot,
+		PermViewRelease,
 	},
 }
 

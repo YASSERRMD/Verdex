@@ -220,13 +220,13 @@ the matrix (see `packages/identity/doc/rbac-matrix.md`).
 Two new migrations, continuing directly after
 `000027_enable_rls_compliance`:
 
-- `packages/persistence/migrations/000028_create_vulnmanagement.up.sql`
+- `packages/persistence/migrations/000030_create_vulnmanagement.up.sql`
   / `.down.sql` create `vulnmanagement_findings` and
   `vulnmanagement_triage_decisions`. Unlike `packages/compliance`'s
   shared `compliance_controls` catalogue, both tables here are
   genuinely per-tenant operational data -- a finding belongs to one
   tenant's deployment -- so both carry `tenant_id`.
-- `packages/persistence/migrations/000029_enable_rls_vulnmanagement.up.sql`
+- `packages/persistence/migrations/000031_enable_rls_vulnmanagement.up.sql`
   / `.down.sql` enable and force row-level security with the standard
   `tenant_isolation` policy on both tables.
 
