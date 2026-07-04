@@ -233,6 +233,24 @@ const (
 	// overloading PermManageSettings, which covers unrelated tenant
 	// configuration.
 	PermManageCorpusUpdater Permission = "corpusupdater:manage"
+
+	// Monitoring / alerting permissions (packages/alerting, Phase 096).
+
+	// PermViewAlerting allows read-only access to the alert-rule
+	// catalogue, fired alert-event history, escalation policies,
+	// dashboards, and synthetic-check results. It does not permit
+	// registering/updating an AlertRule, setting an EscalationPolicy,
+	// or running a SyntheticCheck on demand -- see
+	// PermManageAlerting.
+	PermViewAlerting Permission = "alerting:view"
+
+	// PermManageAlerting allows registering/updating AlertRules,
+	// setting a tenant's EscalationPolicy, and running a
+	// SyntheticCheck on demand. This was genuinely missing before
+	// Phase 096: no existing permission named monitoring/alerting
+	// administration, so this phase adds it rather than overloading
+	// PermManageSettings, which covers unrelated tenant configuration.
+	PermManageAlerting Permission = "alerting:manage"
 )
 
 // PermissionMatrix maps each Role to the full set of Permissions it
@@ -291,6 +309,8 @@ var PermissionMatrix = map[Role][]Permission{
 		PermManageBulkImport,
 		PermViewCorpusUpdater,
 		PermManageCorpusUpdater,
+		PermViewAlerting,
+		PermManageAlerting,
 	},
 	RoleAuditor: {
 		PermViewCase,
@@ -307,6 +327,7 @@ var PermissionMatrix = map[Role][]Permission{
 		PermViewIntegration,
 		PermViewBulkImport,
 		PermViewCorpusUpdater,
+		PermViewAlerting,
 	},
 }
 
