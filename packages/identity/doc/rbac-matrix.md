@@ -47,6 +47,8 @@ of truth; this table is for human reference only.
 | `securitytesting:manage` | Record findings, run adversarial scenarios, verify remediation |
 | `bulkimport:view`   | Read-only access to import job history, per-record outcomes, and progress |
 | `bulkimport:manage` | Register import jobs, run batches, pause/resume, and roll back imports |
+| `corpusupdater:view` | Read-only access to corpus update jobs, staged/effective amendments, and audit trail |
+| `corpusupdater:manage` | Stage amendments, validate/apply a corpus update job, roll one back |
 
 ## Matrix
 
@@ -84,6 +86,8 @@ does not.
 | `securitytesting:manage` | – |    –     |   –   |   ✓   |    –    |
 | `bulkimport:view`   |   –   |    –     |   –   |   ✓   |    ✓    |
 | `bulkimport:manage` |   –   |    –     |   –   |   ✓   |    –    |
+| `corpusupdater:view` |  –    |    –     |   –   |   ✓   |    ✓    |
+| `corpusupdater:manage` | –   |    –     |   –   |   ✓   |    –    |
 
 ## Design notes
 
@@ -175,4 +179,11 @@ does not.
   deliberately not delegated beyond the tenant administrator. `auditor`
   holds `bulkimport:view` (read-only access to import job history,
   per-record outcomes, and progress) consistent with its read-only,
+* `corpusupdater:manage` (Phase 089, `packages/corpusupdater`) is
+  admin-only: staging an amendment, validating/applying a corpus
+  update job, and rolling one back change the statute/precedent text
+  every downstream reasoning pipeline reads, and are deliberately not
+  delegated beyond the tenant administrator. `auditor` holds
+  `corpusupdater:view` (read-only access to jobs, staged/effective
+  amendments, and their audit trail) consistent with its read-only,
   compliance-facing posture elsewhere in this matrix.

@@ -82,4 +82,6 @@ use (
 	./packages/backupdr
 	./packages/integration
 	./packages/bulkimport
+	./packages/perf
+	./packages/corpusupdater
 )
