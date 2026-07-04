@@ -187,3 +187,12 @@ does not.
   `corpusupdater:view` (read-only access to jobs, staged/effective
   amendments, and their audit trail) consistent with its read-only,
   compliance-facing posture elsewhere in this matrix.
+* `alerting:manage` (Phase 096, `packages/alerting`) is admin-only:
+  registering or updating an alert rule, setting a tenant's escalation
+  policy, and running a synthetic check on demand shape how (and
+  whether) this platform pages a human when something goes wrong, and
+  are deliberately not delegated beyond the tenant administrator.
+  `auditor` holds `alerting:view` (read-only access to the alert-rule
+  catalogue, fired alert-event history, escalation policies,
+  dashboards, and synthetic-check results) consistent with its
+  read-only, compliance-facing posture elsewhere in this matrix.
