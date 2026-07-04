@@ -158,7 +158,7 @@ func NewPostgresCredentialsRepository(exec persistence.Executor) *PostgresCreden
 	return &PostgresCredentialsRepository{exec: exec}
 }
 
-const credentialsColumns = `id, tenant_id, kind, secret_ref, client_id, token_url, scopes, last_verified_at, created_by, created_at, updated_at`
+const credentialsColumns = `id, tenant_id, kind, secret_ref, client_id, token_url, scopes, last_verified_at, created_by, created_at, updated_at` //nolint:gosec // this is a SQL column list, not a credential value; secret_ref is a handle, never the secret itself
 
 func scanCredentials(row rowScanner, c *ConnectorCredentials) error {
 	var scopesJSON []byte

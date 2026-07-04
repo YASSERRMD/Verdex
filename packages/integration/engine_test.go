@@ -118,10 +118,6 @@ func TestEngineRegisterConnectorConfigSucceeds(t *testing.T) {
 	if cfg.ID == uuid.Nil {
 		t.Error("expected a generated ID")
 	}
-	if !cfg.Enabled {
-		// Enabled defaults to the zero value (false) unless explicitly set;
-		// verify Get returns exactly what was stored.
-	}
 
 	got, err := engine.GetConnectorConfig(ctx, tenantID, cfg.ID)
 	if err != nil {

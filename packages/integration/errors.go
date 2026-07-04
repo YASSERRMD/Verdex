@@ -117,9 +117,3 @@ var (
 func wrapf(fn string, err error) error {
 	return fmt.Errorf("integration: %s: %w", fn, err)
 }
-
-// isNotFound reports whether err is target via errors.Is. Small helper
-// mirroring packages/compliance.isNotFound.
-func isNotFound(err, target error) bool {
-	return errors.Is(err, target)
-}

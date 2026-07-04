@@ -21,7 +21,7 @@ const (
 	// CredentialKindOAuthClientCredentials describes an OAuth 2.0
 	// client-credentials grant (client ID + client secret exchanged for
 	// a bearer token).
-	CredentialKindOAuthClientCredentials CredentialKind = "oauth_client_credentials"
+	CredentialKindOAuthClientCredentials CredentialKind = "oauth_client_credentials" //nolint:gosec // this is a label naming the auth *shape*, not a credential value
 
 	// CredentialKindMutualTLS describes a mutual-TLS client certificate
 	// used to authenticate the connection itself, independent of any

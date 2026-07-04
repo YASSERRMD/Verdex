@@ -13,9 +13,9 @@ func TestSandboxConnectorConformance(t *testing.T) {
 	t.Parallel()
 	sandbox := integration.NewSandboxConnector("sandbox")
 	sandbox.SeedCase(integration.InboundCase{
-		ExternalID:         "case-1",
-		ExternalUpdatedAt:  time.Now(),
-		Fields:             map[string]string{"case_title": "Seed Case"},
+		ExternalID:        "case-1",
+		ExternalUpdatedAt: time.Now(),
+		Fields:            map[string]string{"case_title": "Seed Case"},
 	})
 	ConnectorConformanceTest(t, sandbox)
 }
