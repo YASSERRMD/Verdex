@@ -236,11 +236,22 @@ func TestIntegration_Service_RealPostgresRepository(t *testing.T) {
 
 	// A second tenant must not see tenant A's notification, proving RLS
 	// (not just the application-level guard) enforces the boundary.
+	//
+	// Service.List is strictly self-access-only (see
+	// notifications.authorizeSelf's doc comment): the ctx actor must
+	// equal the requested recipientID, regardless of tenant. So the
+	// cross-tenant probe below authenticates as otherActor (tenant B)
+	// and asks for actor's (tenant A's) notifications — a mismatched
+	// recipient — which must fail with ErrForbidden before the call
+	// ever reaches Postgres/RLS, mirroring
+	// packages/caseversioning/integration_test.go's analogous
+	// "read tenant A's snapshot from tenant B's scope" assertion that
+	// expects an error, not a nil error.
 	otherTenant := seedTenant(t, pg, "Tenant B", "tenant-b-notifications")
 	otherActor := &identity.User{ID: uuid.New(), TenantID: otherTenant.ID, Roles: []identity.Role{identity.RoleClerk}, Status: identity.UserStatusActive}
 	otherCtx := identity.WithUser(context.Background(), otherActor)
-	if _, err := svc.List(otherCtx, otherTenant.ID, actor.ID, notifications.Filter{}); err != nil {
-		t.Fatalf("List from tenant B's scope: %v", err)
+	if _, err := svc.List(otherCtx, otherTenant.ID, actor.ID, notifications.Filter{}); err == nil {
+		t.Fatal("expected an error reading tenant A's notifications from tenant B's scope")
 	}
 	otherList, err := svc.List(otherCtx, otherTenant.ID, otherActor.ID, notifications.Filter{})
 	if err != nil {
