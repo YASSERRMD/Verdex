@@ -1,6 +1,7 @@
 package privacy
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -168,4 +169,113 @@ func TransitionSAR(r *SubjectAccessRequest, to SARStatus, now time.Time, notes s
 		}
 	}
 	return nil
+}
+
+// SubmitSAR creates a SubjectAccessRequest in SARStatusReceived (task
+// 4), requiring managePermission and tenant match. DueAt defaults to
+// ReceivedAt plus defaultSARWindow when left zero.
+func (e *Engine) SubmitSAR(ctx context.Context, tenantID uuid.UUID, req SubjectAccessRequest) (SubjectAccessRequest, error) {
+	user, err := authorizeManage(ctx)
+	if err != nil {
+		return SubjectAccessRequest{}, err
+	}
+	if err := requireMatchingUserTenant(user, tenantID); err != nil {
+		return SubjectAccessRequest{}, err
+	}
+
+	req.TenantID = tenantID
+	if req.ID == uuid.Nil {
+		req.ID = uuid.New()
+	}
+	req.Status = SARStatusReceived
+	now := e.now()
+	if req.ReceivedAt.IsZero() {
+		req.ReceivedAt = now
+	}
+	if req.DueAt.IsZero() {
+		req.DueAt = req.ReceivedAt.Add(defaultSARWindow)
+	}
+	req.CreatedAt = now
+	req.UpdatedAt = now
+	if req.HandledBy == uuid.Nil {
+		req.HandledBy = user.ID
+	}
+
+	if err := req.Validate(); err != nil {
+		return SubjectAccessRequest{}, err
+	}
+	if err := e.sars.Create(ctx, tenantID, &req); err != nil {
+		return SubjectAccessRequest{}, wrapf("SubmitSAR", err)
+	}
+
+	if e.audit != nil {
+		_, _ = e.audit.RecordSARTransition(ctx, tenantID, user.ID, req.ID, "", req.Status, nil)
+	}
+	return req, nil
+}
+
+// defaultSARWindow is the fallback deadline window applied by
+// SubmitSAR when no explicit DueAt is supplied: 30 days, a common
+// baseline across data-protection regimes. This package does not
+// hardcode any one jurisdiction's exact statutory window as the only
+// option -- callers that need a different window set DueAt explicitly.
+const defaultSARWindow = 30 * 24 * time.Hour
+
+// AdvanceSAR moves the SubjectAccessRequest identified by sarID to to,
+// requiring managePermission and tenant match, and recording the
+// transition (success or failure) via AuditSink regardless of
+// outcome.
+func (e *Engine) AdvanceSAR(ctx context.Context, tenantID, sarID uuid.UUID, to SARStatus, notes string) (SubjectAccessRequest, error) {
+	user, err := authorizeManage(ctx)
+	if err != nil {
+		return SubjectAccessRequest{}, err
+	}
+	if err := requireMatchingUserTenant(user, tenantID); err != nil {
+		return SubjectAccessRequest{}, err
+	}
+
+	req, err := e.sars.Get(ctx, tenantID, sarID)
+	if err != nil {
+		return SubjectAccessRequest{}, err
+	}
+	from := req.Status
+
+	if err := TransitionSAR(req, to, e.now(), notes); err != nil {
+		if e.audit != nil {
+			_, _ = e.audit.RecordSARTransition(ctx, tenantID, user.ID, sarID, from, to, err)
+		}
+		return SubjectAccessRequest{}, err
+	}
+	req.HandledBy = user.ID
+
+	if err := e.sars.Update(ctx, tenantID, req); err != nil {
+		wrapped := wrapf("AdvanceSAR", err)
+		if e.audit != nil {
+			_, _ = e.audit.RecordSARTransition(ctx, tenantID, user.ID, sarID, from, to, wrapped)
+		}
+		return SubjectAccessRequest{}, wrapped
+	}
+
+	if e.audit != nil {
+		_, _ = e.audit.RecordSARTransition(ctx, tenantID, user.ID, sarID, from, to, nil)
+	}
+	return *req, nil
+}
+
+// ListSARsForSubject returns every SubjectAccessRequest on file for
+// subjectID within tenantID, requiring viewPermission and tenant
+// match.
+func (e *Engine) ListSARsForSubject(ctx context.Context, tenantID uuid.UUID, subjectID string) ([]SubjectAccessRequest, error) {
+	user, err := authorizeView(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := requireMatchingUserTenant(user, tenantID); err != nil {
+		return nil, err
+	}
+	list, err := e.sars.ListForSubject(ctx, tenantID, subjectID)
+	if err != nil {
+		return nil, wrapf("ListSARsForSubject", err)
+	}
+	return list, nil
 }
