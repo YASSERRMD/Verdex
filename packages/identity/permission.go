@@ -199,6 +199,23 @@ const (
 	// PermManageSettings, which covers unrelated tenant configuration.
 	PermManageIntegration Permission = "integration:manage"
 
+	// Bulk import / migration-tools permissions (packages/bulkimport,
+	// Phase 088).
+
+	// PermViewBulkImport allows read-only access to a tenant's import
+	// job history, per-record outcomes, and progress/audit trail. It
+	// does not permit registering a job, running a batch, or rolling
+	// back an import -- see PermManageBulkImport.
+	PermViewBulkImport Permission = "bulkimport:view"
+
+	// PermManageBulkImport allows registering an ImportJob, running
+	// batches (Engine.RunBatch), pausing/resuming a job, and rolling
+	// back a completed or failed job. This was genuinely missing
+	// before Phase 088: no existing permission named bulk
+	// case-corpus-import administration, so this phase adds it rather
+	// than overloading PermManageSettings, which covers unrelated
+	// tenant configuration.
+	PermManageBulkImport Permission = "bulkimport:manage"
 	// Statute/precedent corpus-updater permissions
 	// (packages/corpusupdater, Phase 089).
 
@@ -270,6 +287,8 @@ var PermissionMatrix = map[Role][]Permission{
 		PermManageBackupDR,
 		PermViewIntegration,
 		PermManageIntegration,
+		PermViewBulkImport,
+		PermManageBulkImport,
 		PermViewCorpusUpdater,
 		PermManageCorpusUpdater,
 	},
@@ -286,6 +305,7 @@ var PermissionMatrix = map[Role][]Permission{
 		PermViewVulnmanagement,
 		PermViewBackupDR,
 		PermViewIntegration,
+		PermViewBulkImport,
 		PermViewCorpusUpdater,
 	},
 }

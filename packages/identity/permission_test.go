@@ -57,6 +57,8 @@ var expectedPermissions = map[identity.Role][]identity.Permission{
 		identity.PermManageBackupDR,
 		identity.PermViewIntegration,
 		identity.PermManageIntegration,
+		identity.PermViewBulkImport,
+		identity.PermManageBulkImport,
 		identity.PermViewCorpusUpdater,
 		identity.PermManageCorpusUpdater,
 	},
@@ -73,6 +75,7 @@ var expectedPermissions = map[identity.Role][]identity.Permission{
 		identity.PermViewVulnmanagement,
 		identity.PermViewBackupDR,
 		identity.PermViewIntegration,
+		identity.PermViewBulkImport,
 		identity.PermViewCorpusUpdater,
 	},
 }
@@ -101,6 +104,8 @@ var allPermissions = []identity.Permission{
 	identity.PermManageThreatmodel,
 	identity.PermViewSecuritytesting,
 	identity.PermManageSecuritytesting,
+	identity.PermViewBulkImport,
+	identity.PermManageBulkImport,
 	identity.PermViewCorpusUpdater,
 	identity.PermManageCorpusUpdater,
 }
