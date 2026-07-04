@@ -1,6 +1,7 @@
 package pilot
 
 import (
+	"sort"
 	"strings"
 	"time"
 
@@ -164,6 +165,8 @@ func CanTransitionFinding(from, to FindingStatus) bool {
 // Priority, and tracked through a Status triage state machine.
 // Mirrors packages/vulnmanagement.Finding's shape, applied to
 // pilot-feedback-driven issues instead of security findings.
+//
+//nolint:revive // "PilotFinding" is the exact type name this phase's design brief specifies; a bare "Finding" would collide with packages/vulnmanagement.Finding and packages/grounding.Finding, both of which name a different kind of finding entirely.
 type PilotFinding struct {
 	// ID uniquely identifies this finding.
 	ID uuid.UUID `json:"id"`
@@ -242,4 +245,20 @@ func (f *PilotFinding) Validate() error {
 		return wrapf("PilotFinding.Validate", ErrInvalidFinding)
 	}
 	return nil
+}
+
+// SortFindingsByPriorityDesc returns a copy of findings sorted by
+// descending Priority (PriorityCritical first, PriorityLow last),
+// stable on ties -- mirroring
+// packages/vulnmanagement.Report.SLABreachesBySeverityDesc's identical
+// ordering convention: the most urgent finding surfaced first, rather
+// than insertion order, for a caller rendering
+// Engine.ListFindingsForDeployment's result.
+func SortFindingsByPriorityDesc(findings []PilotFinding) []PilotFinding {
+	out := make([]PilotFinding, len(findings))
+	copy(out, findings)
+	sort.SliceStable(out, func(i, j int) bool {
+		return out[i].Priority.rank() > out[j].Priority.rank()
+	})
+	return out
 }

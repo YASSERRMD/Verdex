@@ -117,3 +117,27 @@ func TestCanTransitionFinding_Table(t *testing.T) {
 		}
 	}
 }
+
+func TestSortFindingsByPriorityDesc(t *testing.T) {
+	t.Parallel()
+	findings := []pilot.PilotFinding{
+		{Title: "low", Priority: pilot.PriorityLow},
+		{Title: "critical", Priority: pilot.PriorityCritical},
+		{Title: "medium", Priority: pilot.PriorityMedium},
+		{Title: "high", Priority: pilot.PriorityHigh},
+	}
+	sorted := pilot.SortFindingsByPriorityDesc(findings)
+	wantOrder := []string{"critical", "high", "medium", "low"}
+	if len(sorted) != len(wantOrder) {
+		t.Fatalf("len(sorted) = %d, want %d", len(sorted), len(wantOrder))
+	}
+	for i, want := range wantOrder {
+		if sorted[i].Title != want {
+			t.Errorf("sorted[%d].Title = %q, want %q", i, sorted[i].Title, want)
+		}
+	}
+	// The original slice must be untouched.
+	if findings[0].Title != "low" {
+		t.Errorf("SortFindingsByPriorityDesc mutated its input slice: findings[0].Title = %q, want %q", findings[0].Title, "low")
+	}
+}

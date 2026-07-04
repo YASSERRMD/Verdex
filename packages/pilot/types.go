@@ -93,6 +93,8 @@ func CanTransitionDeployment(from, to DeploymentStatus) bool {
 // why this package does not import packages/jurisdiction directly), a
 // Status tracking where in its lifecycle the pilot currently sits, and
 // a start/end date bounding the pilot window.
+//
+//nolint:revive // "PilotDeployment" is the exact type name this phase's design brief specifies; a bare "Deployment" would collide in meaning with packages/iac.DeploymentProfile and packages/backupdr's deployment concepts in call sites that import multiple such packages together.
 type PilotDeployment struct {
 	// ID uniquely identifies this pilot deployment.
 	ID uuid.UUID `json:"id"`
@@ -161,6 +163,8 @@ func (d *PilotDeployment) Validate() error {
 // CaseID-reference convention exactly -- this package does not
 // duplicate Case itself, only the pilot-supervision record layered on
 // top of it.
+//
+//nolint:revive // "PilotCase" is the exact type name this phase's design brief specifies; a bare "Case" would be ambiguous against the real packages/caselifecycle.Case it references by ID, which call sites frequently hold a reference to side by side.
 type PilotCase struct {
 	// ID uniquely identifies this pilot-case record.
 	ID uuid.UUID `json:"id"`
