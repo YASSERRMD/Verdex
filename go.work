@@ -92,4 +92,5 @@ use (
 	./packages/alerting
 	./packages/docsite
 	./packages/e2e
+	./packages/pilot
 )
