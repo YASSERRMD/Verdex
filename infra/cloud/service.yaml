@@ -1,0 +1,28 @@
+# infra/cloud/service.yaml
+#
+# Phase 094 (packages/iac): cloud-tier Service fronting the gateway
+# Deployment (deployment.yaml). ClusterIP only -- ingress/load-balancer
+# termination is expected to be handled by the target cloud's own
+# managed ingress controller, out of scope for this reference manifest
+# set (see packages/iac/doc/deployment.md for why this phase stops at
+# a handful of well-formed manifests rather than a full Helm chart).
+apiVersion: v1
+kind: Service
+metadata:
+  name: verdex-gateway
+  namespace: verdex
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/part-of: verdex
+    verdex.io/tier: cloud
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: gateway
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+    - name: metrics
+      port: 9090
+      targetPort: metrics

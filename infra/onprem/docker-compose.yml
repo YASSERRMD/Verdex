@@ -1,0 +1,97 @@
+# infra/onprem/docker-compose.yml
+#
+# Phase 094 (packages/iac): on-prem-tier composition. Unlike
+# infra/cloud/docker-compose.yml, this is the *actual* recommended
+# runtime shape for this tier, not a local stand-in for a managed
+# service -- an on-prem deployment has no managed Postgres, no managed
+# object storage, and no managed secret store to fall back on. Every
+# assumption below is explicit:
+#
+#   - No managed database. postgres runs as a first-class service in
+#     this compose file, backed by a named local volume
+#     (onprem_postgres_data) bind-mounted to the customer's own local
+#     disk/SAN -- there is no infra/onprem equivalent of "swap this
+#     for RDS". Backup/restore is the customer's operational
+#     responsibility, composing with packages/backupdr (Phase 077-ish)
+#     by reference for *how* to back it up, not by this file
+#     automating it.
+#   - No managed secret store. Secrets are still referenced (never
+#     inlined) via env://VAR_NAME, but the operator is expected to
+#     supply them via a local .env file or their own secrets
+#     mechanism -- there is no cloud KMS to defer to (contrast
+#     infra/cloud's implicit assumption that a managed secret store
+#     exists downstream of the secretKeyRef indirection).
+#   - Local storage only. cloud_postgres_data's cloud-tier equivalent
+#     assumes elastic block storage; onprem_postgres_data assumes a
+#     fixed local path the operator provisions and monitors for free
+#     space themselves.
+#
+# packages/dataresidency's region concept does not apply here the same
+# way it does for infra/cloud -- an on-prem deployment's data resides
+# wherever the customer's hardware physically sits, so
+# VERDEX_DATARESIDENCY_REGION is deliberately absent; see
+# packages/iac.DeploymentProfile's on-prem validation rule (Region must
+# be empty for TierOnPrem).
+
+services:
+  gateway:
+    image: verdex/gateway:${VERDEX_IMAGE_TAG:-latest}
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+    environment:
+      VERDEX_PROFILE: onprem
+      VERDEX_SERVER_PORT: "8080"
+      VERDEX_METRICS_PORT: "9090"
+      VERDEX_DATABASE_DSN: "env://VERDEX_DATABASE_DSN"
+      VERDEX_ENCRYPTION_KEY: "env://VERDEX_ENCRYPTION_KEY"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  router:
+    image: verdex/router:${VERDEX_IMAGE_TAG:-latest}
+    environment:
+      VERDEX_PROFILE: onprem
+      VERDEX_SERVER_PORT: "8081"
+      VERDEX_DATABASE_DSN: "env://VERDEX_DATABASE_DSN"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8081/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # First-class, not a stand-in: this tier has no managed database to
+  # fall back on. onprem_postgres_data is a local bind mount the
+  # customer's own hardware/SAN backs.
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: verdex
+      POSTGRES_USER: verdex
+      POSTGRES_PASSWORD: "env://VERDEX_DATABASE_PASSWORD"
+    volumes:
+      - onprem_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U verdex"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  # Local-storage assumption made explicit: no cloud driver, no
+  # elastic resize. The operator provisions and monitors this path's
+  # free space themselves.
+  onprem_postgres_data:
+    driver: local

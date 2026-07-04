@@ -1,0 +1,90 @@
+# infra/cloud/deployment.yaml
+#
+# Phase 094 (packages/iac): cloud-tier Deployment for the gateway
+# service. Container hardening follows
+# packages/threatmodel/doc/Dockerfile.hardened (Phase 083's reference
+# hardened image: non-root, distroless, no embedded secrets) and its
+# runtime-settings notes verbatim in securityContext below --
+# read_only_root_filesystem and no_privileged_capabilities are exactly
+# the two checklist items that Dockerfile's own comment says belong at
+# the orchestrator layer, not in the image.
+#
+# Secrets are never inlined here: VERDEX_DATABASE_DSN and
+# VERDEX_ENCRYPTION_KEY are sourced from a Kubernetes Secret
+# (verdex-cloud-secrets) whose own values this repository never
+# commits -- see secret-injection-plan.yaml and
+# packages/iac/secretplan.go for how that Secret's contents are
+# expected to be populated (a KMS reference resolved at deploy time,
+# composing with packages/keymanagement/packages/encryption, not a
+# plaintext value checked into this file).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: verdex-gateway
+  namespace: verdex
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/part-of: verdex
+    verdex.io/tier: cloud
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gateway
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gateway
+        app.kubernetes.io/part-of: verdex
+        verdex.io/tier: cloud
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        fsGroup: 65532
+      containers:
+        - name: gateway
+          image: verdex/gateway@sha256:0000000000000000000000000000000000000000000000000000000000000000
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: metrics
+              containerPort: 9090
+          envFrom:
+            - configMapRef:
+                name: verdex-cloud-config
+          env:
+            - name: VERDEX_DATABASE_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: verdex-cloud-secrets
+                  key: database-dsn
+            - name: VERDEX_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: verdex-cloud-secrets
+                  key: encryption-key
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "512Mi"

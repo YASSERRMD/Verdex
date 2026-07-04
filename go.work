@@ -88,4 +88,5 @@ use (
 	./packages/scalability
 	./packages/reliability
 	./packages/cicdgate
+	./packages/iac
 )
