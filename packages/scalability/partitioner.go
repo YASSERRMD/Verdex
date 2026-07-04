@@ -133,7 +133,7 @@ func NewModuloPartitioner(n int) (Partitioner, error) {
 
 // Partition implements Partitioner.
 func (p *moduloPartitioner) Partition(key string) int {
-	return int(hashString(key) % uint32(p.partitionCount))
+	return int(hashString(key)) % p.partitionCount
 }
 
 // PartitionCount implements Partitioner.
