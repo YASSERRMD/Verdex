@@ -1,6 +1,7 @@
 package privacy
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -118,4 +119,112 @@ func HasValidConsent(records []ConsentRecord, subjectID, purpose string, now tim
 		}
 	}
 	return false
+}
+
+// RecordConsent creates a ConsentRecord (task 6), requiring
+// managePermission and tenant match. Every call is recorded via
+// AuditSink regardless of outcome.
+func (e *Engine) RecordConsent(ctx context.Context, tenantID uuid.UUID, c ConsentRecord) (ConsentRecord, error) {
+	user, err := authorizeManage(ctx)
+	if err != nil {
+		if e.audit != nil {
+			actorID, _ := actorFromCtx(ctx)
+			_, _ = e.audit.RecordConsentChange(ctx, tenantID, actorID, c, false, err)
+		}
+		return ConsentRecord{}, err
+	}
+	if err := requireMatchingUserTenant(user, tenantID); err != nil {
+		if e.audit != nil {
+			_, _ = e.audit.RecordConsentChange(ctx, tenantID, user.ID, c, false, err)
+		}
+		return ConsentRecord{}, err
+	}
+
+	c.TenantID = tenantID
+	if c.ID == uuid.Nil {
+		c.ID = uuid.New()
+	}
+	if c.RecordedBy == uuid.Nil {
+		c.RecordedBy = user.ID
+	}
+	if c.GrantedAt.IsZero() {
+		c.GrantedAt = e.now()
+	}
+	if err := c.Validate(); err != nil {
+		if e.audit != nil {
+			_, _ = e.audit.RecordConsentChange(ctx, tenantID, user.ID, c, false, err)
+		}
+		return ConsentRecord{}, err
+	}
+	if err := e.consent.Create(ctx, tenantID, &c); err != nil {
+		wrapped := wrapf("RecordConsent", err)
+		if e.audit != nil {
+			_, _ = e.audit.RecordConsentChange(ctx, tenantID, user.ID, c, false, wrapped)
+		}
+		return ConsentRecord{}, wrapped
+	}
+
+	if e.audit != nil {
+		_, _ = e.audit.RecordConsentChange(ctx, tenantID, user.ID, c, false, nil)
+	}
+	return c, nil
+}
+
+// WithdrawConsent stamps WithdrawnAt on the ConsentRecord identified by
+// consentID, requiring managePermission and tenant match. Returns
+// ErrConsentAlreadyWithdrawn if the record already carries a
+// WithdrawnAt.
+func (e *Engine) WithdrawConsent(ctx context.Context, tenantID, consentID uuid.UUID) (ConsentRecord, error) {
+	user, err := authorizeManage(ctx)
+	if err != nil {
+		return ConsentRecord{}, err
+	}
+	if err := requireMatchingUserTenant(user, tenantID); err != nil {
+		return ConsentRecord{}, err
+	}
+
+	c, err := e.consent.Get(ctx, tenantID, consentID)
+	if err != nil {
+		return ConsentRecord{}, err
+	}
+	if c.WithdrawnAt != nil {
+		if e.audit != nil {
+			_, _ = e.audit.RecordConsentChange(ctx, tenantID, user.ID, *c, true, ErrConsentAlreadyWithdrawn)
+		}
+		return ConsentRecord{}, ErrConsentAlreadyWithdrawn
+	}
+
+	now := e.now()
+	c.WithdrawnAt = &now
+	if err := e.consent.Update(ctx, tenantID, c); err != nil {
+		wrapped := wrapf("WithdrawConsent", err)
+		if e.audit != nil {
+			_, _ = e.audit.RecordConsentChange(ctx, tenantID, user.ID, *c, true, wrapped)
+		}
+		return ConsentRecord{}, wrapped
+	}
+
+	if e.audit != nil {
+		_, _ = e.audit.RecordConsentChange(ctx, tenantID, user.ID, *c, true, nil)
+	}
+	return *c, nil
+}
+
+// CheckConsent resolves subject's full consent history for tenantID
+// and reports whether HasValidConsent holds for purpose as of now,
+// requiring viewPermission and tenant match.
+func (e *Engine) CheckConsent(ctx context.Context, tenantID uuid.UUID, subjectID, purpose string) (bool, error) {
+	user, err := authorizeView(ctx)
+	if err != nil {
+		return false, err
+	}
+	if err := requireMatchingUserTenant(user, tenantID); err != nil {
+		return false, err
+	}
+
+	records, err := e.consent.ListForSubject(ctx, tenantID, subjectID)
+	if err != nil {
+		return false, wrapf("CheckConsent", err)
+	}
+	return HasValidConsent(records, subjectID, purpose, e.now()), nil
 }
