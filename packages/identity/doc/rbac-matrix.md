@@ -37,6 +37,8 @@ of truth; this table is for human reference only.
 | `compliance:manage` | Register controls, record evidence, set a compliance profile  |
 | `threatmodel:view`  | Read-only access to the STRIDE threat catalogue and mitigation history |
 | `threatmodel:manage` | Transition a catalogued mitigation's status                  |
+| `backupdr:view`     | Read-only access to backup policies, backup/drill history, and RPO/RTO evaluations |
+| `backupdr:manage`   | Set backup policies, record backups, execute restore drills   |
 
 ## Matrix
 
@@ -64,6 +66,8 @@ does not.
 | `compliance:manage` |   –   |    –     |   –   |   ✓   |    –    |
 | `threatmodel:view`  |   –   |    –     |   –   |   ✓   |    ✓    |
 | `threatmodel:manage` |   –   |    –     |   –   |   ✓   |    –    |
+| `backupdr:view`     |   –   |    –     |   –   |   ✓   |    ✓    |
+| `backupdr:manage`   |   –   |    –     |   –   |   ✓   |    –    |
 
 ## Design notes
 
@@ -112,3 +116,12 @@ does not.
   and a mitigation's recorded status-transition history) consistent
   with its read-only, compliance-facing posture elsewhere in this
   matrix.
+* `backupdr:manage` (Phase 085, `packages/backupdr`) is admin-only:
+  setting a tenant's backup policy per data class, recording a backup,
+  and executing a restore drill are administrative actions that shape
+  this platform's actual disaster-recovery posture, and are
+  deliberately not delegated beyond the tenant administrator. `auditor`
+  holds `backupdr:view` (read-only access to backup policies, backup
+  record history, restore-drill history, and RPO/RTO evaluation
+  results) consistent with its read-only, compliance-facing posture
+  elsewhere in this matrix.
