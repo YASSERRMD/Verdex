@@ -77,4 +77,5 @@ use (
 	./packages/privacy
 	./packages/compliance
 	./packages/threatmodel
+	./packages/securitytesting
 )
