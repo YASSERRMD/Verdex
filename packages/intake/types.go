@@ -1,6 +1,7 @@
 package intake
 
 import (
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -66,7 +67,10 @@ type IntakeRequest struct {
 }
 
 // IntakeResult is returned by IntakeService.Ingest and contains the provenance
-// record for the uploaded file.
+// record for the uploaded file.  The Status and DiscardedAt values may be
+// updated asynchronously by a background goroutine once the TempBuffer's TTL
+// elapses, so they are guarded by a mutex and must be read via the Status()
+// and DiscardedAt() accessor methods rather than as plain fields.
 type IntakeResult struct {
 	// IntakeID is a unique identifier for this intake operation.
 	IntakeID uuid.UUID
@@ -85,9 +89,30 @@ type IntakeResult struct {
 	// the TempBuffer.
 	ReceivedAt time.Time
 
-	// DiscardedAt is set once the TempBuffer has been successfully discarded.
-	DiscardedAt *time.Time
+	mu          sync.Mutex
+	discardedAt *time.Time
+	status      IntakeStatus
+}
 
-	// Status reflects the final state of the intake pipeline for this upload.
-	Status IntakeStatus
+// Status reflects the final state of the intake pipeline for this upload.
+func (r *IntakeResult) Status() IntakeStatus {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.status
+}
+
+// DiscardedAt is set once the TempBuffer has been successfully discarded.
+func (r *IntakeResult) DiscardedAt() *time.Time {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.discardedAt
+}
+
+// markDiscarded atomically updates the result once the TempBuffer has been
+// discarded by the background TTL goroutine.
+func (r *IntakeResult) markDiscarded(at time.Time) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.discardedAt = &at
+	r.status = StatusDiscarded
 }
