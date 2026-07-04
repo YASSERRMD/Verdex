@@ -3,6 +3,7 @@ package persistence_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,7 +15,35 @@ import (
 
 	"github.com/YASSERRMD/verdex/packages/config"
 	"github.com/YASSERRMD/verdex/packages/persistence"
+	"github.com/YASSERRMD/verdex/packages/persistence/migrations"
 )
+
+// expectedMigrationVersion counts the *.up.sql files embedded in
+// packages/persistence/migrations (the same embed.FS the production
+// migrator reads via persistence.NewEmbeddedMigrator) to determine the
+// schema version that should result from applying every migration.
+// Deriving this from the actual files on disk means the expectation
+// can never go stale as later phases add more migrations, unlike a
+// hardcoded literal.
+func expectedMigrationVersion(t *testing.T) uint {
+	t.Helper()
+
+	entries, err := migrations.FS.ReadDir(".")
+	if err != nil {
+		t.Fatalf("read embedded migrations directory: %v", err)
+	}
+
+	var count uint
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".up.sql") {
+			count++
+		}
+	}
+	if count == 0 {
+		t.Fatal("expected at least one *.up.sql migration file in the embedded migrations directory, found none")
+	}
+	return count
+}
 
 // containerStartTimeout bounds how long we wait for Docker to pull
 // and start the Postgres container. If Docker is unreachable (daemon
@@ -128,12 +157,14 @@ func TestIntegration_MigrationsApplyCleanly(t *testing.T) {
 	if dirty {
 		t.Fatal("expected clean schema after Up, got dirty")
 	}
-	// Phase 005 (packages/tenancy) added migrations 000003 (RLS on
-	// deployments), 000004 (deployment provisioning records), and 000005
-	// (the non-superuser verdex_app role RLS depends on) to this
-	// directory, so the latest version is now 5, not 2.
-	if version != 5 {
-		t.Fatalf("expected schema version 5 after applying all migrations, got %d", version)
+	// Compare against the actual number of *.up.sql files embedded in
+	// the migrations directory rather than a hardcoded literal, so this
+	// assertion doesn't go stale every time a later phase adds another
+	// migration (as previously happened: this used to hardcode 5, then
+	// drifted silently out of sync as the directory grew to 23+ files).
+	want := expectedMigrationVersion(t)
+	if version != want {
+		t.Fatalf("expected schema version %d after applying all migrations, got %d", want, version)
 	}
 
 	// Running Up again must be a no-op, not an error.
