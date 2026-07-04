@@ -80,4 +80,5 @@ use (
 	./packages/securitytesting
 	./packages/vulnmanagement
 	./packages/backupdr
+	./packages/integration
 )

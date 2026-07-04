@@ -179,6 +179,25 @@ const (
 	// phase adds it rather than overloading PermManageSettings, which
 	// covers unrelated tenant configuration.
 	PermManageBackupDR Permission = "backupdr:manage"
+
+	// External system integration permissions (packages/integration,
+	// Phase 087).
+
+	// PermViewIntegration allows read-only access to registered
+	// connector configurations (minus credential material), import and
+	// delivery run history, and reconciliation results. It does not
+	// permit registering a connector, triggering an import/delivery, or
+	// changing credentials -- see PermManageIntegration.
+	PermViewIntegration Permission = "integration:view"
+
+	// PermManageIntegration allows registering/updating connector
+	// configurations, setting connector credentials, triggering inbound
+	// case imports and outbound report deliveries, and running
+	// reconciliation. This was genuinely missing before Phase 087: no
+	// existing permission named external-system-integration
+	// administration, so this phase adds it rather than overloading
+	// PermManageSettings, which covers unrelated tenant configuration.
+	PermManageIntegration Permission = "integration:manage"
 )
 
 // PermissionMatrix maps each Role to the full set of Permissions it
@@ -231,6 +250,8 @@ var PermissionMatrix = map[Role][]Permission{
 		PermManageVulnmanagement,
 		PermViewBackupDR,
 		PermManageBackupDR,
+		PermViewIntegration,
+		PermManageIntegration,
 	},
 	RoleAuditor: {
 		PermViewCase,
@@ -244,6 +265,7 @@ var PermissionMatrix = map[Role][]Permission{
 		PermViewSecuritytesting,
 		PermViewVulnmanagement,
 		PermViewBackupDR,
+		PermViewIntegration,
 	},
 }
 
