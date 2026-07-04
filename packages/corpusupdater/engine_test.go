@@ -49,6 +49,39 @@ func TestCreateJob_RequiresManagePermission(t *testing.T) {
 	}
 }
 
+func TestCreateJob_RequiresManagePermission_NoRelevantPermissionAtAll(t *testing.T) {
+	t.Parallel()
+	engine, tenantID := newTestEngine(t)
+	ctx := ctxWithUser(advocateUser(tenantID))
+
+	_, err := engine.CreateJob(ctx, tenantID, corpusupdater.CorpusUpdateJob{
+		JurisdictionCode: "AE-DXB",
+		TargetCorpus:     corpusupdater.CorpusStatute,
+	})
+	if !errors.Is(err, corpusupdater.ErrForbidden) {
+		t.Errorf("CreateJob as advocate (holds neither corpusupdater permission) = %v, want ErrForbidden", err)
+	}
+}
+
+func TestGetJob_RequiresViewPermission_NoRelevantPermissionAtAll(t *testing.T) {
+	t.Parallel()
+	engine, tenantID := newTestEngine(t)
+	adminCtx := ctxWithUser(adminUser(tenantID))
+
+	job, err := engine.CreateJob(adminCtx, tenantID, corpusupdater.CorpusUpdateJob{
+		JurisdictionCode: "AE-DXB",
+		TargetCorpus:     corpusupdater.CorpusStatute,
+	})
+	if err != nil {
+		t.Fatalf("CreateJob() = %v", err)
+	}
+
+	advocateCtx := ctxWithUser(advocateUser(tenantID))
+	if _, err := engine.GetJob(advocateCtx, tenantID, job.ID); !errors.Is(err, corpusupdater.ErrForbidden) {
+		t.Errorf("GetJob as advocate (holds neither corpusupdater permission) = %v, want ErrForbidden", err)
+	}
+}
+
 func TestCreateJob_RejectsCrossTenantActor(t *testing.T) {
 	t.Parallel()
 	engine, tenantID := newTestEngine(t)
