@@ -145,6 +145,23 @@ const (
 	// administration, so this phase adds it rather than overloading
 	// PermManageSettings, which covers unrelated tenant configuration.
 	PermManageVulnmanagement Permission = "vulnmanagement:manage"
+	// Backup / disaster-recovery permissions (packages/backupdr, Phase
+	// 085).
+
+	// PermViewBackupDR allows read-only access to a tenant's backup
+	// policies, backup record history, restore-drill history, and
+	// RPO/RTO evaluation results. It does not permit setting a backup
+	// policy, recording a backup, or executing a restore drill -- see
+	// PermManageBackupDR.
+	PermViewBackupDR Permission = "backupdr:view"
+
+	// PermManageBackupDR allows setting a tenant's BackupPolicy per
+	// DataClass, recording BackupRecord entries, and executing
+	// RestoreDrill runs. This was genuinely missing before Phase 085:
+	// no existing permission named backup/DR administration, so this
+	// phase adds it rather than overloading PermManageSettings, which
+	// covers unrelated tenant configuration.
+	PermManageBackupDR Permission = "backupdr:manage"
 )
 
 // PermissionMatrix maps each Role to the full set of Permissions it
@@ -193,6 +210,8 @@ var PermissionMatrix = map[Role][]Permission{
 		PermManageThreatmodel,
 		PermViewVulnmanagement,
 		PermManageVulnmanagement,
+		PermViewBackupDR,
+		PermManageBackupDR,
 	},
 	RoleAuditor: {
 		PermViewCase,
@@ -204,6 +223,7 @@ var PermissionMatrix = map[Role][]Permission{
 		PermViewCompliance,
 		PermViewThreatmodel,
 		PermViewVulnmanagement,
+		PermViewBackupDR,
 	},
 }
 

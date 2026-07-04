@@ -78,4 +78,5 @@ use (
 	./packages/compliance
 	./packages/threatmodel
 	./packages/vulnmanagement
+	./packages/backupdr
 )

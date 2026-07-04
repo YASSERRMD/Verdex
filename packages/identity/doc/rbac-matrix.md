@@ -39,6 +39,8 @@ of truth; this table is for human reference only.
 | `threatmodel:manage` | Transition a catalogued mitigation's status                  |
 | `vulnmanagement:view` | Read-only access to scanner findings, triage history, and SLA reports |
 | `vulnmanagement:manage` | Record findings, triage them, transition finding status    |
+| `backupdr:view`     | Read-only access to backup policies, backup/drill history, and RPO/RTO evaluations |
+| `backupdr:manage`   | Set backup policies, record backups, execute restore drills   |
 
 ## Matrix
 
@@ -68,6 +70,8 @@ does not.
 | `threatmodel:manage` |   –   |    –     |   –   |   ✓   |    –    |
 | `vulnmanagement:view` |   –  |    –     |   –   |   ✓   |    ✓    |
 | `vulnmanagement:manage` | – |    –     |   –   |   ✓   |    –    |
+| `backupdr:view`     |   –   |    –     |   –   |   ✓   |    ✓    |
+| `backupdr:manage`   |   –   |    –     |   –   |   ✓   |    –    |
 
 ## Design notes
 
@@ -125,3 +129,12 @@ does not.
   `vulnmanagement:view` (read-only access to findings, triage decision
   history, and SLA-breach reports) consistent with its read-only,
   compliance-facing posture elsewhere in this matrix.
+* `backupdr:manage` (Phase 085, `packages/backupdr`) is admin-only:
+  setting a tenant's backup policy per data class, recording a backup,
+  and executing a restore drill are administrative actions that shape
+  this platform's actual disaster-recovery posture, and are
+  deliberately not delegated beyond the tenant administrator. `auditor`
+  holds `backupdr:view` (read-only access to backup policies, backup
+  record history, restore-drill history, and RPO/RTO evaluation
+  results) consistent with its read-only, compliance-facing posture
+  elsewhere in this matrix.
