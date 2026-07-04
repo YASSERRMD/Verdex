@@ -85,5 +85,6 @@ use (
 	./packages/bulkimport
 	./packages/perf
 	./packages/corpusupdater
+	./packages/reliability
 	./packages/cicdgate
 )
