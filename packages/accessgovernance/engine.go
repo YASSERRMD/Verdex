@@ -269,6 +269,64 @@ func (e *Engine) Elevate(ctx context.Context, tenantID uuid.UUID, granteeUserID 
 	return *grant, nil
 }
 
+// CreatePolicy registers a Policy (task 1), requiring the caller to
+// hold managePermission and to belong to tenantID. The policy is
+// persisted exactly as supplied -- callers that want to dry-run it
+// first should call TestPolicy before CreatePolicy, and typically
+// create with Active=false, then ActivatePolicy once satisfied.
+func (e *Engine) CreatePolicy(ctx context.Context, tenantID uuid.UUID, p Policy) (Policy, error) {
+	user, err := authorizeManage(ctx)
+	if err != nil {
+		return Policy{}, err
+	}
+	if err := requireMatchingUserTenant(user, tenantID); err != nil {
+		return Policy{}, err
+	}
+
+	p.TenantID = tenantID
+	if p.ID == uuid.Nil {
+		p.ID = uuid.New()
+	}
+	if p.CreatedBy == uuid.Nil {
+		p.CreatedBy = user.ID
+	}
+	now := e.now()
+	if p.CreatedAt.IsZero() {
+		p.CreatedAt = now
+	}
+	p.UpdatedAt = now
+	if err := p.Validate(); err != nil {
+		return Policy{}, err
+	}
+	if err := e.policies.Create(ctx, tenantID, &p); err != nil {
+		return Policy{}, wrapf("CreatePolicy", err)
+	}
+	return p, nil
+}
+
+// ActivatePolicy flips policyID's Active flag, requiring
+// managePermission.
+func (e *Engine) ActivatePolicy(ctx context.Context, tenantID, policyID uuid.UUID, active bool) (Policy, error) {
+	user, err := authorizeManage(ctx)
+	if err != nil {
+		return Policy{}, err
+	}
+	if err := requireMatchingUserTenant(user, tenantID); err != nil {
+		return Policy{}, err
+	}
+
+	p, err := e.policies.Get(ctx, tenantID, policyID)
+	if err != nil {
+		return Policy{}, err
+	}
+	p.Active = active
+	p.UpdatedAt = e.now()
+	if err := e.policies.Update(ctx, tenantID, p); err != nil {
+		return Policy{}, wrapf("ActivatePolicy", err)
+	}
+	return *p, nil
+}
+
 // GrantCaseAccess creates a per-case CaseGrant (task 2), requiring the
 // caller to hold managePermission and to belong to tenantID.
 func (e *Engine) GrantCaseAccess(ctx context.Context, tenantID uuid.UUID, g CaseGrant) (CaseGrant, error) {
