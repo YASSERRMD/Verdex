@@ -44,7 +44,7 @@ func main() {
 		fmt.Printf("branchcheck: branch name %q OK\n", branchName)
 	}
 
-	if err := cicdgate.ValidatePRCommitCount(commitCount); err != nil {
+	if err := cicdgate.ValidatePRCommitCount(branchName, commitCount); err != nil {
 		fmt.Fprintln(os.Stderr, "branchcheck:", err)
 		failed = true
 	} else {

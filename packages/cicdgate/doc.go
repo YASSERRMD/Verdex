@@ -16,8 +16,10 @@
 //   - ValidateBranchName / ValidatePRCommitCount (branchpolicy.go): a
 //     real, runnable check of this repository's phase-NNN-slug /
 //     fix-slug branch-naming convention and its documented >=10-commit
-//     minimum per pull request -- wired into a new branch-policy CI
-//     job (task 3).
+//     minimum per phase-NNN-slug pull request (fix-slug pull requests,
+//     this repository's convention for small non-phase corrective
+//     work, are exempt) -- wired into a new branch-policy CI job
+//     (task 3).
 //   - ReleaseArtifact / BuildAttestation / Verify (types.go,
 //     attestation.go): a structured data model for a signed build
 //     artifact (name, digest algorithm/digest, SignatureState/

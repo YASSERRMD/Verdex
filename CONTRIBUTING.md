@@ -11,11 +11,18 @@ All commits must use:
 
 - One branch per phase, named `phase-NNN-short-slug`
   (e.g. `phase-007-jurisdiction-loader`)
+- Small, non-phase corrective work (a bug fix, a security hardening
+  change, a stale-test repair) may instead use `fix-short-slug`
+  (e.g. `fix-guardrail-whitespace-obfuscation`) — see "Commits" below
+  for how the atomic-commit minimum applies to this branch type
 - Never commit directly to `main`
 
 ## Commits
 
-- Minimum **10 atomic commits** per phase
+- Minimum **10 atomic commits** per phase (`phase-NNN-slug` branches).
+  `fix-slug` branches are exempt from this minimum — they are
+  small, non-phase corrective work by definition, and are sized to
+  the fix itself rather than to a fixed commit quota
 - Each commit covers a single logical change
 - Use the imperative mood: `Add X`, `Fix Y`, `Remove Z`
 - No squash merges — full history is required for audit
@@ -62,7 +69,7 @@ before discard.
 ## Review Checklist
 
 - [ ] Branch named correctly
-- [ ] ≥10 atomic commits
+- [ ] ≥10 atomic commits (phase-NNN-slug branches; not required for fix-slug)
 - [ ] All tests pass
 - [ ] Non-binding guardrail enforced where applicable
 - [ ] No hardcoded provider references

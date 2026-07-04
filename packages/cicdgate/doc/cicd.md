@@ -42,12 +42,15 @@ repository this package would need to own.
 at least two digits so historical branches like `phase-001` still
 validate) or `fix-slug` (this repository's own observed convention for
 small corrective work -- e.g. `fix-notifications-access-check`,
-`fix-annotations-audit-permission` -- not written into
-`CONTRIBUTING.md` verbatim, but real, recurring practice in this
-repository's git history). `ValidatePRCommitCount` checks a pull
-request's commit count against `MinimumCommitCount` (10), matching
-`CONTRIBUTING.md`'s "Minimum 10 atomic commits per phase" and
-`pull_request_template.md`'s checklist item of the same number.
+`fix-annotations-audit-permission` -- now documented in
+`CONTRIBUTING.md`'s "Branching" section). `ValidatePRCommitCount`
+checks a pull request's commit count against `MinimumCommitCount`
+(10) for `phase-NNN-slug` branches, matching `CONTRIBUTING.md`'s
+"Minimum 10 atomic commits per phase" and `pull_request_template.md`'s
+checklist item of the same number; `fix-slug` branches are exempt,
+since the minimum is explicitly phase-sized and every `fix-*` pull
+request merged before this check existed shipped with a single
+commit.
 
 Both are wired into a new `branch-policy` job in
 `.github/workflows/ci.yml` that runs on `pull_request`, builds a tiny
