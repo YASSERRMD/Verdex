@@ -177,7 +177,20 @@ type extractedLink struct {
 	target string
 }
 
-// extractLinks scans absPath line by line for markdown inline links.
+// fencedCodeBlockDelimiter matches a fenced-code-block delimiter line
+// (``` or ~~~, optionally indented and/or followed by a language tag),
+// per the CommonMark fenced-code-block convention this repository's
+// documentation uses throughout for Go/JSON/YAML examples.
+var fencedCodeBlockDelimiter = regexp.MustCompile("^\\s*(```|~~~)")
+
+// extractLinks scans absPath line by line for markdown inline links,
+// skipping any line inside a fenced code block. This repository's
+// documentation is dense with Go code examples, and Go's generic
+// function-call syntax ("NewThing[T](arg)") is otherwise
+// indistinguishable from a markdown inline link to the same regex --
+// skipping fenced blocks entirely avoids that whole class of false
+// positive rather than trying to special-case Go syntax specifically.
+//
 // Scanning per line (rather than the whole file at once) means a
 // reported Line number is always exact, and deliberately does not
 // support a link target split across multiple lines -- no link in
@@ -197,9 +210,19 @@ func extractLinks(absPath string) ([]extractedLink, error) {
 	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
 
 	lineNum := 0
+	inFencedBlock := false
 	for scanner.Scan() {
 		lineNum++
 		line := scanner.Text()
+
+		if fencedCodeBlockDelimiter.MatchString(line) {
+			inFencedBlock = !inFencedBlock
+			continue
+		}
+		if inFencedBlock {
+			continue
+		}
+
 		for _, match := range mdLinkPattern.FindAllStringSubmatch(line, -1) {
 			links = append(links, extractedLink{
 				line:   lineNum,

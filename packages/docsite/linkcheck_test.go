@@ -17,10 +17,10 @@ func TestCheckLinks_CleanFixtureReportsNoBrokenLinks(t *testing.T) {
 		t.Fatalf("expected a clean Report, got %d broken link(s): %+v", len(report.Broken), report.Broken)
 	}
 
-	// Three markdown files: docs/README.md, docs/architecture/overview.md,
-	// packages/foo/doc/foo.md.
-	if len(report.FilesScanned) != 3 {
-		t.Fatalf("expected 3 files scanned, got %d: %v", len(report.FilesScanned), report.FilesScanned)
+	// Four markdown files: docs/README.md, docs/architecture/overview.md,
+	// docs/code-examples.md, packages/foo/doc/foo.md.
+	if len(report.FilesScanned) != 4 {
+		t.Fatalf("expected 4 files scanned, got %d: %v", len(report.FilesScanned), report.FilesScanned)
 	}
 
 	// docs/README.md alone has 4 internal links (architecture overview,
@@ -76,6 +76,40 @@ func TestCheckLinks_BrokenFixtureReportsExactBrokenLinks(t *testing.T) {
 	}
 	if pkgBroken.Target != "../../bar/doc/bar.md" {
 		t.Errorf("second broken link Target = %q, want %q", pkgBroken.Target, "../../bar/doc/bar.md")
+	}
+}
+
+func TestExtractLinks_SkipsFencedCodeBlocks(t *testing.T) {
+	links, err := extractLinks(filepath.Join("testdata", "clean", "docs", "code-examples.md"))
+	if err != nil {
+		t.Fatalf("extractLinks returned unexpected error: %v", err)
+	}
+
+	// Exactly 2 real links exist in this fixture, both outside fenced
+	// blocks: "[docs index](README.md)" and
+	// "[foo package doc](../packages/foo/doc/foo.md)". The
+	// "[also skipped](inside-a-tilde-fence.md)" line and the Go
+	// generic-call syntax "NewIdempotencyGuard[PaymentResult](10 *
+	// time.Minute)" both live inside fenced blocks (``` and ~~~
+	// respectively) and must not be extracted as links.
+	if len(links) != 2 {
+		t.Fatalf("expected exactly 2 links extracted (fenced-block content skipped), got %d: %+v", len(links), links)
+	}
+
+	for _, link := range links {
+		if link.target == "inside-a-tilde-fence.md" {
+			t.Error("a link inside a ~~~-fenced block was extracted; fenced blocks must be skipped")
+		}
+		if link.text == "PaymentResult" {
+			t.Error("Go generic-call syntax inside a ```-fenced block was misread as a markdown link")
+		}
+	}
+
+	if links[0].target != "README.md" {
+		t.Errorf("first extracted link target = %q, want %q", links[0].target, "README.md")
+	}
+	if links[1].target != "../packages/foo/doc/foo.md" {
+		t.Errorf("second extracted link target = %q, want %q", links[1].target, "../packages/foo/doc/foo.md")
 	}
 }
 
