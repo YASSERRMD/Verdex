@@ -49,7 +49,8 @@ report, err := docsite.CheckLinks(repoRoot)
 `CheckLinks` walks `repoRoot`'s `docs/` tree (recursively) and every
 `packages/*/doc/` directory (non-recursively -- no package nests a
 subdirectory under its own `doc/` as of this phase), extracts every
-markdown inline link (`[text](target)`) from every file found, and
+markdown inline link (link text in square brackets, immediately
+followed by a parenthesized target) from every file found, and
 verifies each internal link target resolves to a real file or
 directory on disk, relative to the linking file's own directory.
 External links (`http://`, `https://`, `mailto:`) are skipped
@@ -68,17 +69,21 @@ links were found.
 ### Why fenced code blocks are skipped
 
 This repository's documentation is dense with Go code examples, and
-Go's generic function-call syntax --
-`NewIdempotencyGuard[PaymentResult](10 * time.Minute)`, for a real
-example this phase's own `checklinks` run found inside
-`packages/reliability/doc/reliability.md` -- is otherwise
-indistinguishable from a markdown inline link to a regex-based
-scanner. `extractLinks` tracks fenced-code-block state (` ``` ` and
-`~~~` delimiters) and skips every line inside one, rather than trying
-to special-case Go syntax specifically. See `linkcheck_test.go`'s
-`TestExtractLinks_SkipsFencedCodeBlocks` for the fixture proving this
-holds for both fence styles, and that scanning resumes correctly once
-a block closes.
+Go's generic function-call syntax is otherwise indistinguishable from
+a markdown inline link to a regex-based scanner. For a real example
+this phase's own `checklinks` run found inside
+`packages/reliability/doc/reliability.md`:
+
+```go
+guard := reliability.NewIdempotencyGuard[PaymentResult](10 * time.Minute)
+```
+
+`extractLinks` tracks fenced-code-block state (triple-backtick and
+triple-tilde delimiters) and skips every line inside one, rather than
+trying to special-case Go syntax specifically. See
+`linkcheck_test.go`'s `TestExtractLinks_SkipsFencedCodeBlocks` for the
+fixture proving this holds for both fence styles, and that scanning
+resumes correctly once a block closes.
 
 ### Proof this actually catches broken links
 
