@@ -89,7 +89,7 @@
 //     PostgresPreferenceRepository (preference.go, repository.go): a
 //     durable, tenant-scoped per-user locale preference — the one piece
 //     of this phase that is genuinely stateful (task 6's server-side
-//     half). See migrations/000036_create_localization.up.sql.
+//     half). See migrations/000040_create_localization.up.sql.
 //   - Engine (engine.go): ties Catalog, the preference store, and
 //     AuditSink together behind the identity permission/tenant-scoping
 //     discipline every other packages/* Engine in this codebase follows.

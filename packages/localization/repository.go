@@ -93,7 +93,7 @@ var _ PreferenceRepository = (*InMemoryPreferenceRepository)(nil)
 // PostgresPreferenceRepository is a PostgreSQL-backed
 // PreferenceRepository, storing Preference rows in the
 // `localization_preferences` table (see
-// packages/persistence/migrations/000036_create_localization.up.sql).
+// packages/persistence/migrations/000040_create_localization.up.sql).
 // It accepts a persistence.Executor per call, mirroring
 // packages/privacy.PostgresInventoryRepository exactly, so callers can
 // run it directly against a pool or compose it inside a transaction

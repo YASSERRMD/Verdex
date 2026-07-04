@@ -54,7 +54,7 @@ related packages, reusing each rather than duplicating it:
   `repository.go`, `engine.go`): the one durable, stateful piece of
   this phase -- a per-user, per-tenant locale preference, backed by a
   small Postgres table
-  (`packages/persistence/migrations/000036_create_localization.up.sql`).
+  (`packages/persistence/migrations/000040_create_localization.up.sql`).
 - **`apps/web` wiring**: a `LocaleProvider`/`useLocale` cookie-backed
   switcher, a `useDirection` hook applying `dir="rtl"` conditionally, an
   externalized strings module, and a locale switcher wired into

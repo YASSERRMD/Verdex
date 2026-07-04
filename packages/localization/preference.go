@@ -15,7 +15,7 @@ import (
 // locale a given user wants is a per-user setting that must survive a
 // server restart and follow the user across devices/sessions, hence a
 // real repository/migration (see repository.go,
-// packages/persistence/migrations/000036_create_localization.up.sql)
+// packages/persistence/migrations/000040_create_localization.up.sql)
 // rather than an in-memory-only cookie value.
 type Preference struct {
 	// ID uniquely identifies this preference record.
