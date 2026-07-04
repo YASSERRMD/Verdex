@@ -81,5 +81,6 @@ use (
 	./packages/vulnmanagement
 	./packages/backupdr
 	./packages/integration
+	./packages/perf
 	./packages/corpusupdater
 )
