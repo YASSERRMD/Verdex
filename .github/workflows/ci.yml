@@ -42,6 +42,30 @@ jobs:
       - name: Test
         run: make test
 
+  # Phase 097 (packages/e2e): the full-journey, jurisdiction-aware
+  # end-to-end test suite, run as its own job so it is separately
+  # visible in the PR checks list (a scenario failure here specifically
+  # means a cross-phase composition/journey regression -- ingestion,
+  # reasoningorchestration, signoff, guardrail, knowledgeisolation,
+  # multilingual, or intake no longer compose end to end -- distinct
+  # from a build-go failure in any one of those packages' own unit
+  # tests). Every scenario is in-process/in-memory: no Docker, no
+  # testcontainers, no real LLM provider call (see
+  # packages/e2e/doc.go's "what this suite does NOT cover"), so this
+  # job needs nothing beyond the same Go toolchain setup build-go uses.
+  e2e-tests:
+    name: End-to-end suite (Go)
+    runs-on: ubuntu-latest
+    needs: lint-go
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+      - name: Run E2E suite
+        run: go test ./packages/e2e/... -race -count=1 -timeout=5m -v
+
   secrets-scan:
     name: Secrets scan (gitleaks)
     runs-on: ubuntu-latest
@@ -296,7 +320,11 @@ jobs:
     # (mirroring container-scan's pre-Phase-095 treatment before a
     # real Dockerfile/deploy target existed) and is deliberately not a
     # gate dependency.
-    needs: [build-go, build-ts, secrets-scan, container-scan, branch-policy, sign-artifacts]
+    #
+    # Phase 097 (packages/e2e) adds e2e-tests as a blocking gate
+    # dependency: a cross-phase journey regression is exactly the kind
+    # of failure this gate exists to catch before merge.
+    needs: [build-go, build-ts, secrets-scan, container-scan, branch-policy, sign-artifacts, e2e-tests]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -306,7 +334,8 @@ jobs:
                 "${{ needs.build-ts.result }}" != "success" || \
                 "${{ needs.secrets-scan.result }}" != "success" || \
                 "${{ needs.container-scan.result }}" != "success" || \
-                "${{ needs.sign-artifacts.result }}" != "success" ]]; then
+                "${{ needs.sign-artifacts.result }}" != "success" || \
+                "${{ needs.e2e-tests.result }}" != "success" ]]; then
             echo "One or more CI jobs failed"
             exit 1
           fi
