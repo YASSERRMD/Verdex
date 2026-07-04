@@ -81,3 +81,18 @@ func requireMatchingTenant(want, got uuid.UUID) error {
 	}
 	return nil
 }
+
+// actorFromCtx resolves the actor's user ID from ctx if present,
+// falling back to uuid.Nil (which AuditSink's actorFor renders as
+// systemActor) when ctx carries no authenticated user -- used by the
+// audit-on-failure paths, which must still record an event even when
+// authorizeManage/authorizeView itself failed (e.g.
+// ErrUnauthenticated), mirroring packages/compliance.actorFromCtx
+// exactly.
+func actorFromCtx(ctx context.Context) uuid.UUID {
+	user, err := authorizeActor(ctx)
+	if err != nil {
+		return uuid.Nil
+	}
+	return user.ID
+}
