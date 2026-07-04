@@ -75,6 +75,10 @@ var (
 	// evaluate a DataClass with no registered Target.
 	ErrNoTarget = errors.New("backupdr: no RPO/RTO target registered for data class")
 
+	// ErrTargetNotFound is returned when no Target is on file for a
+	// tenant's DataClass.
+	ErrTargetNotFound = errors.New("backupdr: RPO/RTO target not found")
+
 	// ErrIntegrityMismatch is returned by VerifyIntegrity when a
 	// BackupRecord's stored hash does not match the freshly computed
 	// hash.
