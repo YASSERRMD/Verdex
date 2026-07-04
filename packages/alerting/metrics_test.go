@@ -1,6 +1,7 @@
 package alerting_test
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -57,7 +58,7 @@ func TestRegisterBusinessMetrics_RegistersRealHandles(t *testing.T) {
 	catalogue.SyntheticCheckLatencySeconds.Observe(0.05, "health-endpoint", "pass")
 
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/metrics", nil)
 	registry.Handler().ServeHTTP(rec, req)
 
 	body := rec.Body.String()
@@ -88,7 +89,7 @@ func TestCatalogue_RecordAlertFired(t *testing.T) {
 	catalogue.RecordAlertFired(alerting.SeverityCritical)
 
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/metrics", nil)
 	registry.Handler().ServeHTTP(rec, req)
 	if !strings.Contains(rec.Body.String(), `severity="critical"`) {
 		t.Errorf("scraped output missing severity=critical label; got:\n%s", rec.Body.String())

@@ -117,8 +117,11 @@ func (k ConditionKind) externallyEvaluated() bool {
 	switch k {
 	case ConditionSLOBreached, ConditionQualityRegression, ConditionCostThreshold:
 		return true
+	case ConditionThresholdAbove, ConditionThresholdBelow:
+		return false
+	default:
+		return false
 	}
-	return false
 }
 
 // Condition is the trigger an AlertRule evaluates. For
