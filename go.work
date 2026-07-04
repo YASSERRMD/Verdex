@@ -73,4 +73,5 @@ use (
 	./packages/auditlog
 	./packages/dataresidency
 	./packages/airgapped
+	./packages/accessgovernance
 )
