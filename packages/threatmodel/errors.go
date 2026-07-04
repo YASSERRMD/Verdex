@@ -16,12 +16,24 @@ var (
 	// identity.Permission a threatmodel operation requires.
 	ErrForbidden = errors.New("threatmodel: actor lacks required permission")
 
+	// ErrCrossTenantAccess is returned when an operation would record
+	// or query a mitigation-transition audit event under a tenant
+	// scope that does not match the caller's own tenant, mirroring
+	// packages/privacy.ErrCrossTenantAccess and
+	// packages/compliance.ErrCrossTenantAccess.
+	ErrCrossTenantAccess = errors.New("threatmodel: cross-tenant access denied")
+
+	// ErrEmptyTenantID is returned when an operation is called with a
+	// zero tenant ID.
+	ErrEmptyTenantID = errors.New("threatmodel: tenant id is required")
+
 	// ErrNilAuditSink is returned by constructors that require a
 	// non-nil audit sink composing with packages/auditlog.Store.
 	ErrNilAuditSink = errors.New("threatmodel: audit sink must not be nil")
 
 	// ErrNilRepository is returned by constructors that require a
-	// non-nil backing MitigationHistoryRepository.
+	// non-nil backing catalogue used to look up a Mitigation before
+	// transitioning its status.
 	ErrNilRepository = errors.New("threatmodel: repository must not be nil")
 
 	// ErrInvalidComponent is returned when a Component fails structural
@@ -61,11 +73,6 @@ var (
 	// ErrInputInvalidStructure is returned when input fails a
 	// structural well-formedness check (e.g. blank after trimming).
 	ErrInputInvalidStructure = errors.New("threatmodel: input fails structural validation")
-
-	// ErrGuardrailLabelMissing is returned by output-handling
-	// safeguards when model output does not carry the mandatory
-	// non-binding guardrail label.
-	ErrGuardrailLabelMissing = errors.New("threatmodel: output missing non-binding guardrail label")
 
 	// ErrInvalidZone is returned when a Zone fails structural
 	// validation.

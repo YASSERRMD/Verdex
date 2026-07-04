@@ -239,6 +239,12 @@ type Mitigation struct {
 	// pointer back to an actual control is not a real mitigation, just
 	// an aspiration.
 	ReferenceTag string `json:"reference_tag"`
+
+	// LastTransitionAt is when Status last changed, set by
+	// Engine.TransitionMitigation/ResetMitigation. Zero for a
+	// catalogue entry straight out of SeedThreatModels that has never
+	// been transitioned by an Engine.
+	LastTransitionAt time.Time `json:"last_transition_at,omitempty"`
 }
 
 // Validate checks m for structural well-formedness.
