@@ -21,7 +21,7 @@ type rowScanner interface {
 // PostgresConfigRepository is a PostgreSQL-backed ConfigRepository,
 // storing ConnectorConfig rows in the `integration_connector_configs`
 // table (see
-// packages/persistence/migrations/000030_create_integration.up.sql).
+// packages/persistence/migrations/000034_create_integration.up.sql).
 // It accepts a persistence.Executor per call, mirroring
 // packages/compliance.PostgresControlRepository exactly, so callers
 // can run it directly against a pool or compose it inside a

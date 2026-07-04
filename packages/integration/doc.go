@@ -95,7 +95,7 @@
 // # Storage
 //
 // Six tenant-scoped tables back this package (migrations
-// 000030_create_integration and 000031_enable_rls_integration):
+// 000034_create_integration and 000035_enable_rls_integration):
 // integration_connector_configs, integration_connector_credentials
 // (secret_ref handle column only, never raw secret bytes),
 // integration_field_mappings, and the append-only

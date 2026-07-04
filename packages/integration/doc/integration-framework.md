@@ -216,7 +216,7 @@ continuing directly after `000027_enable_rls_compliance` at 000028/
 000028 and 000029 (one each) by the time this phase rebased onto the
 current tip, so this phase picked the next free pair instead:
 
-- `packages/persistence/migrations/000030_create_integration.up.sql` /
+- `packages/persistence/migrations/000034_create_integration.up.sql` /
   `.down.sql` create six tables, all tenant-scoped (unlike
   `packages/compliance`'s shared `compliance_controls` catalogue --
   there is no shared reference-data table in this phase):
@@ -225,7 +225,7 @@ current tip, so this phase picked the next free pair instead:
   `integration_field_mappings`, and the append-only
   `integration_import_runs` / `integration_delivery_runs` /
   `integration_reconciliation_results` run-history tables.
-- `packages/persistence/migrations/000031_enable_rls_integration.up.sql`
+- `packages/persistence/migrations/000035_enable_rls_integration.up.sql`
   / `.down.sql` enable and force row-level security with the standard
   `tenant_isolation` policy on all six tables.
 
