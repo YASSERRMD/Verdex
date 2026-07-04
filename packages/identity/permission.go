@@ -272,6 +272,26 @@ const (
 	// phase adds it rather than overloading PermManageSettings, which
 	// covers unrelated tenant configuration.
 	PermManagePilot Permission = "pilot:manage"
+
+	// Release-readiness / GA-release permissions (packages/garelease,
+	// Phase 100).
+
+	// PermViewRelease allows read-only access to ReadinessCheck/
+	// ReleaseReadiness snapshots, ReleaseCandidate records, and Release
+	// records. It does not permit computing a fresh readiness snapshot
+	// for audit purposes, freezing a candidate, cutting a release, or
+	// running the post-release checklist -- see PermManageRelease.
+	PermViewRelease Permission = "release:view"
+
+	// PermManageRelease allows evaluating release readiness
+	// (Engine.CheckReadiness), running the guardrail/audit-trail
+	// verification harnesses, freezing a ReleaseCandidate, cutting a
+	// Release, and running a Release's PostReleaseChecklist. This was
+	// genuinely missing before Phase 100: no existing permission named
+	// release-readiness/GA-cut administration, so this phase adds it
+	// rather than overloading PermManageSettings, which covers
+	// unrelated tenant configuration.
+	PermManageRelease Permission = "release:manage"
 )
 
 // PermissionMatrix maps each Role to the full set of Permissions it
@@ -334,6 +354,8 @@ var PermissionMatrix = map[Role][]Permission{
 		PermManageAlerting,
 		PermViewPilot,
 		PermManagePilot,
+		PermViewRelease,
+		PermManageRelease,
 	},
 	RoleAuditor: {
 		PermViewCase,
@@ -352,6 +374,7 @@ var PermissionMatrix = map[Role][]Permission{
 		PermViewCorpusUpdater,
 		PermViewAlerting,
 		PermViewPilot,
+		PermViewRelease,
 	},
 }
 
