@@ -41,6 +41,8 @@ of truth; this table is for human reference only.
 | `vulnmanagement:manage` | Record findings, triage them, transition finding status    |
 | `backupdr:view`     | Read-only access to backup policies, backup/drill history, and RPO/RTO evaluations |
 | `backupdr:manage`   | Set backup policies, record backups, execute restore drills   |
+| `integration:view`  | Read-only access to connector configs, import/delivery runs, and reconciliation results |
+| `integration:manage` | Register connectors, set credentials, run imports/deliveries/reconciliation |
 
 ## Matrix
 
@@ -72,6 +74,8 @@ does not.
 | `vulnmanagement:manage` | – |    –     |   –   |   ✓   |    –    |
 | `backupdr:view`     |   –   |    –     |   –   |   ✓   |    ✓    |
 | `backupdr:manage`   |   –   |    –     |   –   |   ✓   |    –    |
+| `integration:view`  |   –   |    –     |   –   |   ✓   |    ✓    |
+| `integration:manage` |   –   |    –     |   –   |   ✓   |    –    |
 
 ## Design notes
 
@@ -138,3 +142,13 @@ does not.
   record history, restore-drill history, and RPO/RTO evaluation
   results) consistent with its read-only, compliance-facing posture
   elsewhere in this matrix.
+* `integration:manage` (Phase 087, `packages/integration`) is
+  admin-only: registering a connector configuration, setting connector
+  credentials, and triggering an inbound case import or outbound
+  report delivery are the highest-blast-radius operations this package
+  exposes -- they reach an external court case-management system --
+  and are deliberately not delegated beyond the tenant administrator.
+  `auditor` holds `integration:view` (read-only access to connector
+  configurations minus credential material, import/delivery run
+  history, and reconciliation results) consistent with its read-only,
+  compliance-facing posture elsewhere in this matrix.
