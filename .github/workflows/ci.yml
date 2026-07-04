@@ -42,6 +42,25 @@ jobs:
       - name: Test
         run: make test
 
+  # Phase 098 (packages/docsite): the automated "review and link docs"
+  # mechanism -- walks docs/ and every packages/*/doc/*.md file,
+  # extracts every markdown relative link, and fails if any does not
+  # resolve to a real file/directory on disk. Runs independently of
+  # build-go/lint-go (it needs only the repository checkout and a Go
+  # toolchain to `go run` the checker, not the full build/test/lint
+  # pass) so a documentation-only PR gets fast, focused feedback.
+  docs-link-check:
+    name: Documentation link check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+      - name: Check documentation links
+        run: go run ./packages/docsite/cmd/checklinks .
+
   # Phase 097 (packages/e2e): the full-journey, jurisdiction-aware
   # end-to-end test suite, run as its own job so it is separately
   # visible in the PR checks list (a scenario failure here specifically
@@ -321,10 +340,16 @@ jobs:
     # real Dockerfile/deploy target existed) and is deliberately not a
     # gate dependency.
     #
+    # Phase 098 (packages/docsite) adds docs-link-check as a blocking
+    # gate dependency: it runs deterministically (no external network
+    # dependency, no flaky third-party service, unlike sca-scan/
+    # sast-scan above) and directly protects the documentation this
+    # phase adds, so there is no reason to leave it informational-only.
+    #
     # Phase 097 (packages/e2e) adds e2e-tests as a blocking gate
     # dependency: a cross-phase journey regression is exactly the kind
     # of failure this gate exists to catch before merge.
-    needs: [build-go, build-ts, secrets-scan, container-scan, branch-policy, sign-artifacts, e2e-tests]
+    needs: [build-go, build-ts, secrets-scan, container-scan, branch-policy, sign-artifacts, docs-link-check, e2e-tests]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -335,6 +360,7 @@ jobs:
                 "${{ needs.secrets-scan.result }}" != "success" || \
                 "${{ needs.container-scan.result }}" != "success" || \
                 "${{ needs.sign-artifacts.result }}" != "success" || \
+                "${{ needs.docs-link-check.result }}" != "success" || \
                 "${{ needs.e2e-tests.result }}" != "success" ]]; then
             echo "One or more CI jobs failed"
             exit 1
