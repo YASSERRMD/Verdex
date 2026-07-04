@@ -38,13 +38,18 @@ var (
 	// structural validation.
 	ErrInvalidRolloutTrigger = errors.New("cicdgate: invalid rollout trigger")
 
+	// ErrPromotionNotReady is returned by EvaluatePromotion when a
+	// RolloutTrigger's RequiredHealthySamples condition is not yet
+	// satisfied by the supplied StageHealth samples.
+	ErrPromotionNotReady = errors.New("cicdgate: rollout promotion condition not yet met")
+
 	// ErrInvalidRollbackTrigger is returned when a RollbackTrigger fails
 	// structural validation.
 	ErrInvalidRollbackTrigger = errors.New("cicdgate: invalid rollback trigger")
 
-	// ErrRollbackConditionNotMet is returned by Evaluate when none of a
-	// RollbackTrigger's configured conditions are satisfied by the
-	// supplied StageHealth snapshot.
+	// ErrRollbackConditionNotMet is returned by EvaluateRollback when
+	// none of a RollbackTrigger's configured conditions are satisfied
+	// by the supplied StageHealth snapshot.
 	ErrRollbackConditionNotMet = errors.New("cicdgate: rollback condition not met")
 )
 
