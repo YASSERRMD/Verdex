@@ -10,7 +10,7 @@ import (
 
 // managePermission is the identity.Permission required to register or
 // update a catalogued Control, record ControlEvidence, or set a
-// tenant's ComplianceProfile.
+// tenant's Profile.
 const managePermission = identity.PermManageCompliance
 
 // viewPermission is the identity.Permission required for read-only

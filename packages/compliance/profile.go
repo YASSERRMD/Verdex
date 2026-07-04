@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// ComplianceProfile is a per-deployment (tenant) selection of which
+// Profile is a per-deployment (tenant) selection of which
 // Frameworks -- and, optionally, which specific Controls beyond a
 // selected Framework's full set -- apply (task 7). Not every
 // deployment needs every framework: an air-gapped, UAE-only
@@ -16,9 +16,10 @@ import (
 // data-protection regime opts that overlay in explicitly. Mirrors how
 // packages/jurisdiction and packages/reasoningprofile scope behavior by
 // deployment rather than assuming one global configuration.
-type ComplianceProfile struct {
+type Profile struct {
 	// TenantID is the tenant this profile belongs to. A tenant has at
-	// most one ComplianceProfile at a time -- SetProfile replaces it.
+	// most one Profile at a time -- SetProfile replaces the existing
+	// one wholesale rather than merging.
 	TenantID uuid.UUID `json:"tenant_id"`
 
 	// Frameworks lists every Framework this deployment is evaluated
@@ -44,7 +45,7 @@ type ComplianceProfile struct {
 }
 
 // Validate checks p for structural well-formedness.
-func (p *ComplianceProfile) Validate() error {
+func (p *Profile) Validate() error {
 	if p == nil {
 		return ErrInvalidProfile
 	}
@@ -53,7 +54,7 @@ func (p *ComplianceProfile) Validate() error {
 	}
 	for _, f := range p.Frameworks {
 		if !f.IsValid() {
-			return wrapf("ComplianceProfile.Validate", ErrInvalidFramework)
+			return wrapf("Profile.Validate", ErrInvalidFramework)
 		}
 	}
 	return nil
@@ -63,7 +64,7 @@ func (p *ComplianceProfile) Validate() error {
 // Frameworks list means "every framework applies" (the permissive
 // default a freshly-provisioned tenant with no profile yet set should
 // not silently exempt itself from everything).
-func (p *ComplianceProfile) includesFramework(framework Framework) bool {
+func (p *Profile) includesFramework(framework Framework) bool {
 	if p == nil || len(p.Frameworks) == 0 {
 		return true
 	}
@@ -76,7 +77,7 @@ func (p *ComplianceProfile) includesFramework(framework Framework) bool {
 }
 
 // excludesControl reports whether p explicitly excludes controlID.
-func (p *ComplianceProfile) excludesControl(controlID uuid.UUID) bool {
+func (p *Profile) excludesControl(controlID uuid.UUID) bool {
 	if p == nil {
 		return false
 	}
@@ -95,7 +96,7 @@ func (p *ComplianceProfile) excludesControl(controlID uuid.UUID) bool {
 // and the dashboard both call to scope a report to what a specific
 // deployment actually needs to satisfy, rather than every control this
 // platform has ever catalogued globally.
-func ApplicableControls(catalogue []Control, profile *ComplianceProfile) []Control {
+func ApplicableControls(catalogue []Control, profile *Profile) []Control {
 	out := make([]Control, 0, len(catalogue))
 	for _, c := range catalogue {
 		if !profile.includesFramework(c.Framework) {
@@ -109,29 +110,28 @@ func ApplicableControls(catalogue []Control, profile *ComplianceProfile) []Contr
 	return out
 }
 
-// ProfileRepository persists ComplianceProfile records, one per
-// tenant.
+// ProfileRepository persists Profile records, one per tenant.
 type ProfileRepository interface {
-	Set(ctx context.Context, tenantID uuid.UUID, p *ComplianceProfile) error
-	Get(ctx context.Context, tenantID uuid.UUID) (*ComplianceProfile, error)
+	Set(ctx context.Context, tenantID uuid.UUID, p *Profile) error
+	Get(ctx context.Context, tenantID uuid.UUID) (*Profile, error)
 }
 
-// SetProfile creates or replaces tenantID's ComplianceProfile (task
-// 7), requiring managePermission and tenant match. Every call is
-// recorded via AuditSink regardless of outcome.
-func (e *Engine) SetProfile(ctx context.Context, tenantID uuid.UUID, profile ComplianceProfile) (ComplianceProfile, error) {
+// SetProfile creates or replaces tenantID's Profile (task 7),
+// requiring managePermission and tenant match. Every call is recorded
+// via AuditSink regardless of outcome.
+func (e *Engine) SetProfile(ctx context.Context, tenantID uuid.UUID, profile Profile) (Profile, error) {
 	user, err := authorizeManage(ctx)
 	if err != nil {
 		if e.audit != nil {
 			_, _ = e.audit.RecordProfileSet(ctx, tenantID, actorFromCtx(ctx), profile, err)
 		}
-		return ComplianceProfile{}, err
+		return Profile{}, err
 	}
 	if err := requireMatchingUserTenant(user, tenantID); err != nil {
 		if e.audit != nil {
 			_, _ = e.audit.RecordProfileSet(ctx, tenantID, user.ID, profile, err)
 		}
-		return ComplianceProfile{}, err
+		return Profile{}, err
 	}
 
 	profile.TenantID = tenantID
@@ -146,14 +146,14 @@ func (e *Engine) SetProfile(ctx context.Context, tenantID uuid.UUID, profile Com
 		if e.audit != nil {
 			_, _ = e.audit.RecordProfileSet(ctx, tenantID, user.ID, profile, err)
 		}
-		return ComplianceProfile{}, err
+		return Profile{}, err
 	}
 	if err := e.profiles.Set(ctx, tenantID, &profile); err != nil {
 		wrapped := wrapf("SetProfile", err)
 		if e.audit != nil {
 			_, _ = e.audit.RecordProfileSet(ctx, tenantID, user.ID, profile, wrapped)
 		}
-		return ComplianceProfile{}, wrapped
+		return Profile{}, wrapped
 	}
 
 	if e.audit != nil {
@@ -162,20 +162,20 @@ func (e *Engine) SetProfile(ctx context.Context, tenantID uuid.UUID, profile Com
 	return profile, nil
 }
 
-// GetProfile returns tenantID's current ComplianceProfile, requiring
+// GetProfile returns tenantID's current Profile, requiring
 // viewPermission and tenant match. Returns ErrProfileNotFound if none
 // has been set yet.
-func (e *Engine) GetProfile(ctx context.Context, tenantID uuid.UUID) (ComplianceProfile, error) {
+func (e *Engine) GetProfile(ctx context.Context, tenantID uuid.UUID) (Profile, error) {
 	user, err := authorizeView(ctx)
 	if err != nil {
-		return ComplianceProfile{}, err
+		return Profile{}, err
 	}
 	if err := requireMatchingUserTenant(user, tenantID); err != nil {
-		return ComplianceProfile{}, err
+		return Profile{}, err
 	}
 	profile, err := e.profiles.Get(ctx, tenantID)
 	if err != nil {
-		return ComplianceProfile{}, err
+		return Profile{}, err
 	}
 	return *profile, nil
 }

@@ -7,31 +7,30 @@ import (
 	"github.com/google/uuid"
 )
 
-// ComplianceStatus is the result of evaluating a single Control against
-// a tenant's collected ControlEvidence (task 6).
-type ComplianceStatus string
+// Status is the result of evaluating a single Control against a
+// tenant's collected ControlEvidence (task 6).
+type Status string
 
 const (
 	// StatusSatisfied means at least minEvidenceForSatisfied pieces of
 	// distinct-Kind evidence are on file for the control -- strong
 	// enough coverage that the control is considered fully
 	// demonstrated.
-	StatusSatisfied ComplianceStatus = "satisfied"
+	StatusSatisfied Status = "satisfied"
 
 	// StatusPartiallyMet means at least one piece of evidence is on
 	// file, but fewer than minEvidenceForSatisfied distinct kinds --
 	// some coverage exists, but not enough to consider the control
 	// fully demonstrated.
-	StatusPartiallyMet ComplianceStatus = "partially_met"
+	StatusPartiallyMet Status = "partially_met"
 
 	// StatusGap means no evidence at all is on file for the control --
 	// nothing demonstrates it is satisfied.
-	StatusGap ComplianceStatus = "gap"
+	StatusGap Status = "gap"
 )
 
-// IsValid reports whether s is one of the named ComplianceStatus
-// constants.
-func (s ComplianceStatus) IsValid() bool {
+// IsValid reports whether s is one of the named Status constants.
+func (s Status) IsValid() bool {
 	switch s {
 	case StatusSatisfied, StatusPartiallyMet, StatusGap:
 		return true
@@ -40,7 +39,7 @@ func (s ComplianceStatus) IsValid() bool {
 }
 
 // String satisfies fmt.Stringer.
-func (s ComplianceStatus) String() string { return string(s) }
+func (s Status) String() string { return string(s) }
 
 // minEvidenceKindsForSatisfied is the number of distinct EvidenceKind
 // values a Control must have at least one ControlEvidence record for
@@ -54,7 +53,7 @@ func (s ComplianceStatus) String() string { return string(s) }
 // satisfied on one piece of evidence alone.
 const minEvidenceKindsForSatisfied = 2
 
-// EvaluateControl reports the ComplianceStatus of control given every
+// EvaluateControl reports the Status of control, given every
 // ControlEvidence on file for it, evaluated as of now (task 6's
 // per-control evaluation). This is real evaluation logic: it counts
 // distinct EvidenceKind values among the matching evidence records
@@ -100,8 +99,8 @@ type ControlGapResult struct {
 	// Control is the catalogued control this result evaluates.
 	Control Control `json:"control"`
 
-	// Status is the resolved ComplianceStatus.
-	Status ComplianceStatus `json:"status"`
+	// Status is the resolved compliance Status.
+	Status Status `json:"status"`
 
 	// EvidenceCount is how many ControlEvidence records (as of the
 	// evaluation instant) matched this control.
@@ -113,8 +112,8 @@ type ControlGapResult struct {
 }
 
 // GapAnalysisReport is a tenant's full gap-analysis snapshot (task 6):
-// every applicable Control (per ApplicableControls/ComplianceProfile),
-// each evaluated against the tenant's collected ControlEvidence.
+// every applicable Control (per ApplicableControls/Profile), each
+// evaluated against the tenant's collected ControlEvidence.
 type GapAnalysisReport struct {
 	// TenantID is the tenant this report was generated for.
 	TenantID uuid.UUID `json:"tenant_id"`
@@ -126,10 +125,10 @@ type GapAnalysisReport struct {
 	Results []ControlGapResult `json:"results"`
 }
 
-// CountByStatus returns how many Results carry each ComplianceStatus,
-// keyed by status.
-func (r GapAnalysisReport) CountByStatus() map[ComplianceStatus]int {
-	counts := map[ComplianceStatus]int{
+// CountByStatus returns how many Results carry each Status, keyed by
+// status.
+func (r GapAnalysisReport) CountByStatus() map[Status]int {
+	counts := map[Status]int{
 		StatusSatisfied:    0,
 		StatusPartiallyMet: 0,
 		StatusGap:          0,
@@ -155,9 +154,9 @@ func (r GapAnalysisReport) Gaps() []ControlGapResult {
 
 // RunGapAnalysis computes a GapAnalysisReport for tenantID (task 6),
 // requiring viewPermission and tenant match: every catalogued Control
-// applicable per the tenant's ComplianceProfile (or every catalogued
-// Control, if no profile has been set -- the permissive default), each
-// evaluated via EvaluateControl against the tenant's full collected
+// applicable per the tenant's Profile (or every catalogued Control, if
+// no profile has been set -- the permissive default), each evaluated
+// via EvaluateControl against the tenant's full collected
 // ControlEvidence set.
 func (e *Engine) RunGapAnalysis(ctx context.Context, tenantID uuid.UUID) (GapAnalysisReport, error) {
 	user, err := authorizeView(ctx)
@@ -173,7 +172,7 @@ func (e *Engine) RunGapAnalysis(ctx context.Context, tenantID uuid.UUID) (GapAna
 		return GapAnalysisReport{}, wrapf("RunGapAnalysis", err)
 	}
 
-	var profile *ComplianceProfile
+	var profile *Profile
 	p, err := e.profiles.Get(ctx, tenantID)
 	switch {
 	case err == nil:

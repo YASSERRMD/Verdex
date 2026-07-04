@@ -84,17 +84,17 @@ var _ EvidenceRepository = (*InMemoryEvidenceRepository)(nil)
 // backed by a map guarded by a mutex.
 type InMemoryProfileRepository struct {
 	mu       sync.RWMutex
-	profiles map[uuid.UUID]*ComplianceProfile
+	profiles map[uuid.UUID]*Profile
 }
 
 // NewInMemoryProfileRepository builds an empty
 // InMemoryProfileRepository.
 func NewInMemoryProfileRepository() *InMemoryProfileRepository {
-	return &InMemoryProfileRepository{profiles: make(map[uuid.UUID]*ComplianceProfile)}
+	return &InMemoryProfileRepository{profiles: make(map[uuid.UUID]*Profile)}
 }
 
 // Set implements ProfileRepository.
-func (r *InMemoryProfileRepository) Set(_ context.Context, tenantID uuid.UUID, p *ComplianceProfile) error {
+func (r *InMemoryProfileRepository) Set(_ context.Context, tenantID uuid.UUID, p *Profile) error {
 	if p == nil {
 		return ErrInvalidProfile
 	}
@@ -112,7 +112,7 @@ func (r *InMemoryProfileRepository) Set(_ context.Context, tenantID uuid.UUID, p
 }
 
 // Get implements ProfileRepository.
-func (r *InMemoryProfileRepository) Get(_ context.Context, tenantID uuid.UUID) (*ComplianceProfile, error) {
+func (r *InMemoryProfileRepository) Get(_ context.Context, tenantID uuid.UUID) (*Profile, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	p, ok := r.profiles[tenantID]

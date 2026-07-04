@@ -19,7 +19,10 @@ replace (
 require (
 	github.com/YASSERRMD/verdex/packages/auditlog v0.0.0-00010101000000-000000000000
 	github.com/YASSERRMD/verdex/packages/identity v0.0.0-00010101000000-000000000000
+	github.com/YASSERRMD/verdex/packages/persistence v0.0.0
+	github.com/YASSERRMD/verdex/packages/tenancy v0.0.0
 	github.com/google/uuid v1.6.0
+	github.com/jackc/pgx/v5 v5.10.0
 )
 
 require (
@@ -29,9 +32,7 @@ require (
 	github.com/YASSERRMD/verdex/packages/guardrail v0.0.0 // indirect
 	github.com/YASSERRMD/verdex/packages/irac v0.0.0 // indirect
 	github.com/YASSERRMD/verdex/packages/observability v0.0.0 // indirect
-	github.com/YASSERRMD/verdex/packages/persistence v0.0.0 // indirect
 	github.com/YASSERRMD/verdex/packages/signoff v0.0.0-00010101000000-000000000000 // indirect
-	github.com/YASSERRMD/verdex/packages/tenancy v0.0.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
@@ -39,7 +40,6 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.19.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.10.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect

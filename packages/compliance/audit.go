@@ -130,8 +130,8 @@ func (s *AuditSink) RecordEvidenceAdd(ctx context.Context, tenantID uuid.UUID, a
 }
 
 // RecordProfileSet appends an Event describing a tenant's
-// ComplianceProfile being set or replaced.
-func (s *AuditSink) RecordProfileSet(ctx context.Context, tenantID uuid.UUID, actorUserID uuid.UUID, p ComplianceProfile, setErr error) (auditlog.Event, error) {
+// Profile being set or replaced.
+func (s *AuditSink) RecordProfileSet(ctx context.Context, tenantID uuid.UUID, actorUserID uuid.UUID, p Profile, setErr error) (auditlog.Event, error) {
 	if s == nil || s.store == nil {
 		return auditlog.Event{}, ErrNilAuditSink
 	}

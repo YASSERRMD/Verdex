@@ -9,7 +9,7 @@ import (
 
 // FrameworkSummary is one Framework's aggregate standing within a
 // Dashboard: how many applicable controls it contributes and how many
-// of those resolve to each ComplianceStatus.
+// of those resolve to each Status.
 type FrameworkSummary struct {
 	// Framework is the framework this summary aggregates.
 	Framework Framework `json:"framework"`
@@ -19,8 +19,8 @@ type FrameworkSummary struct {
 	TotalControls int `json:"total_controls"`
 
 	// StatusCounts is how many of those controls resolve to each
-	// ComplianceStatus, keyed by status.
-	StatusCounts map[ComplianceStatus]int `json:"status_counts"`
+	// Status, keyed by status.
+	StatusCounts map[Status]int `json:"status_counts"`
 }
 
 // Dashboard is a compliance-mapping aggregation report for one tenant
@@ -40,9 +40,9 @@ type Dashboard struct {
 	TotalControls int `json:"total_controls"`
 
 	// OverallStatusCounts is how many applicable controls resolve to
-	// each ComplianceStatus, keyed by status, across every framework
+	// each Status, keyed by status, across every framework
 	// combined.
-	OverallStatusCounts map[ComplianceStatus]int `json:"overall_status_counts"`
+	OverallStatusCounts map[Status]int `json:"overall_status_counts"`
 
 	// ByFramework is one FrameworkSummary per distinct Framework
 	// represented among the applicable controls, ordered by Framework
@@ -74,7 +74,7 @@ const recentEvidenceWindow = 30 * 24 * time.Hour
 func BuildDashboard(report GapAnalysisReport, evidence []ControlEvidence, now time.Time) Dashboard {
 	frameworkOrder := make([]Framework, 0)
 	summaries := make(map[Framework]*FrameworkSummary)
-	overall := map[ComplianceStatus]int{
+	overall := map[Status]int{
 		StatusSatisfied:    0,
 		StatusPartiallyMet: 0,
 		StatusGap:          0,
@@ -86,7 +86,7 @@ func BuildDashboard(report GapAnalysisReport, evidence []ControlEvidence, now ti
 		if !ok {
 			summary = &FrameworkSummary{
 				Framework: fw,
-				StatusCounts: map[ComplianceStatus]int{
+				StatusCounts: map[Status]int{
 					StatusSatisfied:    0,
 					StatusPartiallyMet: 0,
 					StatusGap:          0,

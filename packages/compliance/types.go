@@ -34,7 +34,7 @@ const (
 	// overlay (e.g. GDPR-shaped requirement categories: lawful basis,
 	// data-subject rights, breach notification, data minimization).
 	// Mapped as an applicable reference overlay a deployment may opt
-	// into via ComplianceProfile, not as this platform's primary legal
+	// into via Profile, not as this platform's primary legal
 	// basis.
 	FrameworkInternationalDataProtection Framework = "international_data_protection"
 

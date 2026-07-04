@@ -14,7 +14,7 @@ import (
 // tenants -- mirroring how packages/jurisdiction's jurisdiction
 // definitions are shared reference data rather than per-tenant rows.
 // A deployment narrows which catalogued controls actually apply to it
-// via ComplianceProfile (profile.go), not by forking the catalogue.
+// via Profile (profile.go), not by forking the catalogue.
 type ControlRepository interface {
 	Create(ctx context.Context, c *Control) error
 	Get(ctx context.Context, id uuid.UUID) (*Control, error)

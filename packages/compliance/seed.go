@@ -133,7 +133,7 @@ var judicialRecordsSeeds = []Control{
 // frameworks mapped in as an applicable/reference overlay layered on
 // top of the same underlying controls that satisfy UAE data
 // protection, rather than a wholly separate implementation. A
-// deployment opts into this overlay via ComplianceProfile when its
+// deployment opts into this overlay via Profile when its
 // customer base or regulatory exposure calls for it.
 var internationalOverlaySeeds = []Control{
 	{

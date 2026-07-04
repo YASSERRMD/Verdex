@@ -58,11 +58,11 @@ var (
 	// ID does not resolve to any stored record for the tenant.
 	ErrEvidenceNotFound = errors.New("compliance: control evidence not found")
 
-	// ErrInvalidProfile is returned when a ComplianceProfile fails
+	// ErrInvalidProfile is returned when a Profile fails
 	// structural validation.
 	ErrInvalidProfile = errors.New("compliance: invalid compliance profile")
 
-	// ErrProfileNotFound is returned when no ComplianceProfile is on
+	// ErrProfileNotFound is returned when no Profile is on
 	// file for a tenant.
 	ErrProfileNotFound = errors.New("compliance: compliance profile not found")
 )

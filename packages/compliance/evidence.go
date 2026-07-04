@@ -30,7 +30,7 @@ const (
 	EvidenceKindDocument EvidenceKind = "document"
 
 	// EvidenceKindConfiguration references a specific configuration
-	// artifact (e.g. a RetentionPolicy, a ComplianceProfile, an RLS
+	// artifact (e.g. a RetentionPolicy, a Profile, an RLS
 	// migration) proving the control is enforced structurally.
 	EvidenceKindConfiguration EvidenceKind = "configuration"
 )
@@ -52,7 +52,7 @@ func (k EvidenceKind) String() string { return string(k) }
 // is satisfied for a given tenant/deployment (task 5): a reference to
 // an auditlog query, a test name, a doc link, or a configuration
 // artifact. GapAnalysis (gap.go) consumes a tenant's full
-// ControlEvidence set to decide each Control's ComplianceStatus.
+// ControlEvidence set to decide each Control's Status.
 type ControlEvidence struct {
 	// ID uniquely identifies this evidence record.
 	ID uuid.UUID `json:"id"`

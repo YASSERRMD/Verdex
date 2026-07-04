@@ -5,13 +5,12 @@ import (
 )
 
 // Engine is the compliance-mapping orchestrator: it composes the
-// Control catalogue, per-tenant ControlEvidence, ComplianceProfile
-// selection, and gap-analysis/dashboard reporting into one set of
-// tenant- and permission-scoped operations, recording every control
-// registration, evidence addition, and profile change via AuditSink.
-// Engine mirrors packages/privacy.Engine's shape closely: authenticate,
-// check tenant match, check permission, mutate, audit regardless of
-// outcome.
+// Control catalogue, per-tenant ControlEvidence, Profile selection,
+// and gap-analysis/dashboard reporting into one set of tenant- and
+// permission-scoped operations, recording every control registration,
+// evidence addition, and profile change via AuditSink. Engine mirrors
+// packages/privacy.Engine's shape closely: authenticate, check tenant
+// match, check permission, mutate, audit regardless of outcome.
 type Engine struct {
 	controls ControlRepository
 	evidence EvidenceRepository
