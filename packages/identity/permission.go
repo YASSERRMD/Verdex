@@ -251,6 +251,27 @@ const (
 	// administration, so this phase adds it rather than overloading
 	// PermManageSettings, which covers unrelated tenant configuration.
 	PermManageAlerting Permission = "alerting:manage"
+
+	// Pilot deployment / feedback-loop permissions (packages/pilot,
+	// Phase 099).
+
+	// PermViewPilot allows read-only access to a tenant's
+	// PilotDeployments, PilotCases, collected FeedbackEntry records,
+	// PilotFindings, RefinementRecords, and the captured pilot Report.
+	// It does not permit provisioning a deployment, assigning/observing
+	// a case, submitting feedback, triaging a finding, or recording a
+	// refinement -- see PermManagePilot.
+	PermViewPilot Permission = "pilot:view"
+
+	// PermManagePilot allows provisioning and transitioning a
+	// PilotDeployment, assigning and observing PilotCases, submitting
+	// FeedbackEntry records, triaging PilotFindings, recording and
+	// verifying RefinementRecords, and capturing a pilot Report. This
+	// was genuinely missing before Phase 099: no existing permission
+	// named pilot-deployment/feedback-loop administration, so this
+	// phase adds it rather than overloading PermManageSettings, which
+	// covers unrelated tenant configuration.
+	PermManagePilot Permission = "pilot:manage"
 )
 
 // PermissionMatrix maps each Role to the full set of Permissions it
@@ -311,6 +332,8 @@ var PermissionMatrix = map[Role][]Permission{
 		PermManageCorpusUpdater,
 		PermViewAlerting,
 		PermManageAlerting,
+		PermViewPilot,
+		PermManagePilot,
 	},
 	RoleAuditor: {
 		PermViewCase,
@@ -328,6 +351,7 @@ var PermissionMatrix = map[Role][]Permission{
 		PermViewBulkImport,
 		PermViewCorpusUpdater,
 		PermViewAlerting,
+		PermViewPilot,
 	},
 }
 
