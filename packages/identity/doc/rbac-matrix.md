@@ -33,6 +33,8 @@ of truth; this table is for human reference only.
 | `keys:break_glass`  | Invoke the emergency, justified, time-bound break-glass path   |
 | `privacy:view`      | Read-only access to the data inventory and privacy audit trail |
 | `privacy:manage`    | Process subject-access, erasure, and consent-change requests   |
+| `compliance:view`   | Read-only access to the control catalogue and compliance dashboard |
+| `compliance:manage` | Register controls, record evidence, set a compliance profile  |
 
 ## Matrix
 
@@ -56,6 +58,8 @@ does not.
 | `keys:break_glass`  |   –   |    –     |   –   |   ✓   |    –    |
 | `privacy:view`      |   –   |    –     |   –   |   ✓   |    ✓    |
 | `privacy:manage`    |   –   |    –     |   –   |   ✓   |    –    |
+| `compliance:view`   |   –   |    –     |   –   |   ✓   |    ✓    |
+| `compliance:manage` |   –   |    –     |   –   |   ✓   |    –    |
 
 ## Design notes
 
@@ -86,3 +90,12 @@ does not.
   `privacy:view` (read-only access to the data inventory, retention
   report, and privacy audit trail) consistent with its compliance-
   facing posture elsewhere in this matrix.
+* `compliance:manage` (Phase 082, `packages/compliance`) is
+  admin-only: registering/updating a catalogued control, recording
+  control evidence, and setting a tenant's compliance profile are
+  administrative actions that shape what a compliance report and gap
+  analysis certify. `auditor` holds `compliance:view` (read-only
+  access to the control catalogue, a tenant's compliance profile,
+  collected evidence, gap-analysis reports, and the compliance
+  dashboard) consistent with its compliance-facing posture elsewhere
+  in this matrix.

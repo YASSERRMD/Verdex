@@ -75,4 +75,5 @@ use (
 	./packages/airgapped
 	./packages/accessgovernance
 	./packages/privacy
+	./packages/compliance
 )
