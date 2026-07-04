@@ -90,4 +90,14 @@ type Capability struct {
 	ProviderID string
 	// ModelID identifies the specific model (e.g. "claude-3-5-sonnet-20241022").
 	ModelID string
+	// Region declares the jurisdiction/locality this provider/model
+	// combination processes and stores data in (e.g. "eu", "us",
+	// "local"). Empty means undeclared/unknown -- callers that enforce
+	// a data-residency policy (packages/dataresidency, Phase 078)
+	// should treat an empty Region as failing any allow-list check
+	// rather than silently passing it, since an undeclared region
+	// cannot be proven compliant. This field is additive: existing
+	// Capability values with Region unset behave exactly as before for
+	// every caller that does not consult it.
+	Region string
 }
