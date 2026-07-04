@@ -161,7 +161,17 @@ func TestIntegration_Service_RealPostgresRepository(t *testing.T) {
 	tenant := seedTenant(t, pg, "Tenant A", "tenant-a-annotations")
 
 	caseRepo := caselifecycle.NewTenantScopedRepository(pg.Pool())
-	actor := &identity.User{ID: uuid.New(), TenantID: tenant.ID, Roles: []identity.Role{identity.RoleClerk}, Status: identity.UserStatusActive}
+	// RoleAdmin, not RoleClerk: this actor also calls svc.AuditTrail
+	// below, which requires identity.PermAuditRead in addition to the
+	// view/edit permissions RoleClerk already holds. RoleClerk
+	// deliberately lacks PermAuditRead (see
+	// TestService_AuditTrail_RequiresAuditPermission in audit_test.go,
+	// which proves RoleClerk must be forbidden from AuditTrail), so
+	// RoleAdmin is the correct fixture here -- mirroring this package's
+	// own audit_test.go and packages/keymanagement's
+	// postgres_integration_test.go, both of which use RoleAdmin for the
+	// actor exercising an audit-trail read.
+	actor := &identity.User{ID: uuid.New(), TenantID: tenant.ID, Roles: []identity.Role{identity.RoleAdmin}, Status: identity.UserStatusActive}
 	ctx := identity.WithUser(context.Background(), actor)
 
 	c := seedIntegrationCase(t, caseRepo, tenant.ID, actor.ID, "Civil Matter")
