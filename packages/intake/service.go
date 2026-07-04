@@ -234,7 +234,7 @@ func (s *IntakeService) ingest(
 		MIMEType:      detectedMIME,
 		SizeBytes:     hashReader.BytesRead(),
 		ReceivedAt:    receivedAt,
-		Status:        StatusReady,
+		status:        StatusReady,
 	}
 
 	// Step 8: schedule discard.  The TempBuffer's internal timer already fires
@@ -245,8 +245,7 @@ func (s *IntakeService) ingest(
 		discardTime := time.Now().UTC()
 		_ = tb.Discard()
 		s.unregisterBuffer(intakeID)
-		result.DiscardedAt = &discardTime
-		result.Status = StatusDiscarded
+		result.markDiscarded(discardTime)
 		_ = s.audit.Emit(ctx, IntakeAuditEvent{
 			EventType:  "intake.discarded",
 			IntakeID:   intakeID,

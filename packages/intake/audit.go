@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -92,13 +93,19 @@ func (l *LoggingAuditSink) Emit(ctx context.Context, e IntakeAuditEvent) error {
 }
 
 // CapturingAuditSink stores emitted events in memory.  Useful in tests that
-// need to assert on the sequence of audit events.
+// need to assert on the sequence of audit events.  Emit is safe for
+// concurrent use since the intake pipeline may invoke it from a background
+// goroutine (TTL-triggered discard) while another intake operation is still
+// in flight.
 type CapturingAuditSink struct {
+	mu     sync.Mutex
 	Events []IntakeAuditEvent
 }
 
 // Emit implements AuditSink.
 func (c *CapturingAuditSink) Emit(_ context.Context, event IntakeAuditEvent) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.Events = append(c.Events, event)
 	return nil
 }

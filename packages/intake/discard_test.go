@@ -29,18 +29,18 @@ func TestIngest_BufferDiscardedAfterTTL(t *testing.T) {
 		t.Fatalf("Ingest failed: %v", err)
 	}
 
-	if result.Status != intake.StatusReady {
-		t.Fatalf("expected status ready, got %s", result.Status)
+	if result.Status() != intake.StatusReady {
+		t.Fatalf("expected status ready, got %s", result.Status())
 	}
 
 	// Wait for TTL to elapse plus a safety margin.
 	time.Sleep(500 * time.Millisecond)
 
-	if result.Status != intake.StatusDiscarded {
-		t.Fatalf("expected status discarded after TTL, got %s", result.Status)
+	if result.Status() != intake.StatusDiscarded {
+		t.Fatalf("expected status discarded after TTL, got %s", result.Status())
 	}
 
-	if result.DiscardedAt == nil {
+	if result.DiscardedAt() == nil {
 		t.Fatal("DiscardedAt should be set after discard")
 	}
 }

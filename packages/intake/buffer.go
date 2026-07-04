@@ -43,9 +43,11 @@ func Create(ttl time.Duration) (*TempBuffer, error) {
 	}
 
 	if ttl > 0 {
+		tb.mu.Lock()
 		tb.timer = time.AfterFunc(ttl, func() {
 			_ = tb.Discard()
 		})
+		tb.mu.Unlock()
 	}
 
 	return tb, nil
