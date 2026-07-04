@@ -231,11 +231,32 @@ func TestIntegration_Service_RealPostgresRepository(t *testing.T) {
 	if len(otherList) != 0 {
 		t.Fatalf("expected tenant B to see 0 keys, got %d", len(otherList))
 	}
+	// Tenant B's own CurrentKey/ListKeys calls above are themselves
+	// auditable actions (Service.recordAudit runs even for a denied or
+	// empty-result read), so tenant B's history is legitimately
+	// non-empty here -- asserting "0 entries" would be wrong regardless
+	// of tenant isolation. The property that actually proves RLS (not
+	// just the application-level guard) enforces the boundary is that
+	// every entry tenant B can see belongs to tenant B, and none of
+	// tenant A's key IDs or audit entry IDs (from firstID/secondID and
+	// history above) ever appear in tenant B's view.
 	otherHistory, err := svc.AuditHistory(otherCtx, otherTenant.ID, 0)
 	if err != nil {
 		t.Fatalf("AuditHistory tenant B: %v", err)
 	}
-	if len(otherHistory) != 0 {
-		t.Fatalf("expected tenant B to see 0 audit entries, got %d", len(otherHistory))
+	tenantAEntryIDs := make(map[string]bool, len(history))
+	for _, e := range history {
+		tenantAEntryIDs[e.ID.String()] = true
+	}
+	for _, e := range otherHistory {
+		if e.TenantID != otherTenant.ID {
+			t.Fatalf("tenant B's audit history leaked a row for tenant %s (entry %s)", e.TenantID, e.ID)
+		}
+		if e.KeyID == firstID || e.KeyID == secondID {
+			t.Fatalf("tenant B's audit history leaked an entry referencing tenant A's key %q", e.KeyID)
+		}
+		if tenantAEntryIDs[e.ID.String()] {
+			t.Fatalf("tenant B's audit history leaked tenant A's audit entry %s", e.ID)
+		}
 	}
 }
