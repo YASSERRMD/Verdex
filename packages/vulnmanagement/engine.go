@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/YASSERRMD/verdex/packages/auditlog"
 )
 
 // Engine is the vulnerability-management orchestrator: it composes a
@@ -150,4 +152,47 @@ func (e *Engine) ListFindingsBySource(ctx context.Context, tenantID uuid.UUID, s
 		return nil, wrapf("ListFindingsBySource", err)
 	}
 	return list, nil
+}
+
+// ListFindingsByStatus returns every Finding recorded for tenantID
+// currently in status, requiring viewPermission and tenant match --
+// the query a triage queue view uses to show, e.g., every StatusOpen
+// finding awaiting a first decision.
+func (e *Engine) ListFindingsByStatus(ctx context.Context, tenantID uuid.UUID, status Status) ([]Finding, error) {
+	user, err := authorizeView(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := requireMatchingUserTenant(user, tenantID); err != nil {
+		return nil, err
+	}
+	list, err := e.findings.ListByStatus(ctx, tenantID, status)
+	if err != nil {
+		return nil, wrapf("ListFindingsByStatus", err)
+	}
+	return list, nil
+}
+
+// Activity surfaces every vulnerability-management audit event for
+// tenantID matching filter, requiring viewPermission and tenant match,
+// delegating to AuditSink.FindingActivity -- which itself queries
+// through packages/auditlog.Store's own PermAuditRead-gated Query.
+// Returns ErrNilAuditSink if this Engine was constructed with a nil
+// audit sink.
+func (e *Engine) Activity(ctx context.Context, tenantID uuid.UUID, filter auditlog.Filter) ([]auditlog.Event, error) {
+	user, err := authorizeView(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := requireMatchingUserTenant(user, tenantID); err != nil {
+		return nil, err
+	}
+	if e.audit == nil {
+		return nil, ErrNilAuditSink
+	}
+	events, err := e.audit.FindingActivity(ctx, tenantID, filter)
+	if err != nil {
+		return nil, wrapf("Activity", err)
+	}
+	return events, nil
 }
