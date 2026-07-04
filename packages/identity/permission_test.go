@@ -57,6 +57,8 @@ var expectedPermissions = map[identity.Role][]identity.Permission{
 		identity.PermManageBackupDR,
 		identity.PermViewIntegration,
 		identity.PermManageIntegration,
+		identity.PermViewCorpusUpdater,
+		identity.PermManageCorpusUpdater,
 	},
 	identity.RoleAuditor: {
 		identity.PermViewCase,
@@ -71,6 +73,7 @@ var expectedPermissions = map[identity.Role][]identity.Permission{
 		identity.PermViewVulnmanagement,
 		identity.PermViewBackupDR,
 		identity.PermViewIntegration,
+		identity.PermViewCorpusUpdater,
 	},
 }
 
@@ -98,6 +101,8 @@ var allPermissions = []identity.Permission{
 	identity.PermManageThreatmodel,
 	identity.PermViewSecuritytesting,
 	identity.PermManageSecuritytesting,
+	identity.PermViewCorpusUpdater,
+	identity.PermManageCorpusUpdater,
 }
 
 func TestEachRoleHasExactlyTheRightPermissions(t *testing.T) {
