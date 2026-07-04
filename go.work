@@ -85,4 +85,5 @@ use (
 	./packages/bulkimport
 	./packages/perf
 	./packages/corpusupdater
+	./packages/scalability
 )
