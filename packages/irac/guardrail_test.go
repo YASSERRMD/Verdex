@@ -37,6 +37,8 @@ func TestContainsVerdictLanguage(t *testing.T) {
 		{"acquitted", "the defendant was acquitted", true},
 		{"sentenced", "the defendant was sentenced", true},
 		{"case-insensitive", "The Defendant Is GUILTY", true},
+		{"whitespace-obfuscated shall pay", "the defendant shall   pay damages immediately.", true},
+		{"whitespace-obfuscated tab/newline", "it is hereby\tordered that the\nplaintiff prevails", true},
 
 		{"draft analysis label itself", DraftAnalysisLabel, false},
 		{"benign analysis", "the elements of the claim appear satisfied on this record", false},

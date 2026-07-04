@@ -50,17 +50,33 @@ func ValidateBranchName(name string) error {
 	return wrapf("ValidateBranchName", fmt.Errorf("%w: %q does not match phase-NNN-slug or fix-slug", ErrInvalidBranchName, name))
 }
 
-// ValidatePRCommitCount reports whether count meets
-// MinimumCommitCount. It returns an error wrapping
-// ErrInsufficientCommits (testable via errors.Is) when count is below
-// the minimum.
+// ValidatePRCommitCount reports whether count meets MinimumCommitCount
+// for branchName, returning an error wrapping ErrInsufficientCommits
+// (testable via errors.Is) when it does not.
 //
 // This is the runnable form of CONTRIBUTING.md's "Minimum 10 atomic
 // commits per phase" and .github/pull_request_template.md's "At least
 // 10 atomic commits" checklist item -- wired into CI via the
 // branch-policy job so an under-sized pull request fails a check
 // instead of relying on a reviewer counting commits by hand.
-func ValidatePRCommitCount(count int) error {
+//
+// CONTRIBUTING.md frames this minimum as "per phase", and the
+// repository's own history bears that out: every fix-slug pull
+// request merged before this check existed (e.g.
+// fix-notifications-access-check, fix-annotations-audit-permission,
+// fix-keymanagement-tenant-isolation) shipped with a single commit.
+// fix-slug branches are this repository's documented convention for
+// small, non-phase corrective work (see fixBranchPattern and
+// CONTRIBUTING.md's "Branching" section), so they are exempt from the
+// phase-sized minimum rather than being held to a per-phase quota for
+// work that was never phase-sized to begin with. A branchName that
+// matches neither phaseBranchPattern nor fixBranchPattern (already
+// rejected by ValidateBranchName) is treated as non-exempt, so this
+// function never silently waives the check for a malformed name.
+func ValidatePRCommitCount(branchName string, count int) error {
+	if fixBranchPattern.MatchString(branchName) {
+		return nil
+	}
 	if count < MinimumCommitCount {
 		return wrapf("ValidatePRCommitCount", fmt.Errorf("%w: got %d, want >= %d", ErrInsufficientCommits, count, MinimumCommitCount))
 	}

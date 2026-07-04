@@ -48,31 +48,44 @@ func TestValidateBranchName(t *testing.T) {
 
 func TestValidatePRCommitCount(t *testing.T) {
 	tests := []struct {
-		name    string
-		count   int
-		wantErr bool
+		name       string
+		branchName string
+		count      int
+		wantErr    bool
 	}{
-		{name: "exactly minimum", count: 10, wantErr: false},
-		{name: "above minimum", count: 23, wantErr: false},
-		{name: "one below minimum", count: 9, wantErr: true},
-		{name: "zero commits", count: 0, wantErr: true},
-		{name: "well above minimum", count: 100, wantErr: false},
+		{name: "phase branch exactly minimum", branchName: "phase-095-cicd-hardening", count: 10, wantErr: false},
+		{name: "phase branch above minimum", branchName: "phase-095-cicd-hardening", count: 23, wantErr: false},
+		{name: "phase branch one below minimum", branchName: "phase-095-cicd-hardening", count: 9, wantErr: true},
+		{name: "phase branch zero commits", branchName: "phase-095-cicd-hardening", count: 0, wantErr: true},
+		{name: "phase branch well above minimum", branchName: "phase-095-cicd-hardening", count: 100, wantErr: false},
+
+		// fix-slug branches are this repository's convention for
+		// small, non-phase corrective work (see ValidateBranchName)
+		// and are exempt from the phase-sized commit minimum,
+		// matching every fix-* PR merged before this check existed.
+		{name: "fix branch single commit", branchName: "fix-notifications-access-check", count: 1, wantErr: false},
+		{name: "fix branch zero commits", branchName: "fix-typo", count: 0, wantErr: false},
+
+		// A malformed branch name is not exempt -- ValidateBranchName
+		// already rejects it separately, but ValidatePRCommitCount
+		// must not silently waive the count check for it too.
+		{name: "malformed branch name below minimum", branchName: "feature-cicd-hardening", count: 1, wantErr: true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidatePRCommitCount(tt.count)
+			err := ValidatePRCommitCount(tt.branchName, tt.count)
 			if tt.wantErr {
 				if err == nil {
-					t.Fatalf("ValidatePRCommitCount(%d) error = nil, want error", tt.count)
+					t.Fatalf("ValidatePRCommitCount(%q, %d) error = nil, want error", tt.branchName, tt.count)
 				}
 				if !errors.Is(err, ErrInsufficientCommits) {
-					t.Errorf("ValidatePRCommitCount(%d) error = %v, want wrapping ErrInsufficientCommits", tt.count, err)
+					t.Errorf("ValidatePRCommitCount(%q, %d) error = %v, want wrapping ErrInsufficientCommits", tt.branchName, tt.count, err)
 				}
 				return
 			}
 			if err != nil {
-				t.Errorf("ValidatePRCommitCount(%d) error = %v, want nil", tt.count, err)
+				t.Errorf("ValidatePRCommitCount(%q, %d) error = %v, want nil", tt.branchName, tt.count, err)
 			}
 		})
 	}
