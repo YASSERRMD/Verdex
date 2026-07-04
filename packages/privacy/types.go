@@ -1,6 +1,3 @@
-// Package privacy is Phase 081: honoring data-subject rights and
-// enforcing data minimization across the tenant's stored personal
-// data. See doc.go for the full package overview.
 package privacy
 
 import (
