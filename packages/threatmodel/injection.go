@@ -102,9 +102,13 @@ type injectionPattern struct {
 // and packages/guardrail's output-side checks) matter more than any
 // single pattern list.
 var injectionPatterns = []injectionPattern{
-	// Role-override phrases.
-	{FindingRoleOverride, regexp.MustCompile(`(?i)ignore\s+(all\s+|the\s+)?(previous|prior|above|preceding)\s+(instructions?|prompts?|directives?)`)},
-	{FindingRoleOverride, regexp.MustCompile(`(?i)disregard\s+(all\s+|the\s+)?(previous|prior|above)\s+(instructions?|prompts?)`)},
+	// Role-override phrases. "ignor(e|ing)"/"disregard(ing)?" both cover
+	// the imperative ("ignore previous instructions") and the
+	// gerund/participial form an attacker uses when phrasing the
+	// override as something the model supposedly already agreed to do
+	// ("ignoring previous instructions as requested, ...").
+	{FindingRoleOverride, regexp.MustCompile(`(?i)ignor(e|ing)\s+(all\s+|the\s+)?(previous|prior|above|preceding)\s+(instructions?|prompts?|directives?)`)},
+	{FindingRoleOverride, regexp.MustCompile(`(?i)disregard(ing)?\s+(all\s+|the\s+)?(previous|prior|above)\s+(instructions?|prompts?)`)},
 	{FindingRoleOverride, regexp.MustCompile(`(?i)you\s+are\s+now\s+[a-z]`)},
 	{FindingRoleOverride, regexp.MustCompile(`(?i)forget\s+(everything|all)\s+(you\s+)?(know|were\s+told)`)},
 	{FindingRoleOverride, regexp.MustCompile(`(?i)new\s+instructions?\s*:`)},
