@@ -41,6 +41,8 @@ of truth; this table is for human reference only.
 | `vulnmanagement:manage` | Record findings, triage them, transition finding status    |
 | `backupdr:view`     | Read-only access to backup policies, backup/drill history, and RPO/RTO evaluations |
 | `backupdr:manage`   | Set backup policies, record backups, execute restore drills   |
+| `securitytesting:view` | Read-only access to security findings, run records, and remediation history |
+| `securitytesting:manage` | Record findings, run adversarial scenarios, verify remediation |
 
 ## Matrix
 
@@ -72,6 +74,8 @@ does not.
 | `vulnmanagement:manage` | – |    –     |   –   |   ✓   |    –    |
 | `backupdr:view`     |   –   |    –     |   –   |   ✓   |    ✓    |
 | `backupdr:manage`   |   –   |    –     |   –   |   ✓   |    –    |
+| `securitytesting:view` |  –  |    –     |   –   |   ✓   |    ✓    |
+| `securitytesting:manage` | – |    –     |   –   |   ✓   |    –    |
 
 ## Design notes
 
@@ -138,3 +142,11 @@ does not.
   record history, restore-drill history, and RPO/RTO evaluation
   results) consistent with its read-only, compliance-facing posture
   elsewhere in this matrix.
+* `securitytesting:manage` (Phase 086, `packages/securitytesting`) is
+  admin-only: recording a finding, running an adversarial scenario
+  against production defenses, and verifying remediation are actions
+  with real security consequences, and are deliberately not delegated
+  beyond the tenant administrator. `auditor` holds
+  `securitytesting:view` (read-only access to findings, run records,
+  and remediation history) consistent with its read-only,
+  compliance-facing posture elsewhere in this matrix.

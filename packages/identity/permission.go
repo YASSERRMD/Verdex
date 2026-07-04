@@ -128,6 +128,23 @@ const (
 	// PermManageSettings, which covers unrelated tenant configuration.
 	PermManageThreatmodel Permission = "threatmodel:manage"
 
+	// Security-testing / red-team permissions (packages/securitytesting,
+	// Phase 086).
+
+	// PermViewSecuritytesting allows read-only access to recorded
+	// Findings, RunRecords, and the active penetration-test
+	// ScopeDocument. It does not permit running a Scenario/suite,
+	// transitioning a Finding's status, or verifying a remediation --
+	// see PermManageSecuritytesting.
+	PermViewSecuritytesting Permission = "securitytesting:view"
+
+	// PermManageSecuritytesting allows running a Scenario/suite through
+	// the harness, transitioning a Finding's status, and verifying a
+	// remediation. This was genuinely missing before Phase 086: no
+	// existing permission named security-testing/red-team
+	// administration, so this phase adds it rather than overloading
+	// PermManageSettings, which covers unrelated tenant configuration.
+	PermManageSecuritytesting Permission = "securitytesting:manage"
 	// Vulnerability and dependency management permissions
 	// (packages/vulnmanagement, Phase 084).
 
@@ -208,6 +225,8 @@ var PermissionMatrix = map[Role][]Permission{
 		PermManageCompliance,
 		PermViewThreatmodel,
 		PermManageThreatmodel,
+		PermViewSecuritytesting,
+		PermManageSecuritytesting,
 		PermViewVulnmanagement,
 		PermManageVulnmanagement,
 		PermViewBackupDR,
@@ -222,6 +241,7 @@ var PermissionMatrix = map[Role][]Permission{
 		PermViewPrivacy,
 		PermViewCompliance,
 		PermViewThreatmodel,
+		PermViewSecuritytesting,
 		PermViewVulnmanagement,
 		PermViewBackupDR,
 	},
