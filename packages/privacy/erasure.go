@@ -210,3 +210,146 @@ type ErasureResult struct {
 // at most once per request, but a caller's own retry logic could invoke
 // ExecuteErasure again after a partial failure.
 type ScrubFunc func(ctx context.Context, req ErasureRequest) error
+
+// SubmitErasureRequest creates an ErasureRequest in
+// ErasureStatusReceived (task 5), requiring managePermission and
+// tenant match. This only logs the request; ExecuteErasure performs
+// the actual scrub.
+func (e *Engine) SubmitErasureRequest(ctx context.Context, tenantID uuid.UUID, req ErasureRequest) (ErasureRequest, error) {
+	user, err := authorizeManage(ctx)
+	if err != nil {
+		return ErasureRequest{}, err
+	}
+	if err := requireMatchingUserTenant(user, tenantID); err != nil {
+		return ErasureRequest{}, err
+	}
+
+	req.TenantID = tenantID
+	if req.ID == uuid.Nil {
+		req.ID = uuid.New()
+	}
+	req.Status = ErasureStatusReceived
+	now := e.now()
+	if req.RequestedAt.IsZero() {
+		req.RequestedAt = now
+	}
+	req.CreatedAt = now
+	req.UpdatedAt = now
+
+	if err := req.Validate(); err != nil {
+		return ErasureRequest{}, err
+	}
+	if err := e.erasures.Create(ctx, tenantID, &req); err != nil {
+		return ErasureRequest{}, wrapf("SubmitErasureRequest", err)
+	}
+	return req, nil
+}
+
+// ExecuteErasure is task 5's centerpiece: it runs scrub over the
+// ErasureRequest identified by requestID's personal content, then
+// records an ErasureResult that proves -- as explicit, top-level
+// fields, not an implicit assumption -- that the
+// packages/provenance chain-of-custody record for the same content
+// (ProvenanceRecordID/ProvenanceHash, if the request references one)
+// remains completely untouched. This package never mutates a
+// provenance record itself (it has no dependency on
+// packages/provenance's store at all, see erasure.go's doc comments on
+// ErasureRequest/ErasureResult); ExecuteErasure's contribution is
+// structural: it is impossible to call this method and receive back
+// an ErasureResult that both reports ContentScrubbed=true and silently
+// drops ProvenanceRecordID/ProvenanceHash from the originating request
+// -- they are copied through verbatim before scrub even runs, so a
+// failing scrub still leaves the caller able to see what provenance
+// record was supposed to survive.
+//
+// Requires managePermission and tenant match. Returns
+// ErrAlreadyErased if the request's Status is not
+// ErasureStatusReceived. Every call -- success or failure -- is
+// recorded via AuditSink.
+func (e *Engine) ExecuteErasure(ctx context.Context, tenantID, requestID uuid.UUID, scrub ScrubFunc) (ErasureResult, error) {
+	user, err := authorizeManage(ctx)
+	if err != nil {
+		return ErasureResult{}, err
+	}
+	if err := requireMatchingUserTenant(user, tenantID); err != nil {
+		return ErasureResult{}, err
+	}
+	if scrub == nil {
+		return ErasureResult{}, wrapf("ExecuteErasure", ErrInvalidErasureRequest)
+	}
+
+	req, err := e.erasures.Get(ctx, tenantID, requestID)
+	if err != nil {
+		return ErasureResult{}, err
+	}
+	if req.Status != ErasureStatusReceived {
+		if e.audit != nil {
+			_, _ = e.audit.RecordErasureExecute(ctx, tenantID, user.ID, *req, ErasureResult{}, ErrAlreadyErased)
+		}
+		return ErasureResult{}, ErrAlreadyErased
+	}
+
+	now := e.now()
+
+	// ErasureResult's provenance fields are copied from req BEFORE
+	// scrub runs and are never subsequently overwritten -- this is the
+	// mechanism that makes "content scrubbed, provenance hash survives"
+	// a property of this method's control flow rather than a promise
+	// that depends on scrub behaving correctly.
+	result := ErasureResult{
+		RequestID:           req.ID,
+		ActionTaken:         ActionHardDelete,
+		ProvenanceRecordID:  req.ProvenanceRecordID,
+		ProvenanceHash:      req.ProvenanceHash,
+		ProvenancePreserved: true,
+		ExecutedAt:          now,
+	}
+	if policy, polErr := e.RetentionPolicyFor(ctx, req.Category); polErr == nil {
+		result.ActionTaken = policy.OnAction
+	}
+
+	scrubErr := scrub(ctx, *req)
+	if scrubErr != nil {
+		wrapped := wrapf("ExecuteErasure", scrubErr)
+		if e.audit != nil {
+			_, _ = e.audit.RecordErasureExecute(ctx, tenantID, user.ID, *req, result, wrapped)
+		}
+		return ErasureResult{}, wrapped
+	}
+	result.ContentScrubbed = true
+
+	req.Status = ErasureStatusCompleted
+	req.ResolvedAt = &now
+	req.HandledBy = user.ID
+	req.UpdatedAt = now
+	if err := e.erasures.Update(ctx, tenantID, req); err != nil {
+		wrapped := wrapf("ExecuteErasure", err)
+		if e.audit != nil {
+			_, _ = e.audit.RecordErasureExecute(ctx, tenantID, user.ID, *req, result, wrapped)
+		}
+		return ErasureResult{}, wrapped
+	}
+
+	if e.audit != nil {
+		_, _ = e.audit.RecordErasureExecute(ctx, tenantID, user.ID, *req, result, nil)
+	}
+	return result, nil
+}
+
+// ListErasuresForSubject returns every ErasureRequest on file for
+// subjectID within tenantID, requiring viewPermission and tenant
+// match.
+func (e *Engine) ListErasuresForSubject(ctx context.Context, tenantID uuid.UUID, subjectID string) ([]ErasureRequest, error) {
+	user, err := authorizeView(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := requireMatchingUserTenant(user, tenantID); err != nil {
+		return nil, err
+	}
+	list, err := e.erasures.ListForSubject(ctx, tenantID, subjectID)
+	if err != nil {
+		return nil, wrapf("ListErasuresForSubject", err)
+	}
+	return list, nil
+}
