@@ -128,8 +128,7 @@ func (e *Engine) RecordConsent(ctx context.Context, tenantID uuid.UUID, c Consen
 	user, err := authorizeManage(ctx)
 	if err != nil {
 		if e.audit != nil {
-			actorID, _ := actorFromCtx(ctx)
-			_, _ = e.audit.RecordConsentChange(ctx, tenantID, actorID, c, false, err)
+			_, _ = e.audit.RecordConsentChange(ctx, tenantID, actorFromCtx(ctx), c, false, err)
 		}
 		return ConsentRecord{}, err
 	}

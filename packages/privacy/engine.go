@@ -124,8 +124,7 @@ func (e *Engine) RegisterInventoryEntry(ctx context.Context, tenantID uuid.UUID,
 	user, err := authorizeManage(ctx)
 	if err != nil {
 		if e.audit != nil {
-			actorID, _ := actorFromCtx(ctx)
-			_, _ = e.audit.RecordInventoryRegister(ctx, tenantID, actorID, entry, err)
+			_, _ = e.audit.RecordInventoryRegister(ctx, tenantID, actorFromCtx(ctx), entry, err)
 		}
 		return DataInventoryEntry{}, err
 	}
@@ -192,10 +191,10 @@ func (e *Engine) ListInventory(ctx context.Context, tenantID uuid.UUID) ([]DataI
 // when ctx carries no authenticated user -- used by the audit-on-
 // failure paths above, which must still record an event even when
 // authorizeManage itself failed (e.g. ErrUnauthenticated).
-func actorFromCtx(ctx context.Context) (uuid.UUID, bool) {
+func actorFromCtx(ctx context.Context) uuid.UUID {
 	user, err := authorizeActor(ctx)
 	if err != nil {
-		return uuid.Nil, false
+		return uuid.Nil
 	}
-	return user.ID, true
+	return user.ID
 }
