@@ -86,4 +86,6 @@ use (
 	./packages/perf
 	./packages/corpusupdater
 	./packages/scalability
+	./packages/reliability
+	./packages/cicdgate
 )
