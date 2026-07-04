@@ -1,0 +1,752 @@
+{
+  "generated_at": "2026-07-04T08:10:35.921482Z",
+  "schema_version": "threatmodel-sbom-lite/1",
+  "components": [
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/accessgovernance",
+      "type": "application",
+      "found_in": [
+        "accessgovernance"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/accounting",
+      "type": "application",
+      "found_in": [
+        "accounting"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/adapters",
+      "type": "application",
+      "found_in": [
+        "adapters"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/adaptiveretrieval",
+      "type": "application",
+      "found_in": [
+        "adaptiveretrieval"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/agentframework",
+      "type": "application",
+      "found_in": [
+        "agentframework"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/airgapped",
+      "type": "application",
+      "found_in": [
+        "airgapped"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/analytics",
+      "type": "application",
+      "found_in": [
+        "analytics"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/annotations",
+      "type": "application",
+      "found_in": [
+        "annotations"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/application",
+      "type": "application",
+      "found_in": [
+        "application"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/auditlog",
+      "type": "application",
+      "found_in": [
+        "auditlog"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/caselifecycle",
+      "type": "application",
+      "found_in": [
+        "caselifecycle"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/casesearch",
+      "type": "application",
+      "found_in": [
+        "casesearch"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/caseversioning",
+      "type": "application",
+      "found_in": [
+        "caseversioning"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/category",
+      "type": "application",
+      "found_in": [
+        "category"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/citation",
+      "type": "application",
+      "found_in": [
+        "citation"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/compliance",
+      "type": "application",
+      "found_in": [
+        "compliance"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/config",
+      "type": "application",
+      "found_in": [
+        "config"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/dataresidency",
+      "type": "application",
+      "found_in": [
+        "dataresidency"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/embedding",
+      "type": "application",
+      "found_in": [
+        "embedding"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/encryption",
+      "type": "application",
+      "found_in": [
+        "encryption"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/eval",
+      "type": "application",
+      "found_in": [
+        "eval"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/evidence",
+      "type": "application",
+      "found_in": [
+        "evidence"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/evidenceweighing",
+      "type": "application",
+      "found_in": [
+        "evidenceweighing"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/fact",
+      "type": "application",
+      "found_in": [
+        "fact"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/firstpartyagent",
+      "type": "application",
+      "found_in": [
+        "firstpartyagent"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/gateway",
+      "type": "application",
+      "found_in": [
+        "gateway"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/graph",
+      "type": "application",
+      "found_in": [
+        "graph"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/grounding",
+      "type": "application",
+      "found_in": [
+        "grounding"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/guardrail",
+      "type": "application",
+      "found_in": [
+        "guardrail"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/hybridretrieval",
+      "type": "application",
+      "found_in": [
+        "hybridretrieval"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/identity",
+      "type": "application",
+      "found_in": [
+        "identity"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/ingestion",
+      "type": "application",
+      "found_in": [
+        "ingestion"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/intake",
+      "type": "application",
+      "found_in": [
+        "intake"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/irac",
+      "type": "application",
+      "found_in": [
+        "irac"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/issue",
+      "type": "application",
+      "found_in": [
+        "issue"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/issueagent",
+      "type": "application",
+      "found_in": [
+        "issueagent"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/jurisdiction",
+      "type": "application",
+      "found_in": [
+        "jurisdiction"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/keymanagement",
+      "type": "application",
+      "found_in": [
+        "keymanagement"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/knowledgeapi",
+      "type": "application",
+      "found_in": [
+        "knowledgeapi"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/knowledgeisolation",
+      "type": "application",
+      "found_in": [
+        "knowledgeisolation"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/lawapplication",
+      "type": "application",
+      "found_in": [
+        "lawapplication"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/multilingual",
+      "type": "application",
+      "found_in": [
+        "multilingual"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/notifications",
+      "type": "application",
+      "found_in": [
+        "notifications"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/observability",
+      "type": "application",
+      "found_in": [
+        "observability"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/ocr",
+      "type": "application",
+      "found_in": [
+        "ocr"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/ontology",
+      "type": "application",
+      "found_in": [
+        "ontology"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/persistence",
+      "type": "application",
+      "found_in": [
+        "persistence"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/pii",
+      "type": "application",
+      "found_in": [
+        "pii"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/precedent",
+      "type": "application",
+      "found_in": [
+        "precedent"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/privacy",
+      "type": "application",
+      "found_in": [
+        "privacy"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/prompts",
+      "type": "application",
+      "found_in": [
+        "prompts"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/provenance",
+      "type": "application",
+      "found_in": [
+        "provenance"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/provider",
+      "type": "application",
+      "found_in": [
+        "provider"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/reasoningeval",
+      "type": "application",
+      "found_in": [
+        "reasoningeval"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/reasoningorchestration",
+      "type": "application",
+      "found_in": [
+        "reasoningorchestration"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/reasoningprofile",
+      "type": "application",
+      "found_in": [
+        "reasoningprofile"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/reasoningtrace",
+      "type": "application",
+      "found_in": [
+        "reasoningtrace"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/reportexport",
+      "type": "application",
+      "found_in": [
+        "reportexport"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/router",
+      "type": "application",
+      "found_in": [
+        "router"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/secondpartyagent",
+      "type": "application",
+      "found_in": [
+        "secondpartyagent"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/segmentation",
+      "type": "application",
+      "found_in": [
+        "segmentation"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/setup",
+      "type": "application",
+      "found_in": [
+        "setup"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/signoff",
+      "type": "application",
+      "found_in": [
+        "signoff"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/statute",
+      "type": "application",
+      "found_in": [
+        "statute"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/stt",
+      "type": "application",
+      "found_in": [
+        "stt"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/synthesisagent",
+      "type": "application",
+      "found_in": [
+        "synthesisagent"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/tenancy",
+      "type": "application",
+      "found_in": [
+        "tenancy"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/threatmodel",
+      "type": "application",
+      "found_in": [
+        "threatmodel"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/timeline",
+      "type": "application",
+      "found_in": [
+        "timeline"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/traversal",
+      "type": "application",
+      "found_in": [
+        "traversal"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/treeassembly",
+      "type": "application",
+      "found_in": [
+        "treeassembly"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/treeindex",
+      "type": "application",
+      "found_in": [
+        "treeindex"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/treevalidation",
+      "type": "application",
+      "found_in": [
+        "treevalidation"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/uncertainty",
+      "type": "application",
+      "found_in": [
+        "uncertainty"
+      ]
+    },
+    {
+      "name": "github.com/YASSERRMD/verdex/packages/vectorindex",
+      "type": "application",
+      "found_in": [
+        "vectorindex"
+      ]
+    },
+    {
+      "name": "github.com/golang-migrate/migrate/v4",
+      "type": "library",
+      "versions": [
+        "v4.19.1"
+      ],
+      "found_in": [
+        "persistence"
+      ]
+    },
+    {
+      "name": "github.com/google/uuid",
+      "type": "library",
+      "versions": [
+        "v1.6.0"
+      ],
+      "found_in": [
+        "accessgovernance",
+        "accounting",
+        "airgapped",
+        "analytics",
+        "annotations",
+        "auditlog",
+        "caselifecycle",
+        "casesearch",
+        "caseversioning",
+        "compliance",
+        "dataresidency",
+        "gateway",
+        "identity",
+        "ingestion",
+        "intake",
+        "jurisdiction",
+        "keymanagement",
+        "notifications",
+        "observability",
+        "persistence",
+        "pii",
+        "privacy",
+        "provenance",
+        "reportexport",
+        "setup",
+        "signoff",
+        "tenancy",
+        "threatmodel"
+      ]
+    },
+    {
+      "name": "github.com/jackc/pgx/v5",
+      "type": "library",
+      "versions": [
+        "v5.10.0"
+      ],
+      "found_in": [
+        "accessgovernance",
+        "annotations",
+        "auditlog",
+        "caselifecycle",
+        "casesearch",
+        "caseversioning",
+        "compliance",
+        "dataresidency",
+        "keymanagement",
+        "notifications",
+        "persistence",
+        "privacy",
+        "signoff",
+        "tenancy"
+      ]
+    },
+    {
+      "name": "github.com/jung-kurt/gofpdf",
+      "type": "library",
+      "versions": [
+        "v1.16.2"
+      ],
+      "found_in": [
+        "reportexport"
+      ]
+    },
+    {
+      "name": "github.com/neo4j/neo4j-go-driver/v5",
+      "type": "library",
+      "versions": [
+        "v5.28.4"
+      ],
+      "found_in": [
+        "graph",
+        "persistence"
+      ]
+    },
+    {
+      "name": "github.com/pgvector/pgvector-go",
+      "type": "library",
+      "versions": [
+        "v0.4.0"
+      ],
+      "found_in": [
+        "persistence"
+      ]
+    },
+    {
+      "name": "github.com/prometheus/client_golang",
+      "type": "library",
+      "versions": [
+        "v1.23.2"
+      ],
+      "found_in": [
+        "observability"
+      ]
+    },
+    {
+      "name": "github.com/stretchr/testify",
+      "type": "library",
+      "versions": [
+        "v1.11.1"
+      ],
+      "found_in": [
+        "identity"
+      ]
+    },
+    {
+      "name": "github.com/testcontainers/testcontainers-go",
+      "type": "library",
+      "versions": [
+        "v0.43.0"
+      ],
+      "found_in": [
+        "annotations",
+        "caselifecycle",
+        "casesearch",
+        "caseversioning",
+        "compliance",
+        "keymanagement",
+        "notifications",
+        "persistence",
+        "privacy",
+        "signoff",
+        "tenancy"
+      ]
+    },
+    {
+      "name": "github.com/testcontainers/testcontainers-go/modules/neo4j",
+      "type": "library",
+      "versions": [
+        "v0.43.0"
+      ],
+      "found_in": [
+        "graph"
+      ]
+    },
+    {
+      "name": "github.com/testcontainers/testcontainers-go/modules/postgres",
+      "type": "library",
+      "versions": [
+        "v0.43.0"
+      ],
+      "found_in": [
+        "annotations",
+        "caselifecycle",
+        "casesearch",
+        "caseversioning",
+        "compliance",
+        "keymanagement",
+        "notifications",
+        "persistence",
+        "privacy",
+        "signoff",
+        "tenancy"
+      ]
+    },
+    {
+      "name": "go.opentelemetry.io/otel",
+      "type": "library",
+      "versions": [
+        "v1.44.0"
+      ],
+      "found_in": [
+        "observability"
+      ]
+    },
+    {
+      "name": "go.opentelemetry.io/otel/sdk",
+      "type": "library",
+      "versions": [
+        "v1.44.0"
+      ],
+      "found_in": [
+        "observability"
+      ]
+    },
+    {
+      "name": "go.opentelemetry.io/otel/trace",
+      "type": "library",
+      "versions": [
+        "v1.44.0"
+      ],
+      "found_in": [
+        "observability"
+      ]
+    },
+    {
+      "name": "golang.org/x/text",
+      "type": "library",
+      "versions": [
+        "v0.38.0"
+      ],
+      "found_in": [
+        "multilingual"
+      ]
+    },
+    {
+      "name": "gopkg.in/yaml.v3",
+      "type": "library",
+      "versions": [
+        "v3.0.1"
+      ],
+      "found_in": [
+        "config"
+      ]
+    }
+  ]
+}
