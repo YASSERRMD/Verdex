@@ -111,6 +111,22 @@ const (
 	// so this phase adds it rather than overloading
 	// PermManageSettings, which covers unrelated tenant configuration.
 	PermManageCompliance Permission = "compliance:manage"
+
+	// Threat-modeling permissions (packages/threatmodel, Phase 083).
+
+	// PermViewThreatmodel allows read-only access to the STRIDE threat
+	// catalogue and a mitigation's recorded status-transition history.
+	// It does not permit transitioning a mitigation's status -- see
+	// PermManageThreatmodel.
+	PermViewThreatmodel Permission = "threatmodel:view"
+
+	// PermManageThreatmodel allows transitioning a catalogued
+	// Mitigation's status (e.g. Planned -> Implemented -> Verified).
+	// This was genuinely missing before Phase 083: no existing
+	// permission named threat-model/mitigation-status administration,
+	// so this phase adds it rather than overloading
+	// PermManageSettings, which covers unrelated tenant configuration.
+	PermManageThreatmodel Permission = "threatmodel:manage"
 )
 
 // PermissionMatrix maps each Role to the full set of Permissions it
@@ -155,6 +171,8 @@ var PermissionMatrix = map[Role][]Permission{
 		PermManagePrivacy,
 		PermViewCompliance,
 		PermManageCompliance,
+		PermViewThreatmodel,
+		PermManageThreatmodel,
 	},
 	RoleAuditor: {
 		PermViewCase,
@@ -164,6 +182,7 @@ var PermissionMatrix = map[Role][]Permission{
 		PermViewKeys,
 		PermViewPrivacy,
 		PermViewCompliance,
+		PermViewThreatmodel,
 	},
 }
 
