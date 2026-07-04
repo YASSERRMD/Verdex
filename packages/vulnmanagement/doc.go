@@ -55,12 +55,14 @@
 //     exact PermViewThreatmodel/PermManageThreatmodel precedent from
 //     Phase 083.
 //   - .github/workflows/ci.yml: sca-scan (govulncheck, real,
-//     call-graph-aware Go vulnerability scanning -- gates the CI
-//     Gate), sast-scan (gosec, informational -- see the job's own
-//     comment for why it runs continue-on-error), and container-scan
-//     (a documented placeholder, since this repository ships no
-//     Dockerfile yet -- see packages/threatmodel/doc/Dockerfile.hardened
-//     for the reference template a future phase would build against)
+//     call-graph-aware Go vulnerability scanning) and sast-scan
+//     (gosec) both run continue-on-error -- see each job's own comment
+//     for why this phase does not wire them into the hard CI Gate yet
+//     -- and container-scan (a documented placeholder, since this
+//     repository ships no Dockerfile yet -- see
+//     packages/threatmodel/doc/Dockerfile.hardened for the reference
+//     template a future phase would build against, and which does
+//     gate the CI Gate, since it is a no-op that always succeeds)
 //     (tasks 1-3).
 //   - .github/dependabot.yml: weekly automated dependency-update PRs
 //     across every packages/*/go.mod and services/*/go.mod, the npm
