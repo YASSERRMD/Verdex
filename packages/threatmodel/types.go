@@ -1,6 +1,7 @@
 package threatmodel
 
 import (
+	"sort"
 	"strings"
 	"time"
 
@@ -168,9 +169,9 @@ func (s MitigationStatus) rank() int {
 // when a previously verified control is found to have regressed and
 // must be re-verified from scratch, never a silent same-map entry.
 var allowedMitigationTransitions = map[MitigationStatus][]MitigationStatus{
-	MitigationPlanned:      {MitigationImplemented},
-	MitigationImplemented:  {MitigationVerified, MitigationPlanned},
-	MitigationVerified:     {},
+	MitigationPlanned:     {MitigationImplemented},
+	MitigationImplemented: {MitigationVerified, MitigationPlanned},
+	MitigationVerified:    {},
 }
 
 // CanTransitionMitigation reports whether from -> to is a permitted
@@ -381,5 +382,19 @@ func (tm ThreatModel) ThreatsBySeverity(severity Severity) []Threat {
 			out = append(out, t)
 		}
 	}
+	return out
+}
+
+// ThreatsBySeverityDesc returns a copy of tm.Threats sorted by
+// descending Severity (SeverityCritical first, SeverityLow last),
+// stable on ties -- the ordering a human-facing threat-model report
+// wants: the most serious unaddressed risk surfaced first, rather than
+// catalogue-declaration order.
+func (tm ThreatModel) ThreatsBySeverityDesc() []Threat {
+	out := make([]Threat, len(tm.Threats))
+	copy(out, tm.Threats)
+	sort.SliceStable(out, func(i, j int) bool {
+		return out[i].Severity.rank() > out[j].Severity.rank()
+	})
 	return out
 }
