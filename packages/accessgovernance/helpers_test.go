@@ -37,6 +37,17 @@ func ctxWithUser(user *identity.User) context.Context {
 // round-trip without repeating this wiring.
 func newTestEngine(t *testing.T) (*accessgovernance.Engine, uuid.UUID) {
 	t.Helper()
+	engine, _, tenantID := newTestEngineWithAudit(t)
+	return engine, tenantID
+}
+
+// newTestEngineWithAudit is newTestEngine's fuller form: it also
+// returns the *auditlog.Store the Engine's AuditSink writes to, for
+// tests that need to inspect the recorded events directly (task 6's
+// "every Evaluate/Elevate/Attest call recorded" and
+// PrivilegedActivity's own querying of that same store).
+func newTestEngineWithAudit(t *testing.T) (*accessgovernance.Engine, *auditlog.Store, uuid.UUID) {
+	t.Helper()
 
 	policies := accessgovernance.NewInMemoryPolicyRepository()
 	caseGrants := accessgovernance.NewInMemoryCaseGrantRepository()
@@ -56,7 +67,7 @@ func newTestEngine(t *testing.T) (*accessgovernance.Engine, uuid.UUID) {
 	if err != nil {
 		t.Fatalf("accessgovernance.NewEngine: %v", err)
 	}
-	return engine, uuid.New()
+	return engine, auditStore, uuid.New()
 }
 
 // activePolicy builds a minimal, valid, Active Policy for tenantID
