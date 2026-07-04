@@ -129,6 +129,9 @@ type EvidenceRepository interface {
 func (e *Engine) RegisterControl(ctx context.Context, control Control) (Control, error) {
 	user, err := authorizeManage(ctx)
 	if err != nil {
+		if e.audit != nil {
+			_, _ = e.audit.RecordControlRegister(ctx, uuid.Nil, actorFromCtx(ctx), control, err)
+		}
 		return Control{}, err
 	}
 
@@ -145,10 +148,21 @@ func (e *Engine) RegisterControl(ctx context.Context, control Control) (Control,
 	control.UpdatedAt = now
 
 	if err := control.Validate(); err != nil {
+		if e.audit != nil {
+			_, _ = e.audit.RecordControlRegister(ctx, user.TenantID, user.ID, control, err)
+		}
 		return Control{}, err
 	}
 	if err := e.controls.Create(ctx, &control); err != nil {
-		return Control{}, wrapf("RegisterControl", err)
+		wrapped := wrapf("RegisterControl", err)
+		if e.audit != nil {
+			_, _ = e.audit.RecordControlRegister(ctx, user.TenantID, user.ID, control, wrapped)
+		}
+		return Control{}, wrapped
+	}
+
+	if e.audit != nil {
+		_, _ = e.audit.RecordControlRegister(ctx, user.TenantID, user.ID, control, nil)
 	}
 	return control, nil
 }
