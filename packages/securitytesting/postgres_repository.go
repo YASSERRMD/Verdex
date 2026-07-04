@@ -34,7 +34,7 @@ func isUniqueViolation(err error) bool {
 // PostgresRunRecordRepository is a PostgreSQL-backed
 // RunRecordRepository, storing RunRecord rows in the
 // `securitytesting_run_records` table (see
-// packages/persistence/migrations/000028_create_securitytesting.up.sql).
+// packages/persistence/migrations/000032_create_securitytesting.up.sql).
 // It accepts a persistence.Executor per call, mirroring
 // packages/compliance.PostgresEvidenceRepository exactly.
 type PostgresRunRecordRepository struct {
