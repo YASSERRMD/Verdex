@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/YASSERRMD/verdex/packages/provider"
 )
 
 // Guard composes CheckTransfer with audit recording (task 7) and
@@ -68,6 +70,40 @@ func (g *Guard) CheckTransfer(ctx context.Context, tenantID, deploymentID uuid.U
 			ViolationType: ViolationTransferBlocked,
 			SourceRegion:  sourceRegion,
 			DestRegion:    destRegion,
+			Reason:        checkErr.Error(),
+			CreatedAt:     g.now(),
+		})
+		return checkErr
+	}
+	return nil
+}
+
+// CheckProviderLocality runs CheckProviderLocality against policy,
+// records the outcome via the audit sink (reusing
+// RecordTransferCheck's shape with cap.Region as both source and dest
+// region, since a provider-locality check is a degenerate one-sided
+// transfer: "would this call leave the deployment's allowed
+// locality?"), and -- on failure -- sends a ViolationEvent through the
+// alert sink, mirroring Guard.CheckTransfer's contract exactly so a
+// caller selecting a provider gets the same audit+alert guarantee a
+// cross-region data transfer does.
+func (g *Guard) CheckProviderLocality(ctx context.Context, tenantID, deploymentID uuid.UUID, cap provider.Capability, policy *ResidencyPolicy) error {
+	checkErr := CheckProviderLocality(ctx, cap, policy)
+
+	if _, auditErr := g.audit.RecordTransferCheck(ctx, tenantID, deploymentID, cap.Region, cap.Region, checkErr); auditErr != nil {
+		if checkErr != nil {
+			return wrapf("Guard.CheckProviderLocality", errors.Join(checkErr, auditErr))
+		}
+		return wrapf("Guard.CheckProviderLocality", auditErr)
+	}
+
+	if checkErr != nil {
+		_ = g.alert.Send(ctx, ViolationEvent{
+			DeploymentID:  deploymentID,
+			TenantID:      tenantID,
+			ViolationType: ViolationTransferBlocked,
+			SourceRegion:  cap.Region,
+			DestRegion:    cap.Region,
 			Reason:        checkErr.Error(),
 			CreatedAt:     g.now(),
 		})
