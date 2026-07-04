@@ -3,6 +3,7 @@ package integration_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -111,4 +112,36 @@ func newTestEngineWithAudit(t *testing.T) (*integration.Engine, *auditlog.Store,
 		t.Fatalf("integration.NewEngine: %v", err)
 	}
 	return engine, auditStore, uuid.New()
+}
+
+// newTestEngineWithConnector builds a fresh in-memory-backed
+// *integration.Engine with conn registered under connectorType,
+// letting a test control the exact Connector instance (e.g. a
+// SandboxConnector pre-seeded with specific InboundCase fixtures, or
+// one with Unavailable set) rather than the anonymous one
+// newTestEngine wires up. Returns the Engine and a fresh tenant ID.
+func newTestEngineWithConnector(t *testing.T, connectorType string, conn integration.Connector) (*integration.Engine, uuid.UUID) {
+	t.Helper()
+
+	sink, _ := newTestAuditSink(t)
+	registry := integration.NewRegistry()
+	if err := registry.Register(connectorType, conn); err != nil {
+		t.Fatalf("registry.Register: %v", err)
+	}
+
+	engine, err := integration.NewEngine(integration.EngineDeps{
+		Configs:         integration.NewInMemoryConfigRepository(),
+		Credentials:     integration.NewInMemoryCredentialsRepository(),
+		Mappings:        integration.NewInMemoryFieldMappingRepository(),
+		Imports:         integration.NewInMemoryImportRunRepository(),
+		Deliveries:      integration.NewInMemoryDeliveryRunRepository(),
+		Reconciliations: integration.NewInMemoryReconciliationRepository(),
+		Registry:        registry,
+		Audit:           sink,
+		RetryPolicy:     integration.RetryPolicy{MaxAttempts: 2, BaseDelay: time.Millisecond, MaxDelay: 5 * time.Millisecond},
+	})
+	if err != nil {
+		t.Fatalf("integration.NewEngine: %v", err)
+	}
+	return engine, uuid.New()
 }
