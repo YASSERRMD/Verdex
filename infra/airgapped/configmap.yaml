@@ -1,0 +1,24 @@
+# infra/airgapped/configmap.yaml
+#
+# Phase 094 (packages/iac): non-secret configuration for the
+# air-gapped tier, for an operator running a local (single-node, no
+# external control plane) Kubernetes distribution instead of
+# docker-compose.yml. No VERDEX_DATARESIDENCY_REGION (same reasoning
+# as infra/onprem) and an explicit VERDEX_KEY_PROVIDER selecting
+# keymanagement.FileProvider, matching
+# packages/airgapped.Profile.KeyProviderConfigured's requirement that
+# an air-gapped deployment's key source is never a reachable KMS.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: verdex-airgapped-config
+  namespace: verdex
+  labels:
+    app.kubernetes.io/part-of: verdex
+    verdex.io/tier: airgapped
+data:
+  VERDEX_PROFILE: "airgapped"
+  VERDEX_SERVER_PORT: "8080"
+  VERDEX_METRICS_PORT: "9090"
+  VERDEX_KEY_PROVIDER: "file"
+  VERDEX_PROVIDER_ALLOWLIST_PREFIX: "local:"

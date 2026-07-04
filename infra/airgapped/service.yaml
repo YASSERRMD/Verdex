@@ -1,0 +1,30 @@
+# infra/airgapped/service.yaml
+#
+# Phase 094 (packages/iac): air-gapped-tier Service fronting the
+# gateway Deployment. ClusterIP, not NodePort/LoadBalancer -- this
+# cluster's only legitimate consumers are other workloads on the same
+# air-gapped network segment; there is no external ingress path to
+# expose by design (composing with
+# packages/airgapped.NetworkPolicy's loopback/allow-listed-only
+# posture one layer up, at the orchestration layer instead of the
+# process layer).
+apiVersion: v1
+kind: Service
+metadata:
+  name: verdex-gateway
+  namespace: verdex
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/part-of: verdex
+    verdex.io/tier: airgapped
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: gateway
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+    - name: metrics
+      port: 9090
+      targetPort: metrics

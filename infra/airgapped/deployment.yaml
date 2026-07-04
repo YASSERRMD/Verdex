@@ -1,0 +1,88 @@
+# infra/airgapped/deployment.yaml
+#
+# Phase 094 (packages/iac): air-gapped-tier Deployment for the gateway
+# service. Every image reference is
+# "verdex-registry.local/<name>@sha256:<digest>" -- the same offline,
+# digest-pinned, no-public-registry convention as
+# docker-compose.yml in this directory, not a public tag. imagePullPolicy
+# is explicitly "Never": this cluster has no route to any registry
+# outside verdex-registry.local, so even attempting a pull against a
+# public default would simply hang or fail, and setting this
+# explicitly makes that a fast, legible failure instead of a silent
+# network-dependent one.
+#
+# Container hardening follows the same
+# packages/threatmodel/doc/Dockerfile.hardened runtime-settings notes
+# as the other two tiers.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: verdex-gateway
+  namespace: verdex
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/part-of: verdex
+    verdex.io/tier: airgapped
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gateway
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gateway
+        app.kubernetes.io/part-of: verdex
+        verdex.io/tier: airgapped
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        fsGroup: 65532
+      containers:
+        - name: gateway
+          image: verdex-registry.local/gateway@sha256:1111111111111111111111111111111111111111111111111111111111111111
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: metrics
+              containerPort: 9090
+          envFrom:
+            - configMapRef:
+                name: verdex-airgapped-config
+          env:
+            - name: VERDEX_DATABASE_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: verdex-airgapped-secrets
+                  key: database-dsn
+            - name: VERDEX_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: verdex-airgapped-secrets
+                  key: encryption-key
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "512Mi"
