@@ -35,6 +35,8 @@ of truth; this table is for human reference only.
 | `privacy:manage`    | Process subject-access, erasure, and consent-change requests   |
 | `compliance:view`   | Read-only access to the control catalogue and compliance dashboard |
 | `compliance:manage` | Register controls, record evidence, set a compliance profile  |
+| `threatmodel:view`  | Read-only access to the STRIDE threat catalogue and mitigation history |
+| `threatmodel:manage` | Transition a catalogued mitigation's status                  |
 
 ## Matrix
 
@@ -60,6 +62,8 @@ does not.
 | `privacy:manage`    |   –   |    –     |   –   |   ✓   |    –    |
 | `compliance:view`   |   –   |    –     |   –   |   ✓   |    ✓    |
 | `compliance:manage` |   –   |    –     |   –   |   ✓   |    –    |
+| `threatmodel:view`  |   –   |    –     |   –   |   ✓   |    ✓    |
+| `threatmodel:manage` |   –   |    –     |   –   |   ✓   |    –    |
 
 ## Design notes
 
@@ -99,3 +103,12 @@ does not.
   collected evidence, gap-analysis reports, and the compliance
   dashboard) consistent with its compliance-facing posture elsewhere
   in this matrix.
+* `threatmodel:manage` (Phase 083, `packages/threatmodel`) is
+  admin-only: transitioning a catalogued mitigation's status (e.g.
+  Planned -> Implemented -> Verified) is an administrative attestation
+  that a real control has been checked and works, and is deliberately
+  not delegated beyond the tenant administrator. `auditor` holds
+  `threatmodel:view` (read-only access to the STRIDE threat catalogue
+  and a mitigation's recorded status-transition history) consistent
+  with its read-only, compliance-facing posture elsewhere in this
+  matrix.
