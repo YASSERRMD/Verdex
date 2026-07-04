@@ -76,4 +76,5 @@ use (
 	./packages/accessgovernance
 	./packages/privacy
 	./packages/compliance
+	./packages/threatmodel
 )

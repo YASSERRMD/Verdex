@@ -42,6 +42,18 @@ jobs:
       - name: Test
         run: make test
 
+  secrets-scan:
+    name: Secrets scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   lint-ts:
     name: Lint & Typecheck (TypeScript)
     runs-on: ubuntu-latest
@@ -72,13 +84,14 @@ jobs:
   gate:
     name: CI Gate
     runs-on: ubuntu-latest
-    needs: [build-go, build-ts]
+    needs: [build-go, build-ts, secrets-scan]
     if: always()
     steps:
       - name: Fail if any job failed
         run: |
           if [[ "${{ needs.build-go.result }}" != "success" || \
-                "${{ needs.build-ts.result }}" != "success" ]]; then
+                "${{ needs.build-ts.result }}" != "success" || \
+                "${{ needs.secrets-scan.result }}" != "success" ]]; then
             echo "One or more CI jobs failed"
             exit 1
           fi
