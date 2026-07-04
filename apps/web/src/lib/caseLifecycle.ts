@@ -1,4 +1,5 @@
-import type { CaseState, CaseWorkspaceAction } from '@/types';
+import type { CaseState, CaseWorkspaceAction, SupportedLanguage } from '@/types';
+import { translate, type TranslationKey } from '@/lib/i18n/strings';
 
 /**
  * Client-side mirror of packages/caselifecycle's allowedTransitions map
@@ -61,7 +62,14 @@ export function isActionPermitted(state: CaseState, action: CaseWorkspaceAction)
   return permittedActions(state).includes(action);
 }
 
-/** Human-readable label for a CaseState, used in headers and status bars. */
+/**
+ * Human-readable label for a CaseState, used in headers and status
+ * bars. Kept as a static English-only export for backward
+ * compatibility with existing callers; new locale-aware callers should
+ * use caseStateLabel(state, locale) instead (Phase 090, task 1/6),
+ * which resolves through the same externalized strings catalog these
+ * values are copied from (src/lib/i18n/strings.ts).
+ */
 export const CASE_STATE_LABELS: Record<CaseState, string> = {
   draft: 'Draft',
   active: 'Active',
@@ -79,6 +87,11 @@ export const CASE_STATE_BADGE_CLASSES: Record<CaseState, string> = {
   archived: 'bg-neutral-300 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400',
 };
 
+/**
+ * Static English-only export kept for backward compatibility; new
+ * locale-aware callers should use caseWorkspaceActionLabel(action,
+ * locale) instead. See CASE_STATE_LABELS's doc comment.
+ */
 export const CASE_WORKSPACE_ACTION_LABELS: Record<CaseWorkspaceAction, string> = {
   ingest_evidence: 'Ingest Evidence',
   edit_category: 'Edit Category',
@@ -87,3 +100,40 @@ export const CASE_WORKSPACE_ACTION_LABELS: Record<CaseWorkspaceAction, string> =
   review_opinion: 'Review Opinion',
   edit_metadata: 'Edit Metadata',
 };
+
+/** Maps each CaseState to its externalized-strings TranslationKey. */
+const CASE_STATE_KEYS: Record<CaseState, TranslationKey> = {
+  draft: 'case_status.draft',
+  active: 'case_status.active',
+  under_review: 'case_status.under_review',
+  closed: 'case_status.closed',
+  archived: 'case_status.archived',
+};
+
+/** Maps each CaseWorkspaceAction to its externalized-strings TranslationKey. */
+const CASE_WORKSPACE_ACTION_KEYS: Record<CaseWorkspaceAction, TranslationKey> = {
+  ingest_evidence: 'action.ingest_evidence',
+  edit_category: 'action.edit_category',
+  edit_timeline: 'action.edit_timeline',
+  generate_reasoning: 'action.generate_reasoning',
+  review_opinion: 'action.review_opinion',
+  edit_metadata: 'action.edit_metadata',
+};
+
+/**
+ * caseStateLabel is CASE_STATE_LABELS's locale-aware counterpart
+ * (Phase 090): the same label, translated for locale via
+ * src/lib/i18n/strings.ts, falling back to English for any locale
+ * missing a translation.
+ */
+export function caseStateLabel(state: CaseState, locale: SupportedLanguage): string {
+  return translate(locale, CASE_STATE_KEYS[state]);
+}
+
+/**
+ * caseWorkspaceActionLabel is CASE_WORKSPACE_ACTION_LABELS's
+ * locale-aware counterpart (Phase 090).
+ */
+export function caseWorkspaceActionLabel(action: CaseWorkspaceAction, locale: SupportedLanguage): string {
+  return translate(locale, CASE_WORKSPACE_ACTION_KEYS[action]);
+}

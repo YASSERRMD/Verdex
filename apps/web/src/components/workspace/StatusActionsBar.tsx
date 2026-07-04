@@ -6,11 +6,12 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import {
   CASE_STATE_BADGE_CLASSES,
-  CASE_STATE_LABELS,
+  caseStateLabel,
   canArchive,
   canReopen,
   canTransition,
 } from '@/lib/caseLifecycle';
+import { useLocale } from '@/lib/i18n/LocaleContext';
 import type { CaseState } from '@/types';
 
 export interface StatusActionsBarProps {
@@ -50,6 +51,7 @@ export function StatusActionsBar({
 }: StatusActionsBarProps) {
   const [reopenReason, setReopenReason] = useState('');
   const [showReopenForm, setShowReopenForm] = useState(false);
+  const { locale, direction, t } = useLocale();
 
   const ALL_STATES: CaseState[] = ['draft', 'active', 'under_review', 'closed', 'archived'];
   const forwardTransitions: CaseState[] = ALL_STATES.filter((to) => canTransition(state, to));
@@ -57,11 +59,11 @@ export function StatusActionsBar({
   const canSubmitReopen = reopenReason.trim().length > 0;
 
   return (
-    <Card className={clsx(className)} padding="md">
+    <Card className={clsx(className)} padding="md" dir={direction}>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <span className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-            Status
+            {t('common.status')}
           </span>
           <span
             data-testid="status-bar-state-badge"
@@ -70,7 +72,7 @@ export function StatusActionsBar({
               CASE_STATE_BADGE_CLASSES[state],
             )}
           >
-            {CASE_STATE_LABELS[state]}
+            {caseStateLabel(state, locale)}
           </span>
         </div>
 
@@ -107,7 +109,7 @@ export function StatusActionsBar({
           )}
 
           {forwardTransitions.length === 0 && !canReopen(state) && !canArchive(state) && (
-            <span className="text-xs text-neutral-400">No actions available in this state.</span>
+            <span className="text-xs text-neutral-400">{t('common.no_actions_available')}</span>
           )}
         </div>
       </div>
