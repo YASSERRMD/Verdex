@@ -31,7 +31,7 @@ func runConsumerSetupToOpinion(ctx context.Context) (ScenarioResult, error) {
 		return ScenarioResult{}, err
 	}
 
-	result := outcome.toScenarioResult(ctx, startedAt, "")
+	result := outcome.toScenarioResult(ctx, startedAt)
 	if result.Outcome != OutcomePassed {
 		return result, nil
 	}

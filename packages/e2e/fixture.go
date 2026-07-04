@@ -283,7 +283,7 @@ func newSequencedRouter(responses []string) (*router.Router, error) {
 // by scenarios to drive real permission-gated calls
 // (signoff.RequireSignoffPermission, identity.HasPermission) rather
 // than bypassing them.
-func authenticatedContext(tenantID uuid.UUID, roles ...identity.Role) (context.Context, *identity.User) {
+func authenticatedContext(tenantID uuid.UUID, roles ...identity.Role) context.Context {
 	user := &identity.User{
 		ID:        uuid.New(),
 		TenantID:  tenantID,
@@ -294,7 +294,7 @@ func authenticatedContext(tenantID uuid.UUID, roles ...identity.Role) (context.C
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	return identity.WithUser(context.Background(), user), user
+	return identity.WithUser(context.Background(), user)
 }
 
 // defaultReasoningConfig builds a reasoningorchestration.RunConfig

@@ -4,7 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/YASSERRMD/verdex/packages/guardrail"
+	"github.com/YASSERRMD/verdex/packages/identity"
 	"github.com/YASSERRMD/verdex/packages/reasoningorchestration"
 	"github.com/YASSERRMD/verdex/packages/reasoningprofile"
 )
@@ -108,7 +111,15 @@ func runFullJourney(ctx context.Context, caseIDPrefix string, opts journeyOption
 		cfg.SignoffGate = opts.SignoffGate
 	}
 
-	result := reasoningorchestration.Run(ctx, f.caseID, cfg)
+	// reasoningorchestration.Run's tree-reading stages fetch through
+	// knowledgeapi.KnowledgeAPI, which requires an authenticated
+	// identity.User on ctx (see knowledgeapi's own unauthenticated-
+	// request guard) -- mirroring
+	// packages/reasoningorchestration/helpers_test.go's own
+	// authedContext() convention exactly, rather than propagating the
+	// caller's raw, unauthenticated ctx into a call that requires one.
+	reasoningCtx := authenticatedContext(uuid.Nil, identity.RoleAdvocate)
+	result := reasoningorchestration.Run(reasoningCtx, f.caseID, cfg)
 
 	weights := resolveScenarioWeights(legalFamily)
 
@@ -138,14 +149,17 @@ func (o *fullJourneyOutcome) guardrailApproved(ctx context.Context) bool {
 
 // toScenarioResult converts a fullJourneyOutcome into the public
 // ScenarioResult shape, classifying Outcome from the real
-// reasoningorchestration.TerminationReason reached.
-func (o *fullJourneyOutcome) toScenarioResult(ctx context.Context, startedAt time.Time, detail string) ScenarioResult {
+// reasoningorchestration.TerminationReason reached. Every caller
+// currently owns its own success-path Detail message (overwritten
+// after this call returns for OutcomePassed) and relies on this
+// method's own generated message for the failure path, so Detail is
+// not a caller-supplied parameter.
+func (o *fullJourneyOutcome) toScenarioResult(ctx context.Context, startedAt time.Time) ScenarioResult {
 	outcome := OutcomePassed
+	detail := ""
 	if o.reasoningResult.State.Termination != reasoningorchestration.TerminationComplete {
 		outcome = OutcomeFailed
-		if detail == "" {
-			detail = "reasoning phase did not reach TerminationComplete: " + string(o.reasoningResult.State.Termination)
-		}
+		detail = "reasoning phase did not reach TerminationComplete: " + string(o.reasoningResult.State.Termination)
 	}
 
 	return ScenarioResult{

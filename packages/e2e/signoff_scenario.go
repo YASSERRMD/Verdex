@@ -117,7 +117,7 @@ func runSignoffEnforcement(ctx context.Context) (ScenarioResult, error) {
 	// Step 2: attempting to Approve without the exact acknowledgement
 	// phrase must fail -- proving the requirement is not satisfiable by
 	// an empty or approximate string.
-	judgeCtx, _ := authenticatedContext(tenantID, identity.RoleJudge)
+	judgeCtx := authenticatedContext(tenantID, identity.RoleJudge)
 	_, badAckErr := svc.Approve(judgeCtx, signoff.DecisionInput{
 		TenantID:        tenantID,
 		CaseID:          caseID,

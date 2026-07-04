@@ -65,7 +65,7 @@ func runDataIsolation(ctx context.Context) (ScenarioResult, error) {
 	// written into -- confirming the isolation guarantee holds even
 	// when both cases happen to share storage, not merely "different
 	// databases can't see each other," which would be a vacuous test.
-	sharedStore, err := knowledgeisolation.NewCaseScopedStore(caseA.inner, knowledgeisolation.CaseID(caseB.caseID), nil)
+	sharedStore, err := knowledgeisolation.NewCaseScopedStore(caseA.inner, caseB.caseID, nil)
 	if err != nil {
 		return ScenarioResult{}, wrapf("runDataIsolation", err)
 	}
