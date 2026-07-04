@@ -76,6 +76,23 @@ const (
 	// emergency-only, heavily audited escalation, not a routine
 	// capability.
 	PermBreakGlassKeys Permission = "keys:break_glass"
+
+	// Privacy / data-subject-rights permissions (packages/privacy,
+	// Phase 081).
+
+	// PermViewPrivacy allows read-only access to the tenant's data
+	// inventory, retention report, and privacy audit trail. It does not
+	// permit processing a subject-access, erasure, or consent-change
+	// request -- see PermManagePrivacy.
+	PermViewPrivacy Permission = "privacy:view"
+
+	// PermManagePrivacy allows processing subject-access requests,
+	// executing right-to-erasure requests, and recording
+	// consent/legal-basis changes. This was genuinely missing before
+	// Phase 081: no existing permission named data-subject-rights
+	// processing, so this phase adds it rather than overloading
+	// PermManageSettings, which covers unrelated tenant configuration.
+	PermManagePrivacy Permission = "privacy:manage"
 )
 
 // PermissionMatrix maps each Role to the full set of Permissions it
@@ -116,6 +133,8 @@ var PermissionMatrix = map[Role][]Permission{
 		PermViewKeys,
 		PermManageKeys,
 		PermBreakGlassKeys,
+		PermViewPrivacy,
+		PermManagePrivacy,
 	},
 	RoleAuditor: {
 		PermViewCase,
@@ -123,6 +142,7 @@ var PermissionMatrix = map[Role][]Permission{
 		PermViewUsers,
 		PermAuditRead,
 		PermViewKeys,
+		PermViewPrivacy,
 	},
 }
 

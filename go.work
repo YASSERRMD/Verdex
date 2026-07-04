@@ -74,4 +74,5 @@ use (
 	./packages/dataresidency
 	./packages/airgapped
 	./packages/accessgovernance
+	./packages/privacy
 )
