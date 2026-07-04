@@ -145,6 +145,40 @@ const (
 	// administration, so this phase adds it rather than overloading
 	// PermManageSettings, which covers unrelated tenant configuration.
 	PermManageSecuritytesting Permission = "securitytesting:manage"
+	// Vulnerability and dependency management permissions
+	// (packages/vulnmanagement, Phase 084).
+
+	// PermViewVulnmanagement allows read-only access to scanner
+	// findings, triage decision history, SLA-breach reports, and the
+	// vulnerability-management dashboard. It does not permit recording
+	// findings, triaging them, or transitioning a finding's status --
+	// see PermManageVulnmanagement.
+	PermViewVulnmanagement Permission = "vulnmanagement:view"
+
+	// PermManageVulnmanagement allows recording scanner findings,
+	// triaging them (Engine.Triage), and transitioning a finding's
+	// remediation Status. This was genuinely missing before Phase 084:
+	// no existing permission named vulnerability-finding/triage
+	// administration, so this phase adds it rather than overloading
+	// PermManageSettings, which covers unrelated tenant configuration.
+	PermManageVulnmanagement Permission = "vulnmanagement:manage"
+	// Backup / disaster-recovery permissions (packages/backupdr, Phase
+	// 085).
+
+	// PermViewBackupDR allows read-only access to a tenant's backup
+	// policies, backup record history, restore-drill history, and
+	// RPO/RTO evaluation results. It does not permit setting a backup
+	// policy, recording a backup, or executing a restore drill -- see
+	// PermManageBackupDR.
+	PermViewBackupDR Permission = "backupdr:view"
+
+	// PermManageBackupDR allows setting a tenant's BackupPolicy per
+	// DataClass, recording BackupRecord entries, and executing
+	// RestoreDrill runs. This was genuinely missing before Phase 085:
+	// no existing permission named backup/DR administration, so this
+	// phase adds it rather than overloading PermManageSettings, which
+	// covers unrelated tenant configuration.
+	PermManageBackupDR Permission = "backupdr:manage"
 )
 
 // PermissionMatrix maps each Role to the full set of Permissions it
@@ -193,6 +227,10 @@ var PermissionMatrix = map[Role][]Permission{
 		PermManageThreatmodel,
 		PermViewSecuritytesting,
 		PermManageSecuritytesting,
+		PermViewVulnmanagement,
+		PermManageVulnmanagement,
+		PermViewBackupDR,
+		PermManageBackupDR,
 	},
 	RoleAuditor: {
 		PermViewCase,
@@ -204,6 +242,8 @@ var PermissionMatrix = map[Role][]Permission{
 		PermViewCompliance,
 		PermViewThreatmodel,
 		PermViewSecuritytesting,
+		PermViewVulnmanagement,
+		PermViewBackupDR,
 	},
 }
 

@@ -54,6 +54,103 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Phase 084 (packages/vulnmanagement): Software Composition Analysis.
+  # govulncheck cross-references every Go module's actual call graph
+  # against the Go vulnerability database, so it flags only
+  # dependencies (including the Go standard library itself) whose
+  # vulnerable code path this repository actually reaches -- not every
+  # CVE in the dependency tree regardless of reachability. Findings
+  # feed packages/vulnmanagement.Engine's ScannerSourceSCA Finding
+  # pipeline. continue-on-error: as of this phase, this job finds real,
+  # pervasive standard-library findings across nearly every module
+  # (crypto/tls, crypto/x509, net/url fixes shipped in Go 1.25.6-1.25.9,
+  # while this repository currently pins go-version: '1.25', which
+  # setup-go resolves to whatever 1.25.x patch is latest at the time --
+  # verified locally with a full-repo govulncheck run before writing
+  # this job). Bumping the pinned toolchain repo-wide is a real fix but
+  # is out of scope for this phase; continue-on-error keeps this job's
+  # real signal visible without blocking every unrelated PR on a
+  # pre-existing condition this phase did not introduce.
+  sca-scan:
+    name: SCA scan (govulncheck)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+      - name: Run govulncheck on every Go module
+        run: |
+          set -uo pipefail
+          rc=0
+          for mod in $(find . -name go.mod -not -path '*/node_modules/*'); do
+            dir=$(dirname "$mod")
+            echo "→ scanning $dir"
+            (cd "$dir" && govulncheck ./...) || rc=1
+          done
+          exit "$rc"
+
+  # Phase 084 (packages/vulnmanagement): Static Application Security
+  # Testing. gosec is already enabled as a golangci-lint linter (see
+  # .golangci.yml) and gates lint-go, but golangci-lint's gosec
+  # integration understands this repo's `//nolint:gosec` suppression
+  # comments, while the standalone gosec binary run here only
+  # recognizes its own native `//#nosec` comments -- so this job
+  # surfaces a handful of already-reviewed, already-suppressed
+  # findings (see e.g. packages/adapters/*/adapter.go's
+  # `//nolint:gosec` G104 suppressions) that are not real regressions.
+  # continue-on-error keeps this job informational rather than
+  # blocking merges on pre-existing, already-accepted findings; new
+  # findings introduced by a change are still visible in this job's
+  # log for review, feeding packages/vulnmanagement.Engine's
+  # ScannerSourceSAST Finding pipeline.
+  sast-scan:
+    name: SAST scan (gosec)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+      - name: Install gosec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+      - name: Run gosec on every Go module
+        run: |
+          set -uo pipefail
+          rc=0
+          for mod in $(find . -name go.mod -not -path '*/node_modules/*'); do
+            dir=$(dirname "$mod")
+            echo "→ scanning $dir"
+            (cd "$dir" && gosec -exclude=G304,G703 -quiet ./...) || rc=1
+          done
+          exit "$rc"
+
+  # Phase 084 (packages/vulnmanagement): container image scanning.
+  # This repository ships no Dockerfile today (verified by
+  # `find . -iname Dockerfile*` immediately before writing this job --
+  # see packages/threatmodel/doc/Dockerfile.hardened, Phase 083's
+  # reference hardened template for when one is added). This job is a
+  # placeholder that documents the intended integration point rather
+  # than scanning a container image that does not exist.
+  container-scan:
+    name: Container image scan (placeholder)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No container image to scan yet
+        run: |
+          echo "TODO(packages/vulnmanagement): this repository has no Dockerfile yet."
+          echo "Once one is added, build the image here and scan it with a tool"
+          echo "such as Trivy or Grype, feeding results into"
+          echo "packages/vulnmanagement.Engine's ScannerSourceContainer Finding pipeline."
+          echo "See packages/threatmodel/doc/Dockerfile.hardened for the reference template."
+
   lint-ts:
     name: Lint & Typecheck (TypeScript)
     runs-on: ubuntu-latest
@@ -83,15 +180,23 @@ jobs:
 
   gate:
     name: CI Gate
+    # sca-scan and sast-scan are deliberately not gate dependencies:
+    # both run continue-on-error: true (see their own comments above
+    # for why) and are informational security signal, not a merge
+    # blocker, so they are visible in the PR checks list without being
+    # wired into this pass/fail decision. container-scan is a no-op
+    # placeholder (no Dockerfile exists yet) that always succeeds, so
+    # it is safe to gate on like any other job.
+    needs: [build-go, build-ts, secrets-scan, container-scan]
     runs-on: ubuntu-latest
-    needs: [build-go, build-ts, secrets-scan]
     if: always()
     steps:
       - name: Fail if any job failed
         run: |
           if [[ "${{ needs.build-go.result }}" != "success" || \
                 "${{ needs.build-ts.result }}" != "success" || \
-                "${{ needs.secrets-scan.result }}" != "success" ]]; then
+                "${{ needs.secrets-scan.result }}" != "success" || \
+                "${{ needs.container-scan.result }}" != "success" ]]; then
             echo "One or more CI jobs failed"
             exit 1
           fi

@@ -37,6 +37,12 @@ of truth; this table is for human reference only.
 | `compliance:manage` | Register controls, record evidence, set a compliance profile  |
 | `threatmodel:view`  | Read-only access to the STRIDE threat catalogue and mitigation history |
 | `threatmodel:manage` | Transition a catalogued mitigation's status                  |
+| `vulnmanagement:view` | Read-only access to scanner findings, triage history, and SLA reports |
+| `vulnmanagement:manage` | Record findings, triage them, transition finding status    |
+| `backupdr:view`     | Read-only access to backup policies, backup/drill history, and RPO/RTO evaluations |
+| `backupdr:manage`   | Set backup policies, record backups, execute restore drills   |
+| `securitytesting:view` | Read-only access to security findings, run records, and remediation history |
+| `securitytesting:manage` | Record findings, run adversarial scenarios, verify remediation |
 
 ## Matrix
 
@@ -64,6 +70,12 @@ does not.
 | `compliance:manage` |   –   |    –     |   –   |   ✓   |    –    |
 | `threatmodel:view`  |   –   |    –     |   –   |   ✓   |    ✓    |
 | `threatmodel:manage` |   –   |    –     |   –   |   ✓   |    –    |
+| `vulnmanagement:view` |   –  |    –     |   –   |   ✓   |    ✓    |
+| `vulnmanagement:manage` | – |    –     |   –   |   ✓   |    –    |
+| `backupdr:view`     |   –   |    –     |   –   |   ✓   |    ✓    |
+| `backupdr:manage`   |   –   |    –     |   –   |   ✓   |    –    |
+| `securitytesting:view` |  –  |    –     |   –   |   ✓   |    ✓    |
+| `securitytesting:manage` | – |    –     |   –   |   ✓   |    –    |
 
 ## Design notes
 
@@ -112,3 +124,29 @@ does not.
   and a mitigation's recorded status-transition history) consistent
   with its read-only, compliance-facing posture elsewhere in this
   matrix.
+* `vulnmanagement:manage` (Phase 084, `packages/vulnmanagement`) is
+  admin-only: recording a scanner finding, triaging it, and
+  transitioning its remediation status (including deciding to accept
+  risk or mark a finding a false positive) are administrative
+  decisions with real security consequences, and are deliberately not
+  delegated beyond the tenant administrator. `auditor` holds
+  `vulnmanagement:view` (read-only access to findings, triage decision
+  history, and SLA-breach reports) consistent with its read-only,
+  compliance-facing posture elsewhere in this matrix.
+* `backupdr:manage` (Phase 085, `packages/backupdr`) is admin-only:
+  setting a tenant's backup policy per data class, recording a backup,
+  and executing a restore drill are administrative actions that shape
+  this platform's actual disaster-recovery posture, and are
+  deliberately not delegated beyond the tenant administrator. `auditor`
+  holds `backupdr:view` (read-only access to backup policies, backup
+  record history, restore-drill history, and RPO/RTO evaluation
+  results) consistent with its read-only, compliance-facing posture
+  elsewhere in this matrix.
+* `securitytesting:manage` (Phase 086, `packages/securitytesting`) is
+  admin-only: recording a finding, running an adversarial scenario
+  against production defenses, and verifying remediation are actions
+  with real security consequences, and are deliberately not delegated
+  beyond the tenant administrator. `auditor` holds
+  `securitytesting:view` (read-only access to findings, run records,
+  and remediation history) consistent with its read-only,
+  compliance-facing posture elsewhere in this matrix.
