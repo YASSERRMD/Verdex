@@ -31,6 +31,8 @@ of truth; this table is for human reference only.
 | `keys:view`         | Read key metadata (ID, version, state) -- not key material      |
 | `keys:manage`       | Rotate and revoke the tenant's encryption keys                 |
 | `keys:break_glass`  | Invoke the emergency, justified, time-bound break-glass path   |
+| `privacy:view`      | Read-only access to the data inventory and privacy audit trail |
+| `privacy:manage`    | Process subject-access, erasure, and consent-change requests   |
 
 ## Matrix
 
@@ -52,6 +54,8 @@ does not.
 | `keys:view`         |   –   |    –     |   –   |   ✓   |    ✓    |
 | `keys:manage`       |   –   |    –     |   –   |   ✓   |    –    |
 | `keys:break_glass`  |   –   |    –     |   –   |   ✓   |    –    |
+| `privacy:view`      |   –   |    –     |   –   |   ✓   |    ✓    |
+| `privacy:manage`    |   –   |    –     |   –   |   ✓   |    –    |
 
 ## Design notes
 
@@ -74,3 +78,11 @@ does not.
   to any other role. `auditor` holds `keys:view` (metadata only, never
   key material) consistent with its read-only, compliance-facing
   posture elsewhere in this matrix.
+* `privacy:manage` (Phase 081, `packages/privacy`) is admin-only:
+  processing a subject-access or right-to-erasure request, or
+  recording a consent/legal-basis change, is a data-subject-rights
+  action with real legal consequences and is deliberately not
+  delegated beyond the tenant administrator. `auditor` holds
+  `privacy:view` (read-only access to the data inventory, retention
+  report, and privacy audit trail) consistent with its compliance-
+  facing posture elsewhere in this matrix.
