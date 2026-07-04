@@ -49,6 +49,8 @@ var expectedPermissions = map[identity.Role][]identity.Permission{
 		identity.PermManageCompliance,
 		identity.PermViewThreatmodel,
 		identity.PermManageThreatmodel,
+		identity.PermViewVulnmanagement,
+		identity.PermManageVulnmanagement,
 		identity.PermViewBackupDR,
 		identity.PermManageBackupDR,
 	},
@@ -61,6 +63,7 @@ var expectedPermissions = map[identity.Role][]identity.Permission{
 		identity.PermViewPrivacy,
 		identity.PermViewCompliance,
 		identity.PermViewThreatmodel,
+		identity.PermViewVulnmanagement,
 		identity.PermViewBackupDR,
 	},
 }

@@ -1,0 +1,56 @@
+# Phase 084 (packages/vulnmanagement): automated dependency updates.
+# Dependabot opens a PR per outdated dependency it finds, which then
+# goes through the same CI gate (including this phase's sca-scan/
+# sast-scan/container-scan jobs) as any other PR -- this is the
+# automation half of continuous vulnerability detection; the scanning
+# jobs in .github/workflows/ci.yml are the detection half.
+version: 2
+updates:
+  # Every packages/<name>/go.mod in this monorepo (Phase-numbered Go
+  # modules; see root go.work). Dependabot's `directories` glob
+  # discovers each one without hand-listing 70+ paths individually.
+  - package-ecosystem: gomod
+    directories:
+      - "/packages/*"
+      - "/services/*"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - go
+    commit-message:
+      prefix: "deps(go)"
+
+  # The npm workspace root (apps/*, packages/*, services/*/frontend --
+  # see package.json's "workspaces" field). A single root-directory
+  # entry covers the whole workspace: npm resolves and updates
+  # workspace-linked package.json files together.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - typescript
+    commit-message:
+      prefix: "deps(npm)"
+
+  # GitHub Actions used in .github/workflows/*.yml (actions/checkout,
+  # actions/setup-go, gitleaks/gitleaks-action, etc.) -- a pinned
+  # Action version can itself carry a vulnerability, so this is part
+  # of the same continuous-detection surface as the Go/npm ecosystems
+  # above, not a separate concern.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: "deps(actions)"

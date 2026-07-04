@@ -128,6 +128,23 @@ const (
 	// PermManageSettings, which covers unrelated tenant configuration.
 	PermManageThreatmodel Permission = "threatmodel:manage"
 
+	// Vulnerability and dependency management permissions
+	// (packages/vulnmanagement, Phase 084).
+
+	// PermViewVulnmanagement allows read-only access to scanner
+	// findings, triage decision history, SLA-breach reports, and the
+	// vulnerability-management dashboard. It does not permit recording
+	// findings, triaging them, or transitioning a finding's status --
+	// see PermManageVulnmanagement.
+	PermViewVulnmanagement Permission = "vulnmanagement:view"
+
+	// PermManageVulnmanagement allows recording scanner findings,
+	// triaging them (Engine.Triage), and transitioning a finding's
+	// remediation Status. This was genuinely missing before Phase 084:
+	// no existing permission named vulnerability-finding/triage
+	// administration, so this phase adds it rather than overloading
+	// PermManageSettings, which covers unrelated tenant configuration.
+	PermManageVulnmanagement Permission = "vulnmanagement:manage"
 	// Backup / disaster-recovery permissions (packages/backupdr, Phase
 	// 085).
 
@@ -191,6 +208,8 @@ var PermissionMatrix = map[Role][]Permission{
 		PermManageCompliance,
 		PermViewThreatmodel,
 		PermManageThreatmodel,
+		PermViewVulnmanagement,
+		PermManageVulnmanagement,
 		PermViewBackupDR,
 		PermManageBackupDR,
 	},
@@ -203,6 +222,7 @@ var PermissionMatrix = map[Role][]Permission{
 		PermViewPrivacy,
 		PermViewCompliance,
 		PermViewThreatmodel,
+		PermViewVulnmanagement,
 		PermViewBackupDR,
 	},
 }

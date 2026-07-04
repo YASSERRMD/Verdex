@@ -77,5 +77,6 @@ use (
 	./packages/privacy
 	./packages/compliance
 	./packages/threatmodel
+	./packages/vulnmanagement
 	./packages/backupdr
 )
