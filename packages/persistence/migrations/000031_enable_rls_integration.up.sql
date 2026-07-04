@@ -4,10 +4,13 @@
 -- NULLIF(...,'')::uuid and why SET LOCAL (never plain SET) is
 -- mandatory in packages/tenancy.WithTenantScope.
 --
--- Every table added in 000028_create_integration.up.sql carries a
+-- Every table added in 000030_create_integration.up.sql carries a
 -- tenant_id column, unlike packages/compliance's shared
 -- compliance_controls catalogue, so every one of them gets a
--- tenant_isolation policy here.
+-- tenant_isolation policy here. Numbered 000030/000031 rather than
+-- 000028/000029 because Phases 084 (vulnmanagement) and 085 (backupdr)
+-- landed on main first and had already claimed those two numbers by
+-- the time this phase rebased onto the current tip.
 ALTER TABLE integration_connector_configs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE integration_connector_configs FORCE ROW LEVEL SECURITY;
 
