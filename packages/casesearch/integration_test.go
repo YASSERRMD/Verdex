@@ -132,12 +132,12 @@ func seedTenant(t *testing.T, pg *persistence.Postgres, name, slug string) *pers
 	return tenant
 }
 
-func seedIntegrationCase(t *testing.T, caseRepo caselifecycle.Repository, tenantID, actorID uuid.UUID, title string) *caselifecycle.Case {
+func seedIntegrationCase(t *testing.T, caseRepo caselifecycle.Repository, tenantID, actorID uuid.UUID, title, categoryID string) *caselifecycle.Case {
 	t.Helper()
 	c, err := caselifecycle.NewCase(caselifecycle.NewCaseInput{
 		TenantID:       tenantID,
 		JurisdictionID: uuid.New(),
-		CategoryID:     "civil",
+		CategoryID:     categoryID,
 		Title:          title,
 		CreatedBy:      actorID,
 	})
@@ -154,7 +154,11 @@ func seedIntegrationCase(t *testing.T, caseRepo caselifecycle.Repository, tenant
 // Engine.Search composes with a real Postgres-backed
 // caselifecycle.TenantScopedRepository (not just the in-memory fixture
 // used elsewhere in this package's test suite), filtering by category
-// against real persisted rows.
+// against real persisted rows. The two seeded cases use genuinely
+// distinct categories ("civil" and "criminal") so a category-filtered
+// search can only match one of them, actually exercising
+// Engine.Search's Filter.CategoryCode plumbing into
+// caselifecycle.Repository.List.
 func TestIntegration_Engine_Search_RealCaselifecycleRepository(t *testing.T) {
 	pg := migratedAppPool(t)
 	tenant := seedTenant(t, pg, "Tenant A", "tenant-a-casesearch")
@@ -163,8 +167,8 @@ func TestIntegration_Engine_Search_RealCaselifecycleRepository(t *testing.T) {
 	actor := &identity.User{ID: uuid.New(), TenantID: tenant.ID, Roles: []identity.Role{identity.RoleJudge}, Status: identity.UserStatusActive}
 	ctx := identity.WithUser(context.Background(), actor)
 
-	civil := seedIntegrationCase(t, caseRepo, tenant.ID, actor.ID, "Civil Matter")
-	seedIntegrationCase(t, caseRepo, tenant.ID, actor.ID, "Other Matter")
+	civil := seedIntegrationCase(t, caseRepo, tenant.ID, actor.ID, "Civil Matter", "civil")
+	seedIntegrationCase(t, caseRepo, tenant.ID, actor.ID, "Other Matter", "criminal")
 
 	engine, err := casesearch.NewEngine(caseRepo, func(context.Context, string) (casesearch.CaseSearcher, error) {
 		return &fakeSearcher{keywordHits: []casesearch.Hit{{NodeID: "n1", Text: "matter", Score: 1}}}, nil
