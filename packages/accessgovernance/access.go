@@ -72,13 +72,3 @@ func requireMatchingTenant(want, got uuid.UUID) error {
 	}
 	return nil
 }
-
-// actorLabel formats a best-effort actor string for audit recording,
-// mirroring packages/keymanagement's actorLabel/currentActor
-// convention.
-func actorLabel(id uuid.UUID, ok bool) string {
-	if !ok || id == uuid.Nil {
-		return "unknown"
-	}
-	return id.String()
-}
