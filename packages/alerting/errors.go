@@ -81,6 +81,10 @@ var (
 	// ErrNilCondition is returned when Engine.Evaluate is called with
 	// an AlertRule carrying a nil/empty Condition.
 	ErrNilCondition = errors.New("alerting: alert rule has no condition")
+
+	// ErrUnknownFlow is returned when BuildDashboard is called with a
+	// flowName not in KnownFlows.
+	ErrUnknownFlow = errors.New("alerting: unknown dashboard flow")
 )
 
 // wrapf mirrors the fmt.Errorf("pkg: fn: %w", err) convention used
