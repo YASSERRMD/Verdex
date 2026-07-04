@@ -66,7 +66,9 @@ func AuthMiddleware(provider Provider, store SessionStore) func(http.Handler) ht
 				if claims.TokenID != "" {
 					// SessionStore.Get expects a uuid; skip if unparseable.
 					// A full implementation would parse claims.TokenID as
-					// a uuid and merge the session.
+					// a uuid and merge the session. Not implemented yet,
+					// so this is a deliberate no-op for now.
+					_ = claims.TokenID
 				}
 			}
 

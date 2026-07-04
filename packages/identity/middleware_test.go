@@ -36,7 +36,7 @@ func TestAuthMiddleware_NoToken_Returns401(t *testing.T) {
 	provider := &identity.NoOpProvider{}
 	handler := identity.AuthMiddleware(provider, nil)(okHandler)
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 
 	handler.ServeHTTP(rec, req)
@@ -52,7 +52,7 @@ func TestAuthMiddleware_InvalidToken_Returns401(t *testing.T) {
 	provider := &identity.NoOpProvider{}
 	handler := identity.AuthMiddleware(provider, nil)(okHandler)
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	req.Header.Set("Authorization", "Bearer not-a-real-token")
 	rec := httptest.NewRecorder()
 
@@ -81,7 +81,7 @@ func TestAuthMiddleware_MalformedAuthHeader_Returns401(t *testing.T) {
 		hdr := hdr
 		t.Run(hdr, func(t *testing.T) {
 			t.Parallel()
-			req := httptest.NewRequest(http.MethodGet, "/", nil)
+			req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 			if hdr != "" {
 				req.Header.Set("Authorization", hdr)
 			}
@@ -116,7 +116,7 @@ func TestAuthMiddleware_ValidToken_Returns200AndUserOnContext(t *testing.T) {
 
 	handler := identity.AuthMiddleware(provider, nil)(capturingHandler)
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	rec := httptest.NewRecorder()
 
@@ -148,7 +148,7 @@ func TestRequireRole_WrongRole_Returns403(t *testing.T) {
 		identity.RequireRole(identity.RoleJudge)(okHandler),
 	)
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	rec := httptest.NewRecorder()
 
@@ -173,7 +173,7 @@ func TestRequireRole_CorrectRole_Returns200(t *testing.T) {
 		identity.RequireRole(identity.RoleJudge)(okHandler),
 	)
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	rec := httptest.NewRecorder()
 
@@ -198,7 +198,7 @@ func TestRequireRole_OneOfMultipleRoles_Returns200(t *testing.T) {
 		identity.RequireRole(identity.RoleJudge, identity.RoleClerk)(okHandler),
 	)
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	rec := httptest.NewRecorder()
 
@@ -224,7 +224,7 @@ func TestRequirePermission_CorrectPermission_Returns200(t *testing.T) {
 		identity.RequirePermission(identity.PermManageUsers)(okHandler),
 	)
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	rec := httptest.NewRecorder()
 
@@ -250,7 +250,7 @@ func TestRequirePermission_MissingPermission_Returns403(t *testing.T) {
 		identity.RequirePermission(identity.PermManageUsers)(okHandler),
 	)
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	rec := httptest.NewRecorder()
 
@@ -267,7 +267,7 @@ func TestRequirePermission_NoUser_Returns401(t *testing.T) {
 	// Call RequirePermission without AuthMiddleware — no user on context.
 	handler := identity.RequirePermission(identity.PermViewCase)(okHandler)
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 
 	handler.ServeHTTP(rec, req)
@@ -282,7 +282,7 @@ func TestRequireRole_NoUser_Returns401(t *testing.T) {
 
 	handler := identity.RequireRole(identity.RoleJudge)(okHandler)
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 
 	handler.ServeHTTP(rec, req)
