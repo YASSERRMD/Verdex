@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 // AuthMiddleware returns an http.Handler middleware that:
@@ -57,18 +59,13 @@ func AuthMiddleware(provider Provider, store SessionStore) func(http.Handler) ht
 			// role list from the live session. On any error we continue
 			// with the token-derived roles rather than rejecting the
 			// request — the token was valid, so we degrade gracefully.
+			// TokenID doubles as the session ID; an empty or unparseable
+			// TokenID simply skips the lookup.
 			if store != nil {
-				// We cannot look up by token; this branch is a hook for
-				// subclasses that embed the session ID in the token
-				// (e.g. as TokenClaims.TokenID). The default
-				// implementation skips the store lookup when TokenID is
-				// empty.
-				if claims.TokenID != "" {
-					// SessionStore.Get expects a uuid; skip if unparseable.
-					// A full implementation would parse claims.TokenID as
-					// a uuid and merge the session. Not implemented yet,
-					// so this is a deliberate no-op for now.
-					_ = claims.TokenID
+				if sessionID, parseErr := uuid.Parse(claims.TokenID); parseErr == nil {
+					if session, getErr := store.Get(r.Context(), sessionID); getErr == nil {
+						user.Roles = session.Roles
+					}
 				}
 			}
 
