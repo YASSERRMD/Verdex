@@ -1,0 +1,23 @@
+# Example packages/scalability policy file.
+#
+# This file documents every field in scalability.PolicyConfig and
+# shows the YAML layer's shape (LoadPolicyConfig). Copy it to a real
+# path and pass that path to scalability.LoadPolicyConfig to use it.
+# Values here mirror scalability.DefaultPolicyConfig()'s baseline --
+# adjust per deployment.
+#
+# Only the fields a real deployment's file actually sets need to be
+# present; any field omitted here retains its Default() value (see
+# config.go's LoadPolicyConfig doc comment).
+
+scaling:
+  min_replicas: 2
+  max_replicas: 20
+  target_metric: 0.70
+  upper_tolerance: 0.15
+  lower_tolerance: 0.15
+  scale_up_step: 1
+  scale_down_step: 1
+
+backpressure:
+  max_in_flight: 100
