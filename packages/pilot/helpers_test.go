@@ -12,6 +12,26 @@ import (
 	"github.com/YASSERRMD/verdex/packages/pilot"
 )
 
+// pilotNow returns the current UTC time, a small named wrapper so test
+// call sites read as intent ("a fresh timestamp for this fixture")
+// rather than a bare time.Now().UTC() repeated at every call site.
+func pilotNow() time.Time {
+	return time.Now().UTC()
+}
+
+// floatsClose reports whether a and b differ by no more than a small
+// epsilon, used throughout this test suite to compare arithmetic-mean
+// aggregates without tripping over binary floating-point rounding
+// (e.g. (0.8+0.9)/2 == 0.8500000000000001, not exactly 0.85).
+func floatsClose(a, b float64) bool {
+	const epsilon = 1e-9
+	diff := a - b
+	if diff < 0 {
+		diff = -diff
+	}
+	return diff < epsilon
+}
+
 // newTestUser builds an identity.User with the given permission-bearing
 // role(s), scoped to tenantID, mirroring
 // packages/compliance's helpers_test.go newTestUser convention.
