@@ -68,6 +68,11 @@ defer migrator.Close()
 
 Adding a new migration: drop a new `NNNNNN_description.up.sql` /
 `.down.sql` pair into `migrations/`, using the next sequential number.
+No other file needs to change: `TestIntegration_MigrationsApplyCleanly`
+(in `integration_test.go`) derives its expected post-migration schema
+version by counting `*.up.sql` files in the embedded `migrations.FS`
+rather than hardcoding a number, so it stays correct as this directory
+grows.
 
 ## Repository pattern
 
