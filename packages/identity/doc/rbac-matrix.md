@@ -45,6 +45,8 @@ of truth; this table is for human reference only.
 | `integration:manage` | Register connectors, set credentials, run imports/deliveries/reconciliation |
 | `securitytesting:view` | Read-only access to security findings, run records, and remediation history |
 | `securitytesting:manage` | Record findings, run adversarial scenarios, verify remediation |
+| `bulkimport:view`   | Read-only access to import job history, per-record outcomes, and progress |
+| `bulkimport:manage` | Register import jobs, run batches, pause/resume, and roll back imports |
 
 ## Matrix
 
@@ -80,6 +82,8 @@ does not.
 | `integration:manage` |   –   |    –     |   –   |   ✓   |    –    |
 | `securitytesting:view` |  –  |    –     |   –   |   ✓   |    ✓    |
 | `securitytesting:manage` | – |    –     |   –   |   ✓   |    –    |
+| `bulkimport:view`   |   –   |    –     |   –   |   ✓   |    ✓    |
+| `bulkimport:manage` |   –   |    –     |   –   |   ✓   |    –    |
 
 ## Design notes
 
@@ -162,4 +166,13 @@ does not.
   beyond the tenant administrator. `auditor` holds
   `securitytesting:view` (read-only access to findings, run records,
   and remediation history) consistent with its read-only,
+  compliance-facing posture elsewhere in this matrix.
+* `bulkimport:manage` (Phase 088, `packages/bulkimport`) is admin-only:
+  registering an import job, running batches against a historical
+  case-corpus source, pausing/resuming a job, and rolling back a
+  completed or failed job are administrative bulk-data operations with
+  real downstream effects on the tenant's case records, and are
+  deliberately not delegated beyond the tenant administrator. `auditor`
+  holds `bulkimport:view` (read-only access to import job history,
+  per-record outcomes, and progress) consistent with its read-only,
   compliance-facing posture elsewhere in this matrix.
