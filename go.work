@@ -90,4 +90,6 @@ use (
 	./packages/cicdgate
 	./packages/iac
 	./packages/alerting
+	./packages/docsite
+	./packages/e2e
 )
