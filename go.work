@@ -93,4 +93,5 @@ use (
 	./packages/docsite
 	./packages/e2e
 	./packages/pilot
+	./packages/garelease
 )
