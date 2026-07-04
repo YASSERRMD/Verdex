@@ -126,13 +126,13 @@
 //     inmemory_repository.go, postgres_repository.go,
 //     tenant_scoped_repository.go): the usual three-layer persistence
 //     pattern, tenant-scoped with RLS enabled in
-//     packages/persistence/migrations/000028_create_securitytesting.up.sql
-//     and 000029_enable_rls_securitytesting.up.sql.
+//     packages/persistence/migrations/000032_create_securitytesting.up.sql
+//     and 000033_enable_rls_securitytesting.up.sql.
 //
 // # Storage
 //
 // Two tables, both tenant-scoped with Row-Level Security enforced
-// (see 000029_enable_rls_securitytesting.up.sql): securitytesting_run_records
+// (see 000033_enable_rls_securitytesting.up.sql): securitytesting_run_records
 // (append-only -- a unique index on id backs ErrDuplicateRunRecord,
 // see abusecase_suite.go's ScenarioAuditReplayRejected) and
 // securitytesting_findings (mutable -- Status transitions via

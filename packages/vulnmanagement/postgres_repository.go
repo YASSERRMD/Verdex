@@ -19,7 +19,7 @@ type rowScanner interface {
 
 // PostgresFindingRepository is a PostgreSQL-backed FindingRepository,
 // storing Finding rows in the `vulnmanagement_findings` table (see
-// packages/persistence/migrations/000028_create_vulnmanagement.up.sql).
+// packages/persistence/migrations/000030_create_vulnmanagement.up.sql).
 // It accepts a persistence.Executor per call, mirroring
 // packages/compliance.PostgresEvidenceRepository exactly.
 type PostgresFindingRepository struct {

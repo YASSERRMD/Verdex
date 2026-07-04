@@ -222,8 +222,8 @@ re-run does).
 ## Storage
 
 Two tables, both tenant-scoped with Row-Level Security enforced (see
-`packages/persistence/migrations/000028_create_securitytesting.up.sql`
-and `000029_enable_rls_securitytesting.up.sql`):
+`packages/persistence/migrations/000032_create_securitytesting.up.sql`
+and `000033_enable_rls_securitytesting.up.sql`):
 
 - **`securitytesting_run_records`**: append-only. A unique index on
   `id` backs `ErrDuplicateRunRecord` at the database layer, the same
