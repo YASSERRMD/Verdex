@@ -6,12 +6,11 @@ generated, per-release commit groupings, see
 `packages/garelease.BuildReleaseNotes` (composes with
 `packages/cicdgate.GenerateReleaseNotes`).
 
-## [Unreleased] -- General availability (100-phase build)
+## [1.0.0] - 2026-07-04 -- General availability (100-phase build)
 
-<!-- The final "cut" date/line for this release is finalized by the
-     orchestrator as the deliberate last step of the 100-phase build,
-     after the git tag itself is created. This entry drafts the
-     content; it does not claim a release has been tagged yet. -->
+Tagged as `v1.0.0` once `packages/garelease`'s release-readiness gate
+and this changelog entry were both in place -- the deliberate last
+step of the 100-phase build.
 
 This release is the culmination of a 100-phase build, delivered across
 eight parts:
