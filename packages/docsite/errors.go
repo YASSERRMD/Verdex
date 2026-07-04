@@ -25,7 +25,8 @@ var (
 )
 
 // wrapf mirrors the fmt.Errorf("pkg: fn: %w", err) convention used
-// throughout this repository's packages.
-func wrapf(fn string, err error) error {
-	return fmt.Errorf("docsite: %s: %w", fn, err)
+// throughout this repository's packages, fixed to CheckLinks since it
+// is this package's only exported function that can fail this way.
+func wrapf(err error) error {
+	return fmt.Errorf("docsite: CheckLinks: %w", err)
 }

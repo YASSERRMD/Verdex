@@ -53,20 +53,20 @@ const (
 // checker ran and found problems."
 func CheckLinks(root string) (Report, error) {
 	if root == "" {
-		return Report{}, wrapf("CheckLinks", ErrEmptyRoot)
+		return Report{}, wrapf(ErrEmptyRoot)
 	}
 
 	rootInfo, err := os.Stat(root)
 	if err != nil || !rootInfo.IsDir() {
-		return Report{}, wrapf("CheckLinks", ErrRootNotFound)
+		return Report{}, wrapf(ErrRootNotFound)
 	}
 
 	files, err := discoverMarkdownFiles(root)
 	if err != nil {
-		return Report{}, wrapf("CheckLinks", err)
+		return Report{}, wrapf(err)
 	}
 	if len(files) == 0 {
-		return Report{}, wrapf("CheckLinks", ErrNoMarkdownFiles)
+		return Report{}, wrapf(ErrNoMarkdownFiles)
 	}
 
 	report := Report{FilesScanned: files}
@@ -75,7 +75,7 @@ func CheckLinks(root string) (Report, error) {
 		absFile := filepath.Join(root, relFile)
 		links, err := extractLinks(absFile)
 		if err != nil {
-			return Report{}, wrapf("CheckLinks", err)
+			return Report{}, wrapf(err)
 		}
 
 		fileDir := filepath.Dir(absFile)
