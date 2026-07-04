@@ -1,6 +1,3 @@
-// Package compliance is Phase 082: mapping this platform's controls
-// to the legal/regulatory frameworks a deployment must answer to. See
-// doc.go for the full composition write-up.
 package compliance
 
 import (
