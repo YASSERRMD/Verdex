@@ -56,6 +56,11 @@ var (
 	// instead of a handle, or names no secret reference at all).
 	ErrInvalidCredentials = errors.New("integration: invalid connector credentials")
 
+	// ErrCredentialsNotFound is returned when a referenced
+	// ConnectorCredentials ID does not resolve to any stored record for
+	// the tenant.
+	ErrCredentialsNotFound = errors.New("integration: connector credentials not found")
+
 	// ErrCredentialsNotVerified is returned when a connector call is
 	// attempted before its credentials have passed Validate/authorize.
 	ErrCredentialsNotVerified = errors.New("integration: connector credentials not verified")
