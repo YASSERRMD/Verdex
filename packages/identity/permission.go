@@ -198,6 +198,24 @@ const (
 	// administration, so this phase adds it rather than overloading
 	// PermManageSettings, which covers unrelated tenant configuration.
 	PermManageIntegration Permission = "integration:manage"
+
+	// Statute/precedent corpus-updater permissions
+	// (packages/corpusupdater, Phase 089).
+
+	// PermViewCorpusUpdater allows read-only access to
+	// CorpusUpdateJob records, staged/effective Amendments, and a
+	// job's audit trail. It does not permit staging an amendment,
+	// applying a job, or rolling one back -- see
+	// PermManageCorpusUpdater.
+	PermViewCorpusUpdater Permission = "corpusupdater:view"
+
+	// PermManageCorpusUpdater allows staging Amendments, validating and
+	// applying a CorpusUpdateJob, and rolling one back. This was
+	// genuinely missing before Phase 089: no existing permission named
+	// corpus-update administration, so this phase adds it rather than
+	// overloading PermManageSettings, which covers unrelated tenant
+	// configuration.
+	PermManageCorpusUpdater Permission = "corpusupdater:manage"
 )
 
 // PermissionMatrix maps each Role to the full set of Permissions it
@@ -252,6 +270,8 @@ var PermissionMatrix = map[Role][]Permission{
 		PermManageBackupDR,
 		PermViewIntegration,
 		PermManageIntegration,
+		PermViewCorpusUpdater,
+		PermManageCorpusUpdater,
 	},
 	RoleAuditor: {
 		PermViewCase,
@@ -266,6 +286,7 @@ var PermissionMatrix = map[Role][]Permission{
 		PermViewVulnmanagement,
 		PermViewBackupDR,
 		PermViewIntegration,
+		PermViewCorpusUpdater,
 	},
 }
 
