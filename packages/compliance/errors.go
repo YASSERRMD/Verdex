@@ -72,3 +72,11 @@ var (
 func wrapf(fn string, err error) error {
 	return fmt.Errorf("compliance: %s: %w", fn, err)
 }
+
+// isNotFound reports whether err is target via errors.Is. Small helper
+// so call sites like RunGapAnalysis can treat "no profile set yet" as
+// a permissive default rather than a hard failure, without repeating
+// the errors.Is call inline.
+func isNotFound(err, target error) bool {
+	return errors.Is(err, target)
+}
