@@ -94,11 +94,3 @@ var (
 func wrapf(fn string, err error) error {
 	return fmt.Errorf("backupdr: %s: %w", fn, err)
 }
-
-// isNotFound reports whether err is target via errors.Is. Small helper
-// so call sites like RunGapAnalysis-style permissive defaults can treat
-// "nothing on file yet" as just that, without repeating the errors.Is
-// call inline.
-func isNotFound(err, target error) bool {
-	return errors.Is(err, target)
-}

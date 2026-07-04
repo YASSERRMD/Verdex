@@ -1,7 +1,6 @@
 package backupdr
 
 import (
-	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -79,15 +78,4 @@ func ResolveRecoveryPoint(records []BackupRecord, tenantID uuid.UUID, class Data
 		Record:       *best,
 		AgeAtRequest: requestedAt.Sub(best.TakenAt),
 	}, nil
-}
-
-// sortByTakenAtDesc sorts records by TakenAt, most recent first. Small
-// helper used by callers (e.g. a future "list recovery candidates"
-// view) that want records in recency order rather than
-// ResolveRecoveryPoint's single-best-match result; kept here so both
-// live next to the PITR logic they support.
-func sortByTakenAtDesc(records []BackupRecord) {
-	sort.Slice(records, func(i, j int) bool {
-		return records[i].TakenAt.After(records[j].TakenAt)
-	})
 }

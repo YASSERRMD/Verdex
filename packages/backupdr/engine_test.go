@@ -240,3 +240,43 @@ func TestEngine_CheckRPO_NoTargetRegistered(t *testing.T) {
 		t.Fatalf("CheckRPO() error = %v, want ErrTargetNotFound", err)
 	}
 }
+
+// TestEngine_FindRecoveryPoint_AuditLogClass proves the engine's PITR
+// path is not hardcoded to DataClassCaseData -- resolving a recovery
+// point for DataClassAuditLog (Phase 077's own audit trail, itself in
+// scope for backup per doc.go) works identically.
+func TestEngine_FindRecoveryPoint_AuditLogClass(t *testing.T) {
+	t.Parallel()
+	engine, tenantID := newTestEngine(t)
+	takenAt := time.Now().Add(-2 * time.Hour)
+	rec := recordTestBackup(t, engine, tenantID, backupdr.DataClassAuditLog, takenAt)
+
+	point, err := engine.FindRecoveryPoint(ctxWithUser(auditorUser(tenantID)), tenantID, backupdr.DataClassAuditLog, time.Now())
+	if err != nil {
+		t.Fatalf("FindRecoveryPoint: %v", err)
+	}
+	if point.Record.ID != rec.ID || point.Class != backupdr.DataClassAuditLog {
+		t.Fatalf("FindRecoveryPoint() = %+v, want it to resolve rec under DataClassAuditLog", point)
+	}
+}
+
+// TestEngine_SetPolicy_NeitherPermissionRejected proves an actor
+// holding neither PermViewBackupDR nor PermManageBackupDR (e.g. a
+// judge, whose role is unrelated to backup/DR administration) is
+// rejected the same way a completely anonymous caller would be.
+func TestEngine_SetPolicy_NeitherPermissionRejected(t *testing.T) {
+	t.Parallel()
+	engine, tenantID := newTestEngine(t)
+	judge := judgeUser(tenantID)
+
+	_, err := engine.SetPolicy(ctxWithUser(judge), tenantID, backupdr.BackupPolicy{
+		Class: backupdr.DataClassCaseData, Frequency: time.Hour, RetentionWindow: 24 * time.Hour,
+	})
+	if !errors.Is(err, backupdr.ErrForbidden) {
+		t.Fatalf("SetPolicy() error = %v, want ErrForbidden for a judge (holds neither backupdr permission)", err)
+	}
+
+	if _, err := engine.ListPolicies(ctxWithUser(judge), tenantID); !errors.Is(err, backupdr.ErrForbidden) {
+		t.Fatalf("ListPolicies() error = %v, want ErrForbidden for a judge (holds neither backupdr permission)", err)
+	}
+}
