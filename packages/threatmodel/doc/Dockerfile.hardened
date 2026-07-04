@@ -1,0 +1,66 @@
+# Reference hardened Dockerfile template (Phase 083, task 7).
+#
+# This repository ships no Dockerfile today -- every package/service
+# currently runs as a plain Go binary with no containerization step.
+# This template is a starting point for whichever future phase adds
+# the first one: copy it, replace <SERVICE_CMD_PATH> with the actual
+# `cmd/...` package path, and confirm the result against
+# threatmodel.DefaultContainerHardeningChecklist() before shipping.
+#
+# It satisfies every rule in
+# threatmodel.DefaultContainerHardeningChecklist():
+#   - non_root_user:              USER nonroot below
+#   - minimal_base_image:         distroless base in the final stage
+#   - pinned_base_image:          FROM pinned by digest, not a floating tag
+#   - no_unnecessary_packages:    build tooling stays in the discarded builder stage
+#   - no_embedded_secrets:        no credential/key is ever COPY'd or ARG'd into a layer
+#   - read_only_root_filesystem:  set at the container-runtime/orchestrator layer, not here (see notes below)
+#   - no_privileged_capabilities: set at the container-runtime/orchestrator layer, not here (see notes below)
+
+# ---- Build stage -----------------------------------------------------
+# Pin by digest, not a floating tag such as `golang:1.25`, so a build
+# is reproducible and cannot silently pick up an unreviewed upstream
+# change. Replace the digest below with the actual digest you have
+# reviewed before using this template for real.
+FROM golang:1.25@sha256:REPLACE_WITH_REVIEWED_DIGEST AS builder
+
+WORKDIR /src
+
+# Copy only what is needed to resolve dependencies first, so dependency
+# layers cache independently of source changes.
+COPY go.work go.work
+COPY packages/ packages/
+
+# Build a fully static binary so the final stage needs no libc at all.
+# Replace <SERVICE_CMD_PATH> with the real cmd/ package for the
+# service being containerized.
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -trimpath -ldflags="-s -w" -o /out/service ./<SERVICE_CMD_PATH>
+
+# ---- Final stage -------------------------------------------------------
+# distroless/static carries no shell, no package manager, and no
+# unnecessary OS surface -- there is nothing here for an attacker who
+# gains code execution to pivot to.
+FROM gcr.io/distroless/static-debian12:nonroot@sha256:REPLACE_WITH_REVIEWED_DIGEST
+
+COPY --from=builder /out/service /service
+
+# distroless/static's :nonroot variant already runs as a non-root
+# "nonroot" user by default; USER is declared explicitly anyway so the
+# intent is never implicit or dependent on a base-image default that
+# could change.
+USER nonroot:nonroot
+
+ENTRYPOINT ["/service"]
+
+# ---- Runtime/orchestrator settings (not expressible in a Dockerfile) --
+# read_only_root_filesystem and no_privileged_capabilities are
+# container-runtime settings, not Dockerfile directives. When running
+# this image:
+#   docker run --read-only --cap-drop=ALL --security-opt=no-new-privileges ...
+# or in Kubernetes, the equivalent securityContext:
+#   readOnlyRootFilesystem: true
+#   allowPrivilegeEscalation: false
+#   capabilities:
+#     drop: ["ALL"]
+#   runAsNonRoot: true
