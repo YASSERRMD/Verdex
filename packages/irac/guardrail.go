@@ -1,6 +1,7 @@
 package irac
 
 import (
+	"regexp"
 	"strings"
 	"time"
 )
@@ -61,13 +62,22 @@ func (c ConclusionNode) HasGuardrailLabel() bool {
 	return c.Label == DraftAnalysisLabel
 }
 
+// whitespaceRun matches one or more consecutive whitespace characters, used
+// to normalize runs of spaces/tabs/newlines to a single space before
+// wordlist matching. This closes an obfuscation gap where padding a
+// wordlist phrase with extra internal whitespace (e.g. "shall   pay")
+// defeated the exact-substring match despite carrying the same meaning.
+var whitespaceRun = regexp.MustCompile(`\s+`)
+
 // ContainsVerdictLanguage reports whether s contains any verdict- or
 // directive-sounding word or phrase from verdictLanguageWordlist,
-// case-insensitively. Exposed so callers and tests can confirm the
+// case-insensitively and independent of internal whitespace variation
+// (runs of spaces/tabs/newlines within s are normalized to a single space
+// before matching). Exposed so callers and tests can confirm the
 // guardrail label (and, optionally, other reasoning-output text) never
 // carries binding verdict/directive language.
 func ContainsVerdictLanguage(s string) bool {
-	lower := strings.ToLower(s)
+	lower := whitespaceRun.ReplaceAllString(strings.ToLower(s), " ")
 	for _, word := range verdictLanguageWordlist {
 		if strings.Contains(lower, word) {
 			return true
