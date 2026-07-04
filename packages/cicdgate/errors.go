@@ -54,3 +54,16 @@ var (
 func wrapf(fn string, err error) error {
 	return fmt.Errorf("cicdgate: %s: %w", fn, err)
 }
+
+// errInvalidArtifactf formats a detail message wrapping
+// ErrInvalidArtifact, so ReleaseArtifact.Validate's many failure modes
+// share one sentinel while still reporting which check failed.
+func errInvalidArtifactf(format string, args ...any) error {
+	return fmt.Errorf("%w: %s", ErrInvalidArtifact, fmt.Sprintf(format, args...))
+}
+
+// errInvalidAttestationf formats a detail message wrapping
+// ErrInvalidAttestation, mirroring errInvalidArtifactf.
+func errInvalidAttestationf(format string, args ...any) error {
+	return fmt.Errorf("%w: %s", ErrInvalidAttestation, fmt.Sprintf(format, args...))
+}
