@@ -93,6 +93,24 @@ const (
 	// processing, so this phase adds it rather than overloading
 	// PermManageSettings, which covers unrelated tenant configuration.
 	PermManagePrivacy Permission = "privacy:manage"
+
+	// Compliance mapping permissions (packages/compliance, Phase 082).
+
+	// PermViewCompliance allows read-only access to the control
+	// catalogue, a tenant's compliance profile, collected control
+	// evidence, gap-analysis reports, and the compliance dashboard. It
+	// does not permit registering controls, recording evidence, or
+	// changing a tenant's compliance profile -- see
+	// PermManageCompliance.
+	PermViewCompliance Permission = "compliance:view"
+
+	// PermManageCompliance allows registering/updating catalogued
+	// controls, recording control evidence, and setting a tenant's
+	// ComplianceProfile. This was genuinely missing before Phase 082:
+	// no existing permission named compliance-mapping administration,
+	// so this phase adds it rather than overloading
+	// PermManageSettings, which covers unrelated tenant configuration.
+	PermManageCompliance Permission = "compliance:manage"
 )
 
 // PermissionMatrix maps each Role to the full set of Permissions it
@@ -135,6 +153,8 @@ var PermissionMatrix = map[Role][]Permission{
 		PermBreakGlassKeys,
 		PermViewPrivacy,
 		PermManagePrivacy,
+		PermViewCompliance,
+		PermManageCompliance,
 	},
 	RoleAuditor: {
 		PermViewCase,
@@ -143,6 +163,7 @@ var PermissionMatrix = map[Role][]Permission{
 		PermAuditRead,
 		PermViewKeys,
 		PermViewPrivacy,
+		PermViewCompliance,
 	},
 }
 
