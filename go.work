@@ -89,4 +89,5 @@ use (
 	./packages/reliability
 	./packages/cicdgate
 	./packages/iac
+	./packages/e2e
 )
