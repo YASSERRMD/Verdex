@@ -159,7 +159,7 @@ func (a *GeminiAdapter) ChatStream(ctx context.Context, req provider.ChatRequest
 	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		resp.Body.Close() //nolint:errcheck
+		resp.Body.Close() // #nosec G104 -- response already read into body above; the error from discarding a now-unused body is not actionable //nolint:errcheck
 		return nil, shared.MapHTTPStatus(resp.StatusCode, body, "gemini")
 	}
 

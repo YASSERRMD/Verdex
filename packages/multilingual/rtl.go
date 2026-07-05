@@ -10,14 +10,14 @@ import "unicode"
 // these markers around detected RTL runs.
 const (
 	// RLE (Right-to-Left Embedding) opens a right-to-left run.
-	RLE = '‫'
+	RLE = '‫' // #nosec G116 -- deliberate Unicode bidi formatting character for RTL text layout, not hidden/obfuscated source code //nolint:gosec
 
 	// LRE (Left-to-Right Embedding) opens a left-to-right run.
-	LRE = '‪'
+	LRE = '‪' // #nosec G116 -- deliberate Unicode bidi formatting character for RTL text layout, not hidden/obfuscated source code //nolint:gosec
 
 	// PDF (Pop Directional Formatting) closes the most recently opened
 	// embedding.
-	PDF = '‬'
+	PDF = '‬' // #nosec G116 -- deliberate Unicode bidi formatting character for RTL text layout, not hidden/obfuscated source code //nolint:gosec
 )
 
 // TextRun is a contiguous span of text that shares a single directionality.

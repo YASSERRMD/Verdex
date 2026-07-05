@@ -70,11 +70,11 @@ func LocalizeCitation(formatter citation.Formatter, locale Locale, in citation.F
 // packages/multilingual.
 const (
 	// bidiLRE (Left-to-Right Embedding) opens a left-to-right run.
-	bidiLRE = '‪'
+	bidiLRE = '‪' // #nosec G116 -- deliberate Unicode bidi formatting character for RTL text layout, not hidden/obfuscated source code //nolint:gosec
 
 	// bidiPDF (Pop Directional Formatting) closes the most recently
 	// opened embedding.
-	bidiPDF = '‬'
+	bidiPDF = '‬' // #nosec G116 -- deliberate Unicode bidi formatting character for RTL text layout, not hidden/obfuscated source code //nolint:gosec
 )
 
 // wrapLTRRunForRTLContext wraps text (a citation string, always
