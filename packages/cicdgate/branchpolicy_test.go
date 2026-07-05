@@ -16,6 +16,8 @@ func TestValidateBranchName(t *testing.T) {
 		{name: "valid three digit phase branch", branchName: "phase-100-future-phase", wantErr: false},
 		{name: "valid fix branch", branchName: "fix-notifications-access-check", wantErr: false},
 		{name: "valid single-segment fix branch", branchName: "fix-typo", wantErr: false},
+		{name: "valid dependabot npm branch", branchName: "dependabot/npm_and_yarn/tailwindcss-4.3.2", wantErr: false},
+		{name: "valid dependabot github_actions branch", branchName: "dependabot/github_actions/actions/checkout-7", wantErr: false},
 		{name: "missing phase number", branchName: "phase-cicd-hardening", wantErr: true},
 		{name: "single digit phase number", branchName: "phase-9-cicd-hardening", wantErr: true},
 		{name: "no slug", branchName: "phase-095", wantErr: true},
@@ -65,6 +67,12 @@ func TestValidatePRCommitCount(t *testing.T) {
 		// matching every fix-* PR merged before this check existed.
 		{name: "fix branch single commit", branchName: "fix-notifications-access-check", count: 1, wantErr: false},
 		{name: "fix branch zero commits", branchName: "fix-typo", count: 0, wantErr: false},
+
+		// Dependabot branches are this repository's convention for
+		// automated dependency-update PRs (see ValidateBranchName) and
+		// are exempt from the phase-sized commit minimum -- Dependabot
+		// always opens exactly one commit per bump.
+		{name: "dependabot branch single commit", branchName: "dependabot/npm_and_yarn/tailwindcss-4.3.2", count: 1, wantErr: false},
 
 		// A malformed branch name is not exempt -- ValidateBranchName
 		// already rejects it separately, but ValidatePRCommitCount
