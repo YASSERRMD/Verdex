@@ -114,7 +114,7 @@ func WithRetry(ctx context.Context, policy RetryPolicy, shouldRetry IsRetryable,
 		return wrapf("WithRetry", errors.New("integration: fn must not be nil"))
 	}
 
-	rng := rand.New(rand.NewSource(time.Now().UnixNano())) //nolint:gosec // jitter timing only, not security-sensitive
+	rng := rand.New(rand.NewSource(time.Now().UnixNano())) // #nosec G404 -- jitter timing only, not security-sensitive //nolint:gosec
 	var lastErr error
 
 	for attempt := 1; attempt <= policy.MaxAttempts; attempt++ {

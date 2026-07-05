@@ -342,7 +342,7 @@ func WriteSBOMSnapshot(workspaceRoot, destPath string) error {
 		return wrapf("WriteSBOMSnapshot", err)
 	}
 	data = append(data, '\n')
-	if err := os.WriteFile(destPath, data, 0o644); err != nil { //nolint:gosec // SBOM snapshot is a non-sensitive, repo-committed artifact.
+	if err := os.WriteFile(destPath, data, 0o644); err != nil { // #nosec G306 -- SBOM snapshot is a non-sensitive, repo-committed artifact. //nolint:gosec
 		return wrapf("WriteSBOMSnapshot", err)
 	}
 	return nil

@@ -105,7 +105,7 @@ func (p RetryPolicy) delayForAttempt(attempt int) time.Duration {
 
 	r := p.rng
 	if r == nil {
-		r = rand.New(rand.NewSource(time.Now().UnixNano())) //nolint:gosec // jitter timing, not a security-sensitive value
+		r = rand.New(rand.NewSource(time.Now().UnixNano())) // #nosec G404 -- jitter timing, not a security-sensitive value //nolint:gosec
 	}
 	// Uniformly distributed in [(1-jitter)*delay, (1+jitter)*delay].
 	lower := float64(delay) * (1 - jitter)

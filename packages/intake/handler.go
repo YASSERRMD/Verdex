@@ -58,6 +58,9 @@ func (h *IntakeHandler) handleUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse multipart form; keep at most 32 MB in memory per Go default.
+	// #nosec G120 -- overall request size is already bounded above by
+	// http.MaxBytesReader(maxBodyBytes); this only sets the in-memory vs.
+	// spill-to-disk threshold within that already-enforced cap. //nolint:gosec
 	if err := r.ParseMultipartForm(32 << 20); err != nil {
 		h.writeError(w, http.StatusBadRequest, fmt.Sprintf("failed to parse multipart form: %s", err))
 		return
