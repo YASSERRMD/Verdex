@@ -23,6 +23,7 @@ node_modules/
 dist/
 .next/
 .nuxt/
+.turbo/
 *.tsbuildinfo
 next-env.d.ts
 
