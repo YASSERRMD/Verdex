@@ -28,6 +28,17 @@ var phaseBranchPattern = regexp.MustCompile(`^phase-[0-9]{2,}-[a-z0-9]+(-[a-z0-9
 // fix-<slug>.
 var fixBranchPattern = regexp.MustCompile(`^fix-[a-z0-9]+(-[a-z0-9]+)*$`)
 
+// dependabotBranchPattern matches the branch names Dependabot itself
+// generates (e.g. dependabot/npm_and_yarn/tailwindcss-4.3.2,
+// dependabot/github_actions/actions/checkout-7) when it opens an
+// automated dependency-update pull request. This repository does not
+// control these names -- Dependabot assigns them -- so, unlike
+// phaseBranchPattern and fixBranchPattern, this is not a style this
+// repository is asking contributors to follow; it is a fixed
+// third-party format this policy must recognize as legitimate rather
+// than reject.
+var dependabotBranchPattern = regexp.MustCompile(`^dependabot/`)
+
 // ValidateBranchName reports whether name conforms to this
 // repository's branch-naming policy: either the phase-NNN-slug form
 // (CONTRIBUTING.md) or the fix-slug form for small corrective changes.
@@ -40,6 +51,11 @@ var fixBranchPattern = regexp.MustCompile(`^fix-[a-z0-9]+(-[a-z0-9]+)*$`)
 // branch-policy job in .github/workflows/ci.yml so a malformed branch
 // name fails a pull request check instead of relying on a reviewer
 // remembering to look.
+//
+// Dependabot-authored branches (dependabotBranchPattern) are also
+// accepted: this repository has no say in how Dependabot names its own
+// branches, so rejecting them would permanently block every automated
+// dependency-update PR rather than flag a real naming violation.
 func ValidateBranchName(name string) error {
 	if phaseBranchPattern.MatchString(name) {
 		return nil
@@ -47,7 +63,10 @@ func ValidateBranchName(name string) error {
 	if fixBranchPattern.MatchString(name) {
 		return nil
 	}
-	return wrapf("ValidateBranchName", fmt.Errorf("%w: %q does not match phase-NNN-slug or fix-slug", ErrInvalidBranchName, name))
+	if dependabotBranchPattern.MatchString(name) {
+		return nil
+	}
+	return wrapf("ValidateBranchName", fmt.Errorf("%w: %q does not match phase-NNN-slug, fix-slug, or dependabot/*", ErrInvalidBranchName, name))
 }
 
 // ValidatePRCommitCount reports whether count meets MinimumCommitCount
@@ -69,12 +88,19 @@ func ValidateBranchName(name string) error {
 // small, non-phase corrective work (see fixBranchPattern and
 // CONTRIBUTING.md's "Branching" section), so they are exempt from the
 // phase-sized minimum rather than being held to a per-phase quota for
-// work that was never phase-sized to begin with. A branchName that
-// matches neither phaseBranchPattern nor fixBranchPattern (already
-// rejected by ValidateBranchName) is treated as non-exempt, so this
-// function never silently waives the check for a malformed name.
+// work that was never phase-sized to begin with. Dependabot branches
+// are exempt for the same reason: Dependabot opens one commit per
+// dependency bump, never a phase-sized batch, so holding it to
+// MinimumCommitCount would mean no automated dependency PR could ever
+// merge. A branchName that matches neither phaseBranchPattern,
+// fixBranchPattern, nor dependabotBranchPattern (already rejected by
+// ValidateBranchName) is treated as non-exempt, so this function never
+// silently waives the check for a malformed name.
 func ValidatePRCommitCount(branchName string, count int) error {
 	if fixBranchPattern.MatchString(branchName) {
+		return nil
+	}
+	if dependabotBranchPattern.MatchString(branchName) {
 		return nil
 	}
 	if count < MinimumCommitCount {
