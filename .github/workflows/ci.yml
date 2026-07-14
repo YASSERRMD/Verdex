@@ -257,7 +257,7 @@ jobs:
             "github-actions/${{ github.workflow }}/${{ github.job }}" \
             | tee /tmp/cicdgate-attestation.json
       - name: Upload artifact + attestation record
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cicdgate-artifact-attestation
           path: /tmp/cicdgate-attestation.json
